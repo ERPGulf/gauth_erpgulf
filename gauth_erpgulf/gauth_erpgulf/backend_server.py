@@ -238,3 +238,4 @@ def generate_token_secure_for_users(username, password, app_key):
             status=500,
             mimetype="application/json",
         )
+
