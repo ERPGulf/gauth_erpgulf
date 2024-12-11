@@ -88,7 +88,8 @@ def generate_token_secure(api_key, api_secret, app_key):
             )
         except (
             Exception
-        ) as e:  # pylint: disable=broad-except
+        ) as e:  
+            # pylint: disable=broad-except
             return Response(
                 json.dumps({"message": "An unexpected error occured", "error": str(e)}),
                 status=500,
