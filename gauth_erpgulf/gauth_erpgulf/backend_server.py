@@ -52,11 +52,45 @@ def generate_token_secure(api_key, api_secret, app_key):
                 ["client_id", "client_secret"],
             )
 
-        except KeyError as db_error:
+        except ValueError as e:
             return Response(
                 json.dumps(
-                    {"message": "Database error occurred", "error": str(db_error)}
+                    {
+                        "message": "Mismatch in expected database results",
+                        "error": str(e),
+                    }
                 ),
+                status=500,
+                mimetype="application/json",
+            )
+        except ConnectionError as e:
+            return Response(
+                json.dumps({"message": "Database connection failed", "error": str(e)}),
+                status=500,
+                mimetype="application/json",
+            )
+        except TimeoutError as e:
+            return Response(
+                json.dumps({"message": "Database query timed out", "error": str(e)}),
+                status=500,
+                mimetype="application/json",
+            )
+        except AttributeError as e:
+            return Response(
+                json.dumps(
+                    {
+                        "message": "Invalid database object or method call",
+                        "error": str(e),
+                    }
+                ),
+                status=500,
+                mimetype="application/json",
+            )
+        except (
+            Exception
+        ) as e:  # Fallback for unexpected exceptions (required to handle edge cases)
+            return Response(
+                json.dumps({"message": "An unexpected error occured", "error": str(e)}),
                 status=500,
                 mimetype="application/json",
             )
@@ -238,4 +272,3 @@ def generate_token_secure_for_users(username, password, app_key):
             status=500,
             mimetype="application/json",
         )
-
