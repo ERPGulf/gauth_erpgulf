@@ -51,44 +51,7 @@ def generate_token_secure(api_key, api_secret, app_key):
                 {"app_name": app_key},
                 ["client_id", "client_secret"],
             )
-
-        except ValueError as e:
-            return Response(
-                json.dumps(
-                    {
-                        "message": "Mismatch in expected database results",
-                        "error": str(e),
-                    }
-                ),
-                status=500,
-                mimetype="application/json",
-            )
-        except ConnectionError as e:
-            return Response(
-                json.dumps({"message": "Database connection failed", "error": str(e)}),
-                status=500,
-                mimetype="application/json",
-            )
-        except TimeoutError as e:
-            return Response(
-                json.dumps({"message": "Database query timed out", "error": str(e)}),
-                status=500,
-                mimetype="application/json",
-            )
-        except (AttributeError,Exception) as e:
-            return Response(
-                json.dumps(
-                    {
-                        "message": "Invalid database object or method call",
-                        "error": str(e),
-                    }
-                ),
-                status=500,
-                mimetype="application/json",
-            )
-        except (
-            BaseException
-        ) as e:
+        except Exception as e:
             return Response(
                 json.dumps({"message": "An unexpected error occured", "error": str(e)}),
                 status=500,
@@ -172,19 +135,6 @@ def generate_token_secure(api_key, api_secret, app_key):
 def generate_token_secure_for_users(username, password, app_key):
     """
     Generates a secure token for users using the provided API credentials.
-
-    This function authenticates a user by validating the provided API key,
-    API secret, and application key. It retrieves client credentials from
-    the database and interacts with the OAuth service to generate a secure token.
-
-    Args:
-        username (str): The username of the user requesting authentication.
-        password (str): The password associated with the user.
-        app_key (str): A base64-encoded application key.
-
-    Returns:
-        Response: A JSON response containing the token if successful, or an
-                  error message and status code if the authentication fails.
     """
 
     frappe.log_error(
@@ -271,4 +221,70 @@ def generate_token_secure_for_users(username, password, app_key):
             json.dumps({"message": e, "user_count": 0}),
             status=500,
             mimetype="application/json",
+        )
+
+
+@frappe.whitelist(allow_guest=True)
+def whoami():
+    """This function is to check the current user of the Session"""
+    try:
+
+        # return {"data": "Guest"}
+        response_content = {
+            "data": {
+                "user": frappe.session.user,
+            }
+        }
+        return Response(
+            json.dumps(response_content), status=200, mimetype="application/json"
+        )
+        # return frappe.session.user
+    except Exception as e:
+        frappe.throw(e)
+
+
+@frappe.whitelist(allow_guest=True)
+def create_refresh_token(refresh_token):
+    url = (
+        frappe.local.conf.host_name + "/api/method/frappe.integrations.oauth2.get_token"
+    )
+    payload = f"grant_type=refresh_token&refresh_token={refresh_token}"
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    files = []
+
+    response = requests.post(
+        url, headers=headers, data=payload, files=files, timeout=10
+    )
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        try:
+            # Parse the JSON string in the response message
+            message_json = json.loads(response.text)
+
+            # Create the new message format
+            new_message = {
+                "access_token": message_json["access_token"],
+                "expires_in": message_json["expires_in"],
+                "token_type": message_json["token_type"],
+                "scope": message_json["scope"],
+                "refresh_token": message_json["refresh_token"],
+            }
+
+            # Return the new message format directly
+            return Response(
+                json.dumps({"data": new_message}),
+                status=200,
+                mimetype="application/json",
+            )
+        except json.JSONDecodeError as e:
+            return Response(
+                json.dumps({"data": f"Error decoding JSON: {e}"}),
+                status=401,
+                mimetype="application/json",
+            )
+    else:
+        # If the request was not successful, return the original response text
+        return Response(
+            json.dumps({"data": response.text}), status=401, mimetype="application/json"
         )
