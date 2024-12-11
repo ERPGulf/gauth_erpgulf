@@ -60,15 +60,6 @@ def generate_token_secure(api_key, api_secret, app_key):
                 status=500,
                 mimetype="application/json",
             )
-        
-        except DatabaseError as db_error:
-            return Response(
-                json.dumps(
-                    {"message": "Database error occurred", "error": str(db_error)}
-                ),
-                status=500,
-                mimetype="application/json",
-            )
 
         if client_id_value is None:
             # return app_key
