@@ -75,7 +75,7 @@ def generate_token_secure(api_key, api_secret, app_key):
                 status=500,
                 mimetype="application/json",
             )
-        except AttributeError as e:
+        except (AttributeError,Exception as e:
             return Response(
                 json.dumps(
                     {
@@ -87,9 +87,8 @@ def generate_token_secure(api_key, api_secret, app_key):
                 mimetype="application/json",
             )
         except (
-            Exception
-        ) as e:  
-            # pylint: disable=broad-except
+            BaseException
+        ) as e:
             return Response(
                 json.dumps({"message": "An unexpected error occured", "error": str(e)}),
                 status=500,
