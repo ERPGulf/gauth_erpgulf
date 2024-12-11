@@ -75,7 +75,7 @@ def generate_token_secure(api_key, api_secret, app_key):
                 status=500,
                 mimetype="application/json",
             )
-        except (AttributeError,Exception as e:
+        except (AttributeError,Exception) as e:
             return Response(
                 json.dumps(
                     {
@@ -272,4 +272,3 @@ def generate_token_secure_for_users(username, password, app_key):
             status=500,
             mimetype="application/json",
         )
-
