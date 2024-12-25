@@ -936,6 +936,7 @@ def g_delete_user(email, mobile_no):
         )
 
 
+
 @frappe.whitelist(allow_guest=False)
 def validate_email(email_to_validate):
 
@@ -1607,7 +1608,7 @@ def firebase_subscribe_to_topic(topic, fcm_token):
         frappe.response["error"] = error_message
         frappe.response["http_status_code"] = 500
         return frappe.response
-    
+
 
 
 @frappe.whitelist(allow_guest=True)
@@ -1794,11 +1795,11 @@ def get_number_of_files(file_storage):
     if hasattr(file_storage, "get_num_files") and callable(file_storage.get_num_files):
         return file_storage.get_num_files()
     else:
-        return 0 
+        return 0
 
 
 
-@frappe.whitelist(allow_guest=False)  
+@frappe.whitelist(allow_guest=False)
 def _get_customer_details(user_email=None, mobile_phone=None):
     if mobile_phone is not None:
         customer_details = frappe.get_list(
@@ -1841,4 +1842,4 @@ def _get_customer_details(user_email=None, mobile_phone=None):
             status=404,
             mimetype="application/json",
         )
-    
+
