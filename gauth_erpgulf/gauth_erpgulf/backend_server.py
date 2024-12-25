@@ -22,7 +22,6 @@ import os
 import geoip2.database
 import frappe
 from erpnext.accounts.utils import get_balance_on, get_fiscal_year
-
 from email.utils import formataddr
 from email.message import EmailMessage
 import smtplib
@@ -273,48 +272,48 @@ def whoami():
 
 
 # Api for refresh token
-@frappe.whitelist(allow_guest=False)
-def create_refresh_token(refresh_token):
-    """this function creates refresh token"""
-    url = (
-        frappe.local.conf.host_name + "/api/method/frappe.integrations.oauth2.get_token"
-    )
-    payload = f"grant_type=refresh_token&refresh_token={refresh_token}"
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    files = []
+# @frappe.whitelist(allow_guest=False)
+# def create_refresh_token(refresh_token):
+#     """this function creates refresh token"""
+#     url = (
+#         frappe.local.conf.host_name + "/api/method/frappe.integrations.oauth2.get_token"
+#     )
+#     payload = f"grant_type=refresh_token&refresh_token={refresh_token}"
+#     headers = {"Content-Type": "application/x-www-form-urlencoded"}
+#     files = []
 
-    response = requests.post(
-        url, headers=headers, data=payload, files=files, timeout=10
-    )
+#     response = requests.post(
+#         url, headers=headers, data=payload, files=files, timeout=10
+#     )
 
-    if response.status_code == 200:
-        try:
+#     if response.status_code == 200:
+#         try:
 
-            message_json = json.loads(response.text)
+#             message_json = json.loads(response.text)
 
-            new_message = {
-                "access_token": message_json["access_token"],
-                "expires_in": message_json["expires_in"],
-                "token_type": message_json["token_type"],
-                "scope": message_json["scope"],
-            }
+#             new_message = {
+#                 "access_token": message_json["access_token"],
+#                 "expires_in": message_json["expires_in"],
+#                 "token_type": message_json["token_type"],
+#                 "scope": message_json["scope"],
+#             }
 
-            return Response(
-                json.dumps({"data": new_message}),
-                status=200,
-                mimetype="application/json",
-            )
-        except json.JSONDecodeError as e:
-            return Response(
-                json.dumps({"data": f"Error decoding JSON: {e}"}),
-                status=401,
-                mimetype="application/json",
-            )
-    else:
+#             return Response(
+#                 json.dumps({"data": new_message}),
+#                 status=200,
+#                 mimetype="application/json",
+#             )
+#         except json.JSONDecodeError as e:
+#             return Response(
+#                 json.dumps({"data": f"Error decoding JSON: {e}"}),
+#                 status=401,
+#                 mimetype="application/json",
+#             )
+#     else:
 
-        return Response(
-            json.dumps({"data": response.text}), status=401, mimetype="application/json"
-        )
+#         return Response(
+#             json.dumps({"data": response.text}), status=401, mimetype="application/json"
+#         )
 
 
 # api for decrypting encrypt key
@@ -724,10 +723,7 @@ def g_generate_reset_password_key(
                 mimetype="application/json",
             )
 
-        # if(len(frappe.get_all('User', {'name': user}))<1):
-        #     return  Response(json.dumps({"message": "Email or Mobile number not found" , "user_count": 0}), status=404, mimetype='application/json')
-        # if(len(frappe.get_all('User', {'mobile_no': mobile}))<1):
-        #     return  Response(json.dumps({"message": "Mobile number or Email not found" , "user_count": 0}), status=404, mimetype='application/json')
+
         key = str(random.randint(100000, 999999))
         doc2 = frappe.get_doc("User", user)
         doc2.reset_password_key = sha256_hash(key)
@@ -777,22 +773,24 @@ def g_generate_reset_password_key(
         )
 
 
+
+
 # to send email to validate otp
 @frappe.whitelist(allow_guest=False)
 def send_email_oci(recipient, subject, body_html):
 
-    sender = frappe.db.get_single_value('Backend Server Settings', 'sender'),
-    sender_name = frappe.db.get_single_value('Backend Server Settings', 'sender_name'),
+    sender = frappe.db.get_single_value('Backend Server Settings', 'sender')
+    sender_name = frappe.db.get_single_value('Backend Server Settings', 'sender_name')
 
-    user_smtp = frappe.db.get_single_value('Backend Server Settings', 'user_smtp'),
-    password_smtp = frappe.db.get_single_value('Backend Server Settings', 'password_smtp'),
+    user_smtp = frappe.db.get_single_value('Backend Server Settings', 'user_smtp')
+    password_smtp = frappe.db.get_single_value('Backend Server Settings', 'password_smtp')
 
     host = frappe.db.get_single_value('Backend Server Settings', 'host')
     port = frappe.db.get_single_value('Backend Server Settings', 'port')
 
     msg = EmailMessage()
     msg["Subject"] = subject
-    msg["From"] = formataddr((sender_name, sender))
+    msg["From"] =  formataddr((sender_name, sender))
     msg["To"] = recipient
 
     msg.set_content(body_html, subtype="html")
@@ -1163,7 +1161,7 @@ def send_firebase_data(
     # Sending firebase data to Android and IPhone from Frappe ERPNext
 
     # frappe.throw(str(_get_access_token()))
-    url = url
+    url = frappe.db.get_single_value("Backend Server Settings","url")
 
     if notification_type == "auction_ended":
         payload = json.dumps(
@@ -1399,96 +1397,448 @@ def get_account_balance(customer=None):
     )
 
 
+# @frappe.whitelist(allow_guest=True)
+# def validate_country_test(IP_address):
+#     """To validate IP address Country"""
+#     import geoip2.database
+
+#     reader = geoip2.database.Reader("geo-ip.mmdb")
+#     response = reader.country(IP_address)
+
+#     return response.country.name
+
+
+# @frappe.whitelist(allow_guest=True)
+# def check_country_restriction_test(*args, **kwargs):
+
+#     # return kwargs.get("ip_address")
+#     try:
+#         # source_ip_address = kwargs.get("ip_address")
+#         source_ip_address = frappe.local.request.headers.get("X-Forwarded-For")
+
+#         # check source_ip is listed in the table.
+#         restriction = frappe.get_all(
+#             "Countries and IP address",
+#             filters={
+#                 "parent": "Backend Server Settings",
+#                 "countries": source_ip_address,
+#             },
+#             fields=[
+#                 "countries",
+#                 "api_allow",
+#                 "desk_web_user_allow",
+#                 "desk_user_allow",
+#             ],
+#         )
+
+#         if (
+#             len(restriction) == 0
+#         ):  # if source_ip not in the table, find country of source_ip
+#             reader = geoip2.database.Reader("geo-ip.mmdb")
+#             response = reader.country(source_ip_address)
+#             user_country = response.country.name
+#             restriction = frappe.get_all(
+#                 "Countries and IP address",
+#                 filters={
+#                     "parent": "Backend Server Settings",
+#                     "countries": user_country,
+#                 },
+#                 fields=[
+#                     "countries",
+#                     "api_allow",
+#                     "desk_web_user_allow",
+#                     "desk_user_allow",
+#                 ],
+#             )
+
+#         if len(restriction) > 0:
+#             if frappe.local.request.path.startswith("/api/method/gauth_erpgulf"):
+
+#                 # check if the call is api
+#                 if restriction[0].get("api_allow") == 0:
+
+#                     frappe.throw(
+#                         "Access To this API from your location is not allowed for security reasons. "
+#                         f"IP: {source_ip_address}",
+#                         frappe.PermissionError,
+#                     )
+#                     return
+#             else:  # as its not api , this can be either system-user or web-user
+#                 user_type = frappe.get_all(
+#                     "User", fields=["user_type"], filters={"name": frappe.session.user}
+#                 )
+#                 if user_type[0].get("user_type") == "System User":
+#                     if restriction[0].get("desk_user_allow") == 0:
+#                         # return"system user"
+#                         frappe.msgprint(
+#                             "Access to this system-user from your location is not allowed for security reasons, please contact system administrator. "
+#                             + frappe.local.request.headers.get("X-Forwarded-For")
+#                         )
+#                         frappe.local.response["http_status_code"] = 403
+#                         # return "system user"
+#                 if user_type[0].get("user_type") == "Website User":
+#                     if restriction[0].get("desk_web_user_allow") == 0:
+#                         # return "website user"
+#                         frappe.msgprint(
+#                             "Access to this web-user from your location is not allowed for security reasons, please contact system administrator. "
+#                             + frappe.local.request.headers.get("X-Forwarded-For")
+#                         )
+#                         frappe.local.response["http_status_code"] = 403
+#                         # return "website user"
+
+#     except:
+#         pass
 
 
 @frappe.whitelist(allow_guest=True)
-def validate_country_test(IP_address):
-    """To validate IP address Country"""
-    import geoip2.database
-
-    reader = geoip2.database.Reader("geo-ip.mmdb")
-    response = reader.country(IP_address)
-
-    return response.country.name
+def time():
+    server_time = frappe.utils.now()
+    unix_time = frappe.utils.get_datetime(frappe.utils.now_datetime()).timestamp()
+    api_response = {"data": {"serverTime": server_time, "unix_time": unix_time}}
+    return api_response
 
 
 @frappe.whitelist(allow_guest=True)
-def check_country_restriction_test(*args, **kwargs):
-
-    # return kwargs.get("ip_address")
+def send_firebase_notification(title, body, client_token="", topic=""):
+    import firebase_admin
+    from firebase_admin import credentials, exceptions, messaging
+    if client_token == "" and topic == "":
+        return Response(
+            json.dumps(
+                {
+                    "message": "Please provide either client token or topic to send message to Firebase",
+                    "message_sent": 0,
+                }
+            ),
+            status=417,
+            mimetype="application/json",
+        )
     try:
-        # source_ip_address = kwargs.get("ip_address")
-        source_ip_address = frappe.local.request.headers.get("X-Forwarded-For")
+        try:
+            firebase_admin.get_app()
+        except ValueError:
+            # If not, then initialize it
+            cred = credentials.Certificate("firebase.json")
+            firebase_admin.initialize_app(cred)
+        message=""
+        if client_token != "":
+            message = messaging.Message(
+                notification=messaging.Notification(
+                    title=title,
+                    body=body,
+                ),
+                token=client_token,
+            )
+        if topic != "":
+            message = messaging.Message(
+                notification=messaging.Notification(
+                    title=title,
+                    body=body,
+                ),
+                topic=topic,
+            )
+        return {
+            "message": "Successfully sent message",
+            "response": messaging.send(message),
+        }
+    except Exception as e:
+        error_message = str(e)
+        frappe.response["message"] = "Failed to send firebase message"
+        frappe.response["error"] = error_message
+        frappe.response["http_status_code"] = 500
+        return frappe.response
 
-        # check source_ip is listed in the table.
-        restriction = frappe.get_all(
-            "Countries and IP address",
-            filters={
-                "parent": "Backend Server Settings",
-                "countries": source_ip_address,
-            },
-            fields=[
-                "countries",
-                "api_allow",
-                "desk_web_user_allow",
-                "desk_user_allow",
-            ],
+
+@frappe.whitelist(allow_guest=False)
+def firebase_subscribe_to_topic(topic, fcm_token):
+    import firebase_admin
+    from firebase_admin import credentials, messaging
+
+    if fcm_token == "" and topic == "":
+        return Response(
+            json.dumps(
+                {
+                    "message": "Please provide FCM Token and  topic to send message to Firebase",
+                    "message_sent": 0,
+                }
+            ),
+            status=417,
+            mimetype="application/json",
         )
 
-        if (
-            len(restriction) == 0
-        ):  # if source_ip not in the table, find country of source_ip
-            reader = geoip2.database.Reader("geo-ip.mmdb")
-            response = reader.country(source_ip_address)
-            user_country = response.country.name
-            restriction = frappe.get_all(
-                "Countries and IP address",
-                filters={
-                    "parent": "Backend Server Settings",
-                    "countries": user_country,
-                },
-                fields=[
-                    "countries",
-                    "api_allow",
-                    "desk_web_user_allow",
-                    "desk_user_allow",
-                ],
+    try:
+
+        # Check if app already exists
+        try:
+            firebase_admin.get_app()
+        except ValueError:
+            # If not, then initialize it
+            cred = credentials.Certificate("firebase.json")
+            firebase_admin.initialize_app(cred)
+
+        try:
+            response = messaging.subscribe_to_topic(fcm_token, topic)
+            if response.failure_count > 0:
+                return Response(
+                    json.dumps({"data": "Failed to subscribe to Firebase topic"}),
+                    status=400,
+                    mimetype="application/json",
+                )
+            else:
+                return Response(
+                    json.dumps({"data": "Successfully subscribed to Firebase topic"}),
+                    status=200,
+                    mimetype="application/json",
+                )
+        except Exception as e:
+            return Response(
+                json.dumps(
+                    {
+                        "data": "Error happened while trying to  subscribe to Firebase topic"
+                    }
+                ),
+                status=400,
+                mimetype="application/json",
             )
 
-        if len(restriction) > 0:
-            if frappe.local.request.path.startswith("/api/method/gauth_erpgulf"):
+    except Exception as e:
+        error_message = str(e)
+        frappe.response["message"] = "Failed to send firebase message"
+        frappe.response["error"] = error_message
+        frappe.response["http_status_code"] = 500
+        return frappe.response
+    
 
-                # check if the call is api
-                if restriction[0].get("api_allow") == 0:
 
-                    frappe.throw(
-                        "Access To this API from your location is not allowed for security reasons. "
-                        f"IP: {source_ip_address}",
-                        frappe.PermissionError,
-                    )
-                    return
-            else:  # as its not api , this can be either system-user or web-user
-                user_type = frappe.get_all(
-                    "User", fields=["user_type"], filters={"name": frappe.session.user}
-                )
-                if user_type[0].get("user_type") == "System User":
-                    if restriction[0].get("desk_user_allow") == 0:
-                        # return"system user"
-                        frappe.msgprint(
-                            "Access to this system-user from your location is not allowed for security reasons, please contact system administrator. "
-                            + frappe.local.request.headers.get("X-Forwarded-For")
-                        )
-                        frappe.local.response["http_status_code"] = 403
-                        # return "system user"
-                if user_type[0].get("user_type") == "Website User":
-                    if restriction[0].get("desk_web_user_allow") == 0:
-                        # return "website user"
-                        frappe.msgprint(
-                            "Access to this web-user from your location is not allowed for security reasons, please contact system administrator. "
-                            + frappe.local.request.headers.get("X-Forwarded-For")
-                        )
-                        frappe.local.response["http_status_code"] = 403
-                        # return "website user"
+@frappe.whitelist(allow_guest=True)
+def make_payment_entry(amount, user, bid, reference):
 
-    except:
-        pass
+    if amount == 0:
+        return "Amount not correct"
+
+    journal_entry = frappe.new_doc("Journal Entry")
+    journal_entry.posting_date = frappe.utils.now()
+    journal_entry.company = frappe.db.get_single_value(
+        "Global Defaults", "default_company"
+    )
+    journal_entry.voucher_type = "Journal Entry"
+    reference = (
+        reference
+        + "  dated:  "
+        + str(now_datetime())
+        + " Bid/Other document No: "
+        + bid
+    )
+    journal_entry.remark = reference
+    debit_entry = {
+        # "account": "QIB Account - D",
+        "account": "1310 - Debtors - D",
+        "credit": amount,
+        "credit_in_account_currency": amount,
+        "account_currency": "QAR",
+        "reference_name": "",
+        "reference_type": "",
+        "reference_detail_no": "",
+        "cost_center": "",
+        "project": "",
+        "party_type": "Customer",
+        "party": user,
+        "is_advance": 0,
+        "reference_detail_no": reference,
+    }
+
+    credit_entry = {
+        "account": "QIB Account - D",
+        # "account": "1310 - Debtors - D",
+        "debit": amount,
+        "debit_in_account_currency": amount,
+        "account_currency": "QAR",
+        "reference_name": "",
+        "reference_type": "",
+        "reference_detail_no": "",
+        "cost_center": "",
+        "project": "",
+        "reference_detail_no": reference,
+        # "party_type": "Customer",
+        # "party": "mumtaz@erpgulf.com422"
+    }
+
+    # for dimension in get_accounting_dimensions():
+    # 	debit_entry.update({dimension: item.get(dimension)})
+
+    # 	credit_entry.update({dimension: item.get(dimension)})
+
+    journal_entry.append("accounts", debit_entry)
+    journal_entry.append("accounts", credit_entry)
+
+    try:
+        # a=10
+        journal_entry.save(ignore_permissions=True)
+        journal_entry.submit()
+        # if submit:
+        # journal_entry.submit()
+
+        # frappe.db.commit()
+        return Response(
+            json.dumps({"data": "JV Successfully created ", "message": ""}),
+            status=200,
+            mimetype="application/json",
+        )
+    except Exception as e:
+        frappe.db.rollback()
+        frappe.log_error(
+            title="Payment Entry failed to JV", message=frappe.get_traceback()
+        )
+        frappe.flags.deferred_accounting_error = True
+        return str(e)
+        # return  Response(json.dumps({"data": "There was an error in creating JV", "message": "Use token with higher privilage to enter JV" }), status=401, mimetype='application/json')
+
+
+
+
+@frappe.whitelist(allow_guest=True)
+def upload_file():
+    user = None
+    if frappe.session.user == "Guest":
+        if frappe.get_system_settings("allow_guests_to_upload_files"):
+            ignore_permissions = True
+        else:
+            raise frappe.PermissionError
+    else:
+        user: "User" = frappe.get_doc("User", frappe.session.user)
+        ignore_permissions = False
+
+    files = frappe.request.files
+    file_names = []
+    urls = []
+    # filecount = 0
+    # for key, file in files.items():
+    #     filecount = filecount + 1
+    #     file_names.append(key)
+
+    # return file_names
+
+    is_private = frappe.form_dict.is_private
+    doctype = frappe.form_dict.doctype
+    docname = frappe.form_dict.docname
+    fieldname = frappe.form_dict.fieldname
+    file_url = frappe.form_dict.file_url
+    folder = frappe.form_dict.folder or "Home"
+    method = frappe.form_dict.method
+    filename = frappe.form_dict.file_name
+    optimize = frappe.form_dict.optimize
+    content = None
+    filenumber = 0
+    for key, file in files.items():
+        filenumber = filenumber + 1
+        file_names.append(key)
+        file = files[key]
+        content = file.stream.read()
+        filename = file.filename
+
+        content_type = guess_type(filename)[0]
+        if optimize and content_type and content_type.startswith("image/"):
+            args = {"content": content, "content_type": content_type}
+            if frappe.form_dict.max_width:
+                args["max_width"] = int(frappe.form_dict.max_width)
+            if frappe.form_dict.max_height:
+                args["max_height"] = int(frappe.form_dict.max_height)
+            content = optimize_image(**args)
+
+        frappe.local.uploaded_file = content
+        frappe.local.uploaded_filename = filename
+
+        if content is not None and (
+            frappe.session.user == "Guest" or (user and not user.has_desk_access())
+        ):
+            filetype = guess_type(filename)[0]
+            # if filetype not in ALLOWED_MIMETYPES:
+            #     frappe.throw(_("You can only upload JPG, PNG, PDF, TXT or Microsoft documents."))
+
+        if method:
+            method = frappe.get_attr(method)
+            is_whitelisted(method)
+            return method()
+        else:
+            # return frappe.get_doc(
+            doc = frappe.get_doc(
+                {
+                    "doctype": "File",
+                    "attached_to_doctype": doctype,
+                    "attached_to_name": docname,
+                    "attached_to_field": fieldname,
+                    "folder": folder,
+                    "file_name": filename,
+                    "file_url": file_url,
+                    "is_private": cint(is_private),
+                    "content": content,
+                }
+            ).save(ignore_permissions=ignore_permissions)
+            urls.append(doc.file_url)
+
+            if fieldname is not None:
+                attach_field = frappe.get_doc(
+                    doctype, docname
+                )  # .save(ignore_permissions = True)
+                setattr(attach_field, fieldname, doc.file_url)
+                attach_field.save(ignore_permissions=True)
+
+    return urls
+
+def get_number_of_files(file_storage):
+    # Implement your logic to count the number of files
+    # Adjust this based on the actual structure of the FileStorage object
+    # For example, if FileStorage has a method to get the number of files, use that
+
+    # Example: Assuming a method called get_num_files() on FileStorage
+    if hasattr(file_storage, "get_num_files") and callable(file_storage.get_num_files):
+        return file_storage.get_num_files()
+    else:
+        return 0 
+
+
+
+@frappe.whitelist(allow_guest=False)  
+def _get_customer_details(user_email=None, mobile_phone=None):
+    if mobile_phone is not None:
+        customer_details = frappe.get_list(
+            "Customer",
+            filters={"mobile_no": mobile_phone},
+            fields=[
+                "name as email",
+                "enabled",
+                "customer_name as full_name",
+                "mobile_no as mobile_number",
+            ],
+        )
+    elif user_email is not None:
+        customer_details = frappe.get_list(
+            "Customer",
+            filters={"name": user_email},
+            fields=[
+                "name as email",
+                "enabled",
+                "customer_name as full_name",
+                "mobile_no as mobile_number",
+            ],
+        )
+    else:
+        return Response(
+            json.dumps({"message": "Customer not found", "user_count": 0}),
+            status=404,
+            mimetype="application/json",
+        )
+
+    if len(customer_details) >= 1:
+        return (
+            customer_details[0]["email"],
+            customer_details[0]["full_name"],
+            customer_details[0]["mobile_number"],
+        )
+    else:
+        return Response(
+            json.dumps({"message": "Customer not found", "user_count": 0}),
+            status=404,
+            mimetype="application/json",
+        )
+    
