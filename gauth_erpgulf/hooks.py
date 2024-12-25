@@ -196,6 +196,7 @@ app_license = "mit"
 
 # Request Events
 # ----------------
+# before_request = "gauth_erpgulf.gauth_erpgulf.backend_server.check_country_restriction_test"
 # before_request = ["gauth_erpgulf.utils.before_request"]
 # after_request = ["gauth_erpgulf.utils.after_request"]
 
