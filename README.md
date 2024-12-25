@@ -1,7 +1,7 @@
 ## gauth_erpgulf
 
 Authentication and API for Frappe ERPNext framework from ERPGulf
-Gauth ERPGulf A`
+Gauth ERPGulf A#`
 #### License
 
 mit
