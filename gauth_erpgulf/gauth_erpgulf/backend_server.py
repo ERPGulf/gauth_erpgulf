@@ -1293,7 +1293,7 @@ def send_firebase_notification(title, body, client_token="", topic=""):
             # If not, then initialize it
             cred = credentials.Certificate("firebase.json")
             firebase_admin.initialize_app(cred)
-        message = ""
+        message =""
         if client_token != "":
             message = messaging.Message(
                 notification=messaging.Notification(
