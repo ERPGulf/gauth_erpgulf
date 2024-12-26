@@ -21,6 +21,10 @@ import ssl
 import re
 import geoip2.database
 import frappe
+from frappe.utils import cint
+from mimetypes import guess_type
+from frappe.utils.image import optimize_image
+from frappe import _, is_whitelisted, ping
 from erpnext.accounts.utils import get_balance_on, get_fiscal_year
 from frappe.utils.response import Response
 import google.auth.transport.requests
@@ -326,8 +330,6 @@ def generate_token_encrypt(encrypted_key):
                 mimetype="application/json",
             )
 
-        client_id = client_id
-        client_secret = client_secret
         url = frappe.local.conf.host_name + OAUTH_TOKEN_URL
         payload = {
             "username": api_key,
@@ -452,13 +454,13 @@ def generate_token_encrypt_for_user(encrypted_key):
                 mimetype="application/json",
             )
 
-        client_id, client_secret, _ = frappe.db.get_value(
+        client_id_value, client_secret_value, _ = frappe.db.get_value(
             OAUTH_CLIENT,
             {"app_name": app_key},
             ["client_id", "client_secret", "user"],
         )
 
-        if client_id is None:
+        if client_id_value is None:
 
             return Response(
                 json.dumps(
@@ -468,8 +470,8 @@ def generate_token_encrypt_for_user(encrypted_key):
                 mimetype="application/json",
             )
 
-        client_id = client_id
-        client_secret = client_secret
+        client_id = client_id_value
+        client_secret = client_secret_value
         url = frappe.local.conf.host_name + OAUTH_TOKEN_URL
         payload = {
             "username": api_key,
@@ -898,7 +900,7 @@ def validate_email(email_to_validate):
     except requests.exceptions.RequestException as e:
         pass
 
-    if blocked == True:
+    if blocked is True:
         return Response(
             json.dumps(
                 {
@@ -909,8 +911,6 @@ def validate_email(email_to_validate):
             status=200,
             mimetype="application/json",
         )
-    else:
-        pass
 
     domain_js_path = os.path.join(
         os.path.dirname(__file__), "..", "public", "domain.js"
