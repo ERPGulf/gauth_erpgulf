@@ -1044,7 +1044,7 @@ def send_firebase_data(
         "Content-Type": APPLICATION_JSON,
     }
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    requests.request("POST", url, headers=headers, data=payload)
     return json_response({"data": "Message sent"})
 
 
@@ -1123,7 +1123,6 @@ def handle_api_restrictions(restriction, ip_address):
             f"Access to this API from your location is not allowed for security reasons. IP: {ip_address}",
             frappe.PermissionError,
         )
-        return
 
 
 def deny_access(user_type):
@@ -1143,7 +1142,6 @@ def handle_non_api_restrictions(restriction):
 
     if user_type == "Website User" and restriction[0].get("desk_web_user_allow") == 0:
         deny_access("web user")
-        return
 
 
 @frappe.whitelist(allow_guest=False)
@@ -1206,7 +1204,6 @@ def send_sms_vodafone(phone_number, message_text):
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
         response = requests.request("GET", url + payload, headers=headers, data="")
-        # return url + payload
         if response.status_code in (200, 201):
             return True
         else:
@@ -1405,7 +1402,6 @@ def make_payment_entry(amount, user, bid, reference):
         "account_currency": "QAR",
         "reference_name": "",
         "reference_type": "",
-        "reference_detail_no": "",
         "cost_center": "",
         "project": "",
         "reference_detail_no": reference,
@@ -1454,7 +1450,6 @@ def upload_file():
     file_url = frappe.form_dict.file_url
     folder = frappe.form_dict.folder or "Home"
     method = frappe.form_dict.method
-    filename = frappe.form_dict.file_name
     optimize = frappe.form_dict.optimize
     content = None
     filenumber = 0
