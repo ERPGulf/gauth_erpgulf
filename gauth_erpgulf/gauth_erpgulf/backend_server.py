@@ -629,7 +629,7 @@ def g_generate_reset_password_key(
                 mimetype=APPLICATION_JSON,
             )
 
-        key = str(secrets.randbelow(900000) + 100000) 
+        key = str(secrets.randbelow(900000) + 100000)
         doc2 = frappe.get_doc("User", user)
         doc2.reset_password_key = sha256_hash(key)
         doc2.last_reset_password_key_generated_on = now_datetime()
@@ -1443,10 +1443,7 @@ def make_payment_entry(amount, user, bid, reference):
     try:
         journal_entry.save(ignore_permissions=True)
         journal_entry.submit()
-        # if submit:
-        # journal_entry.submit()
 
-        # frappe.db.commit()
         return Response(
             json.dumps({"data": "JV Successfully created ", "message": ""}),
             status=200,
