@@ -52,11 +52,16 @@ USER_NOT_FOUND_MESSAGE = "User not found"
 NAME_AS_EMAIL = "name as email"
 
 
+def xor_encrypt_decrypt(text, key):
+    """Encrypt or decrypt text using XOR operation."""
+    return "".join(
+        chr(ord(c) ^ ord(k)) for c, k in zip(text, key * (len(text) // len(key) + 1))
+    )
+
+
 def json_response(data, status=200):
     """Return a standardized JSON response."""
-    return Response(
-        json.dumps(data), status=status, mimetype="application/json"
-    )
+    return Response(json.dumps(data), status=status, mimetype="application/json")
 
 
 def generate_totp():
@@ -189,7 +194,6 @@ def generate_token_secure(api_key, api_secret, app_key):
 def generate_token_secure_for_users(username, password, app_key):
     """
     Generate a secure token for user authentication.
-
     Args:
         username (str): The username of the user.
         password (str): The password of the user.
@@ -198,7 +202,6 @@ def generate_token_secure_for_users(username, password, app_key):
     Returns:
         str: A securely generated token for the user.
     """
-
     frappe.log_error(
         title="Login attempt",
         message=str(username) + "    " + str(password) + "    " + str(app_key + "  "),
@@ -213,7 +216,6 @@ def generate_token_secure_for_users(username, password, app_key):
                 mimetype="application/json",
             )
         client_id_value, client_secret_value = get_oauth_client(app_key)
-
         if client_id_value is None:
             return Response(
                 json.dumps(
@@ -222,7 +224,6 @@ def generate_token_secure_for_users(username, password, app_key):
                 status=401,
                 mimetype="application/json",
             )
-
         client_id = client_id_value  # Replace with your OAuth client ID
         client_secret = client_secret_value  # Replace with your OAuth client secret
         url = frappe.local.conf.host_name + OAUTH_TOKEN_URL
@@ -245,7 +246,6 @@ def generate_token_secure_for_users(username, password, app_key):
             filters={"email": ["like", username]},
         )
         if response.status_code == 200:
-
             result_data = response.json()
             result_data["refresh_token"] = "XXXXXXX"
             result = {
@@ -256,12 +256,9 @@ def generate_token_secure_for_users(username, password, app_key):
                 json.dumps({"data": result}), status=200, mimetype="application/json"
             )
         else:
-
             frappe.local.response.http_status_code = 401
             return json.loads(response.text)
-
     except Exception as e:
-
         return Response(
             json.dumps({"message": e, "user_count": 0}),
             status=500,
@@ -274,13 +271,12 @@ def generate_token_secure_for_users(username, password, app_key):
 def whoami():
     """This function returns the current session user"""
     try:
-
         response_content = {
             "data": {
                 "user": frappe.session.user,
             }
         }
-        return json_response(response_content,status=200)
+        return json_response(response_content, status=200)
     except Exception as e:
         frappe.throw(e)
 
@@ -291,32 +287,22 @@ def decrypt_2fa_key(encrypted_key):
     """This function used for decrypting the 2FA encrypted Key"""
     current_totp = generate_totp()
     encrypted = base64.b64decode(encrypted_key).decode()
-    return current_totp, "".join(
-        chr(ord(c) ^ ord(k))
-        for c, k in zip(
-            encrypted, current_totp * (len(encrypted) // len(current_totp) + 1)
-        )
-    )
+    return current_totp, xor_encrypt_decrypt(encrypted, current_totp)
 
 
-# Api for encripted master token
 @frappe.whitelist(allow_guest=False)
 def generate_token_encrypt(encrypted_key):
     """This function creates the master token using the encrypted key"""
     try:
         try:
-
             _, decrypted_key = decrypt_2fa_key(encrypted_key)
-
             api_key, api_secret, app_key = decrypted_key.split("::")
-
         except ValueError:
             return Response(
                 json.dumps({"message": "2FA token expired", "user_count": 0}),
                 status=401,
                 mimetype="application/json",
             )
-
         try:
             app_key = base64.b64decode(app_key).decode("utf-8")
         except Exception as e:
@@ -327,13 +313,7 @@ def generate_token_encrypt(encrypted_key):
                 status=401,
                 mimetype="application/json",
             )
-
-        client_id, client_secret, _ = frappe.db.get_value(
-            OAUTH_CLIENT,
-            {"app_name": app_key},
-            ["client_id", "client_secret", "user"],
-        )
-
+        client_id, client_secret = get_oauth_client(app_key)
         if client_id is None:
             return Response(
                 json.dumps(
@@ -342,7 +322,6 @@ def generate_token_encrypt(encrypted_key):
                 status=401,
                 mimetype="application/json",
             )
-
         url = frappe.local.conf.host_name + OAUTH_TOKEN_URL
         payload = {
             "username": api_key,
@@ -355,19 +334,16 @@ def generate_token_encrypt(encrypted_key):
         headers = {"Content-Type": "application/json"}
         response = requests.request("POST", url, data=payload, files=files)
         if response.status_code == 200:
-            result_data = json.loads(response.text)
+            result_data = json_response(response)
             return Response(
                 json.dumps({"data": result_data}),
                 status=200,
                 mimetype="application/json",
             )
-
         else:
             frappe.local.response.http_status_code = 401
             return json.loads(response.text)
-
     except Exception as e:
-
         return Response(
             json.dumps({"message": e, "user_count": 0}),
             status=500,
@@ -409,13 +385,7 @@ def test_generate_2fa():
 @frappe.whitelist(allow_guest=True)
 def test_generate_token_encrypt(text_for_encryption):
     current_totp = generate_totp()
-    result = "".join(
-        chr(ord(c) ^ ord(k))
-        for c, k in zip(
-            text_for_encryption,
-            current_totp * (len(text_for_encryption) // len(current_totp) + 1),
-        )
-    )
+    result = xor_encrypt_decrypt(text_for_encryption, current_totp)
     return base64.b64encode(result.encode()).decode()
 
 
@@ -423,13 +393,7 @@ def test_generate_token_encrypt(text_for_encryption):
 @frappe.whitelist(allow_guest=False)
 def test_generate_token_encrypt_for_user(text_for_encryption):
     current_totp = generate_totp()
-    result = "".join(
-        chr(ord(c) ^ ord(k))
-        for c, k in zip(
-            text_for_encryption,
-            current_totp * (len(text_for_encryption) // len(current_totp) + 1),
-        )
-    )
+    result = xor_encrypt_decrypt(text_for_encryption, current_totp)
     return base64.b64encode(result.encode()).decode()
 
 
@@ -461,11 +425,7 @@ def generate_token_encrypt_for_user(encrypted_key):
                 mimetype="application/json",
             )
 
-        client_id_value, client_secret_value, _ = frappe.db.get_value(
-            OAUTH_CLIENT,
-            {"app_name": app_key},
-            ["client_id", "client_secret", "user"],
-        )
+        client_id_value, client_secret_value, _ = get_oauth_client(app_key)
 
         if client_id_value is None:
 
@@ -715,40 +675,27 @@ def g_generate_reset_password_key(
 # to send email to validate otp
 @frappe.whitelist(allow_guest=False)
 def send_email_oci(recipient, subject, body_html):
-
     sender = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sender")
     sender_name = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sender_name")
-
     user_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "user_smtp")
     password_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "password_smtp")
-
     host = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "host")
     port = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "port")
-
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = formataddr((sender_name, sender))
     msg["To"] = recipient
-
     msg.set_content(body_html, subtype="html")
     try:
-
         server = smtplib.SMTP(host, port)
         server.ehlo()
-
         context = ssl.create_default_context()
         server.starttls(context=context)
-
         server.ehlo()
-
         server.login(user_smtp, password_smtp)
-
         server.sendmail(sender, recipient, msg.as_string())
-
         server.close()
-
         return "Email successfully sent!"
-
     except Exception as e:
         return f"Error: {e}"
 
@@ -821,10 +768,7 @@ def g_update_password(username, password):
             "user_details": qid[0] if qid else {},
         }
         # frappe.db.commit()
-        return Response(
-            json.dumps({"data": result}), status=200, mimetype="application/json"
-        )
-
+        return json_response(result)
     except Exception as e:
         return Response(
             json.dumps({"message": e, "user_count": 0}),
@@ -857,12 +801,7 @@ def g_delete_user(email, mobile_no):
             "Customer",
             {"name": email, "customer_name": email, "mobile_no": mobile_no},
         )
-        return Response(
-            json.dumps({"message": "User successfully deleted", "user_count": 1}),
-            status=200,
-            mimetype="application/json",
-        )
-
+        return json_response({"message": "User successfully deleted", "user_count": 1})
     except Exception as e:
         return Response(
             json.dumps({"message": e, "user_count": 0}),
@@ -930,21 +869,15 @@ def validate_email(email_to_validate):
         domains_list = json.loads(domain_js_content)
 
         if domain_name in domains_list:
-            return Response(
-                json.dumps(
-                    {
-                        "blocked": True,
-                        "reason": "Public email not accepted. Please provide your company email",
-                    }
-                ),
-                status=200,
-                mimetype="application/json",
+            return json_response(
+                {
+                    "blocked": True,
+                    "reason": "Public email not accepted. Please provide your company email",
+                }
             )
         else:
 
-            return Response(
-                json.dumps({"blocked": False}), status=200, mimetype="application/json"
-            )
+            return json_response({"blocked": False})
 
     except Exception as e:
         return Response(
@@ -971,15 +904,11 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
             )
 
         frappe.db.set_value("User", username, "enabled", enable_user)
-        return Response(
-            json.dumps(
-                {
-                    "message": f"User successfully {'enabled' if enable_user else 'disabled'} ",
-                    "user_count": 1,
-                }
-            ),
-            status=200,
-            mimetype="application/json",
+        return json_response(
+            {
+                "message": f"User successfully {'enabled' if enable_user else 'disabled'} ",
+                "user_count": 1,
+            }
         )
 
     except Exception as e:
@@ -1126,9 +1055,7 @@ def send_firebase_data(
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    return Response(
-        json.dumps({"data": "Message sent"}), status=200, mimetype="application/json"
-    )
+    return json_response({"data": "Message sent"})
 
 
 # to get access token for request to firebase
@@ -1433,10 +1360,8 @@ def firebase_subscribe_to_topic(topic, fcm_token):
                     mimetype="application/json",
                 )
             else:
-                return Response(
-                    json.dumps({"data": "Successfully subscribed to Firebase topic"}),
-                    status=200,
-                    mimetype="application/json",
+                return json_response(
+                    {"data": "Successfully subscribed to Firebase topic"}
                 )
         except Exception as e:
             return Response(
