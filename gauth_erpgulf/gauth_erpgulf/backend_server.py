@@ -937,6 +937,7 @@ def g_delete_user(email, mobile_no):
 
 
 
+
 @frappe.whitelist(allow_guest=False)
 def validate_email(email_to_validate):
 
