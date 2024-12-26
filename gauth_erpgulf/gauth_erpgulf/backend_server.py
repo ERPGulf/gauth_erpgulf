@@ -82,7 +82,7 @@ def get_oauth_client(app_key):
         ["client_id", "client_secret", "user"],
     )
     if not client_id:
-        raise frappe.ValidationError(_("Security Parameters are not valid"))
+        raise frappe.ValidationError(_(INVALID_SECURITY_PARAMETERS))
     return client_id, client_secret
 
 
@@ -107,7 +107,7 @@ def generate_token_secure(api_key, api_secret, app_key):
             return Response(
                 json.dumps(
                     {
-                        "message": "Security Parameters are not valid",
+                        "message": INVALID_SECURITY_PARAMETERS,
                         "error": str(decode_error),
                         "user_count": 0,
                     }
@@ -128,7 +128,7 @@ def generate_token_secure(api_key, api_secret, app_key):
             # return app_key
             return Response(
                 json.dumps(
-                    {"message": "Security Parameters are not valid", "user_count": 0}
+                    {"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}
                 ),
                 status=401,
                 mimetype=APPLICATION_JSON,
@@ -222,7 +222,7 @@ def generate_token_secure_for_users(username, password, app_key):
         if client_id_value is None:
             return Response(
                 json.dumps(
-                    {"message": "Security Parameters are not valid", "user_count": 0}
+                    {"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}
                 ),
                 status=401,
                 mimetype=APPLICATION_JSON,
@@ -311,7 +311,7 @@ def generate_token_encrypt(encrypted_key):
         except Exception as e:
             return Response(
                 json.dumps(
-                    {"message": "Security Parameters are not valid", "user_count": 0}
+                    {"message":INVALID_SECURITY_PARAMETERS, "user_count": 0}
                 ),
                 status=401,
                 mimetype=APPLICATION_JSON,
@@ -320,7 +320,7 @@ def generate_token_encrypt(encrypted_key):
         if client_id is None:
             return Response(
                 json.dumps(
-                    {"message": "Security Parameters are not valid", "user_count": 0}
+                    {"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}
                 ),
                 status=401,
                 mimetype=APPLICATION_JSON,
@@ -422,7 +422,7 @@ def generate_token_encrypt_for_user(encrypted_key):
         except Exception as e:
             return Response(
                 json.dumps(
-                    {"message": "Security Parameters are not valid", "user_count": 0}
+                    {"message":INVALID_SECURITY_PARAMETERS, "user_count": 0}
                 ),
                 status=401,
                 mimetype=APPLICATION_JSON,
@@ -434,7 +434,7 @@ def generate_token_encrypt_for_user(encrypted_key):
 
             return Response(
                 json.dumps(
-                    {"message": "Security Parameters are not valid", "user_count": 0}
+                    {"message":INVALID_SECURITY_PARAMETERS, "user_count": 0}
                 ),
                 status=401,
                 mimetype=APPLICATION_JSON,
