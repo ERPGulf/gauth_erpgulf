@@ -14,6 +14,7 @@ import random
 import base64
 import json
 import os
+import secrets
 from email.utils import formataddr
 from email.message import EmailMessage
 import smtplib
@@ -50,6 +51,8 @@ FULL_NAME_ALIAS = "full_name as full_name"
 BACKEND_SERVER_SETTINGS = "Backend Server Settings"
 USER_NOT_FOUND_MESSAGE = "User not found"
 NAME_AS_EMAIL = "name as email"
+INVALID_SECURITY_PARAMETERS = "Security Parameters are not valid"
+APPLICATION_JSON = "application/json"
 
 
 def xor_encrypt_decrypt(text, key):
@@ -61,7 +64,7 @@ def xor_encrypt_decrypt(text, key):
 
 def json_response(data, status=200):
     """Return a standardized JSON response."""
-    return Response(json.dumps(data), status=status, mimetype="application/json")
+    return Response(json.dumps(data), status=status, mimetype=APPLICATION_JSON)
 
 
 def generate_totp():
@@ -110,7 +113,7 @@ def generate_token_secure(api_key, api_secret, app_key):
                     }
                 ),
                 status=401,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
         try:
             client_id_value, client_secret_value = get_oauth_client(app_key)
@@ -118,7 +121,7 @@ def generate_token_secure(api_key, api_secret, app_key):
             return Response(
                 json.dumps({"message": "An unexpected error occured", "error": str(e)}),
                 status=500,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
         if client_id_value is None:
@@ -128,7 +131,7 @@ def generate_token_secure(api_key, api_secret, app_key):
                     {"message": "Security Parameters are not valid", "user_count": 0}
                 ),
                 status=401,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
         client_id = client_id_value  # Replace with your OAuth client ID
@@ -155,7 +158,7 @@ def generate_token_secure(api_key, api_secret, app_key):
                     }
                 ),
                 status=500,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
         if response.status_code == 200:
@@ -168,13 +171,13 @@ def generate_token_secure(api_key, api_secret, app_key):
                         {"message": "Invalid JSON response", "error": str(json_error)}
                     ),
                     status=500,
-                    mimetype="application/json",
+                    mimetype=APPLICATION_JSON,
                 )
 
             return Response(
                 json.dumps({"data": result_data}),
                 status=200,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
         else:
@@ -185,7 +188,7 @@ def generate_token_secure(api_key, api_secret, app_key):
         return Response(
             json.dumps({"message": e, "user_count": 0}),
             status=500,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -213,7 +216,7 @@ def generate_token_secure_for_users(username, password, app_key):
             return Response(
                 json.dumps({"message": e, "user_count": 0}),
                 status=401,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
         client_id_value, client_secret_value = get_oauth_client(app_key)
         if client_id_value is None:
@@ -222,7 +225,7 @@ def generate_token_secure_for_users(username, password, app_key):
                     {"message": "Security Parameters are not valid", "user_count": 0}
                 ),
                 status=401,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
         client_id = client_id_value  # Replace with your OAuth client ID
         client_secret = client_secret_value  # Replace with your OAuth client secret
@@ -253,7 +256,7 @@ def generate_token_secure_for_users(username, password, app_key):
                 "user": qid[0] if qid else {},
             }
             return Response(
-                json.dumps({"data": result}), status=200, mimetype="application/json"
+                json.dumps({"data": result}), status=200, mimetype=APPLICATION_JSON
             )
         else:
             frappe.local.response.http_status_code = 401
@@ -262,7 +265,7 @@ def generate_token_secure_for_users(username, password, app_key):
         return Response(
             json.dumps({"message": e, "user_count": 0}),
             status=500,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -301,7 +304,7 @@ def generate_token_encrypt(encrypted_key):
             return Response(
                 json.dumps({"message": "2FA token expired", "user_count": 0}),
                 status=401,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
         try:
             app_key = base64.b64decode(app_key).decode("utf-8")
@@ -311,7 +314,7 @@ def generate_token_encrypt(encrypted_key):
                     {"message": "Security Parameters are not valid", "user_count": 0}
                 ),
                 status=401,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
         client_id, client_secret = get_oauth_client(app_key)
         if client_id is None:
@@ -320,7 +323,7 @@ def generate_token_encrypt(encrypted_key):
                     {"message": "Security Parameters are not valid", "user_count": 0}
                 ),
                 status=401,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
         url = frappe.local.conf.host_name + OAUTH_TOKEN_URL
         payload = {
@@ -331,14 +334,14 @@ def generate_token_encrypt(encrypted_key):
             "client_secret": client_secret,
         }
         files = []
-        headers = {"Content-Type": "application/json"}
+        headers = {"Content-Type": APPLICATION_JSON}
         response = requests.request("POST", url, data=payload, files=files)
         if response.status_code == 200:
             result_data = json_response(response)
             return Response(
                 json.dumps({"data": result_data}),
                 status=200,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
         else:
             frappe.local.response.http_status_code = 401
@@ -347,7 +350,7 @@ def generate_token_encrypt(encrypted_key):
         return Response(
             json.dumps({"message": e, "user_count": 0}),
             status=500,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -411,7 +414,7 @@ def generate_token_encrypt_for_user(encrypted_key):
             return Response(
                 json.dumps({"message": "2FA token expired", "user_count": 0}),
                 status=401,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
         try:
@@ -422,7 +425,7 @@ def generate_token_encrypt_for_user(encrypted_key):
                     {"message": "Security Parameters are not valid", "user_count": 0}
                 ),
                 status=401,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
         client_id_value, client_secret_value, _ = get_oauth_client(app_key)
@@ -434,7 +437,7 @@ def generate_token_encrypt_for_user(encrypted_key):
                     {"message": "Security Parameters are not valid", "user_count": 0}
                 ),
                 status=401,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
         client_id = client_id_value
@@ -448,7 +451,7 @@ def generate_token_encrypt_for_user(encrypted_key):
             "client_secret": client_secret,
         }
         files = []
-        headers = {"Content-Type": "application/json"}
+        headers = {"Content-Type": APPLICATION_JSON}
         response = requests.request("POST", url, data=payload, files=files)
         qid = frappe.get_list(
             "User",
@@ -469,7 +472,7 @@ def generate_token_encrypt_for_user(encrypted_key):
             return Response(
                 json.dumps({"data": result}),
                 status=200,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
         else:
@@ -480,7 +483,7 @@ def generate_token_encrypt_for_user(encrypted_key):
         return Response(
             json.dumps({"message": e, "user_count": 0}),
             status=500,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -498,21 +501,21 @@ def get_user_name(user_email=None, mobile_phone=None):
         return Response(
             json.dumps({"data": USER_NOT_FOUND_MESSAGE, "user_count": 0}),
             status=404,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
     if len(user_details) >= 1:
         return Response(
             json.dumps({"data": user_details, "user_count": 0}),
             status=200,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
     else:
         return Response(
             json.dumps({"data": USER_NOT_FOUND_MESSAGE, "user_count": 0}),
             status=404,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -545,7 +548,7 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
         return Response(
             json.dumps({"message": "User already exists", "user_count": 1}),
             status=409,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
     try:
@@ -582,7 +585,7 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
         return Response(
             json.dumps({"message": str(ve), "user_count": 0}),
             status=400,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
     except Exception as e:
@@ -591,13 +594,13 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
         if "common password" in error_message:
             formatted_message = {"message": {"password": error_message}}
             return Response(
-                json.dumps(formatted_message), status=400, mimetype="application/json"
+                json.dumps(formatted_message), status=400, mimetype=APPLICATION_JSON
             )
 
         return Response(
             json.dumps({"message": error_message, "user_count": 0}),
             status=500,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -614,7 +617,7 @@ def g_generate_reset_password_key(
         return Response(
             json.dumps({"message": "Mobile or Email  not found", "user_count": 0}),
             status=404,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
     try:
         if len(frappe.get_all("User", filters={"name": user, "mobile_no": mobile})) < 1:
@@ -623,36 +626,31 @@ def g_generate_reset_password_key(
                     {"message": "Email or Mobile number not found", "user_count": 0}
                 ),
                 status=404,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
-        key = str(random.randint(100000, 999999))
+        key = str(secrets.randbelow(900000) + 100000) 
         doc2 = frappe.get_doc("User", user)
         doc2.reset_password_key = sha256_hash(key)
         doc2.last_reset_password_key_generated_on = now_datetime()
         doc2.save(ignore_permissions=True)
-
         url = "/update-password?key=" + key
         msg = frappe.get_doc("Email Template", "gauth erpgulf")
         message = msg.response_html
         message = message.replace("xxxxxx", key)
-
         name = frappe.get_all(
             "User",
             fields=["full_name"],
             filters={"name": user, "mobile_no": mobile},
         )
         full_name = name[0].get("full_name")
-
         updated_html_content = message.replace("John Deo", full_name)
         subject = "OTP"
-
         if password_expired:
             url = "/update-password?key=" + key + "&password_expired=true"
         link = get_url(url)
         if send_email:
             send_email_oci(user, subject, updated_html_content)
-
         return Response(
             json.dumps(
                 {
@@ -662,13 +660,13 @@ def g_generate_reset_password_key(
                 }
             ),
             status=200,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
     except Exception as e:
         return Response(
             json.dumps({"message": e, "user_count": 0}),
             status=500,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -730,14 +728,14 @@ def is_user_available(user_email=None, mobile_phone=None):
             response = {"message": "Mobile and Email does not exist", "user_count": 0}
             status_code = 404
         return Response(
-            json.dumps(response), status=status_code, mimetype="application/json"
+            json.dumps(response), status=status_code, mimetype=APPLICATION_JSON
         )
 
     except Exception as e:
         return Response(
             json.dumps({"message": e, "user_count": 0}),
             status=500,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -749,7 +747,7 @@ def g_update_password(username, password):
             return Response(
                 json.dumps({"message": USER_NOT_FOUND_MESSAGE}),
                 status=404,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
         # frappe api to update password
         _update_password(username, password)
@@ -773,7 +771,7 @@ def g_update_password(username, password):
         return Response(
             json.dumps({"message": e, "user_count": 0}),
             status=500,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -791,7 +789,7 @@ def g_delete_user(email, mobile_no):
             return Response(
                 json.dumps({"message": USER_NOT_FOUND_MESSAGE, "user_count": 0}),
                 status=404,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
         frappe.db.delete(
@@ -806,7 +804,7 @@ def g_delete_user(email, mobile_no):
         return Response(
             json.dumps({"message": e, "user_count": 0}),
             status=500,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -825,7 +823,7 @@ def validate_email(email_to_validate):
         return Response(
             json.dumps({"blocked": True, "reason": "Email format not correct"}),
             status=200,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
     get_domain_name = lambda email_to_validate: (
@@ -855,7 +853,7 @@ def validate_email(email_to_validate):
                 }
             ),
             status=200,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
     domain_js_path = os.path.join(
@@ -881,7 +879,7 @@ def validate_email(email_to_validate):
 
     except Exception as e:
         return Response(
-            json.dumps({"blocked": False}), status=400, mimetype="application/json"
+            json.dumps({"blocked": False}), status=400, mimetype=APPLICATION_JSON
         )
 
 
@@ -900,7 +898,7 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
             return Response(
                 json.dumps({"message": USER_NOT_FOUND_MESSAGE, "user_count": 0}),
                 status=404,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
         frappe.db.set_value("User", username, "enabled", enable_user)
@@ -915,7 +913,7 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
         return Response(
             json.dumps({"message": e, "user_count": 0}),
             status=500,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -927,7 +925,7 @@ def g_update_password_using_usertoken(password):
             return Response(
                 json.dumps({"message": USER_NOT_FOUND_MESSAGE, "user_count": 0}),
                 status=404,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
         _update_password(username, password, logout_all_sessions=True)
@@ -946,14 +944,14 @@ def g_update_password_using_usertoken(password):
             "user_details": qid[0] if qid else {},
         }
         return Response(
-            json.dumps({"data": result}), status=200, mimetype="application/json"
+            json.dumps({"data": result}), status=200, mimetype=APPLICATION_JSON
         )
 
     except Exception as e:
         return Response(
             json.dumps({"message": e, "user_count": 0}),
             status=500,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -965,7 +963,7 @@ def g_update_password_using_reset_key(new_password, reset_key, username):
             return Response(
                 json.dumps({"message": USER_NOT_FOUND_MESSAGE, "user_count": 0}),
                 status=404,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
         _update_password_reset_key(new_password=new_password, key=reset_key)
 
@@ -973,27 +971,27 @@ def g_update_password_using_reset_key(new_password, reset_key, username):
             return Response(
                 json.dumps({"message": "Invalid or expired key"}),
                 status=frappe.local.response.http_status_code,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
         if frappe.local.response.http_status_code == 400:
             return Response(
                 json.dumps({"message": "Invalid or expired key"}),
                 status=frappe.local.response.http_status_code,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
         frappe.local.response.http_status_code = 200
         if frappe.local.response.http_status_code == 200:
             return Response(
                 json.dumps({"message": "Password Successfully updated"}),
                 status=frappe.local.response.http_status_code,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
     except Exception as e:
         return Response(
             json.dumps({"message": str(e), "user_count": 0}),
             status=400,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -1051,7 +1049,7 @@ def send_firebase_data(
         )
     headers = {
         "Authorization": "Bearer " + _get_access_token(),
-        "Content-Type": "application/json",
+        "Content-Type": APPLICATION_JSON,
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
@@ -1260,7 +1258,7 @@ def get_account_balance(customer=None):
     balance = get_balance_on(party_type="Customer", party=response_content)
     result = {"balance": 0 - balance}
     return Response(
-        json.dumps({"data": result}), status=200, mimetype="application/json"
+        json.dumps({"data": result}), status=200, mimetype=APPLICATION_JSON
     )
 
 
@@ -1286,7 +1284,7 @@ def send_firebase_notification(title, body, client_token="", topic=""):
                 }
             ),
             status=417,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
     try:
         try:
@@ -1338,7 +1336,7 @@ def firebase_subscribe_to_topic(topic, fcm_token):
                 }
             ),
             status=417,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
     try:
@@ -1357,7 +1355,7 @@ def firebase_subscribe_to_topic(topic, fcm_token):
                 return Response(
                     json.dumps({"data": "Failed to subscribe to Firebase topic"}),
                     status=400,
-                    mimetype="application/json",
+                    mimetype=APPLICATION_JSON,
                 )
             else:
                 return json_response(
@@ -1371,7 +1369,7 @@ def firebase_subscribe_to_topic(topic, fcm_token):
                     }
                 ),
                 status=400,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
     except Exception as e:
@@ -1452,7 +1450,7 @@ def make_payment_entry(amount, user, bid, reference):
         return Response(
             json.dumps({"data": "JV Successfully created ", "message": ""}),
             status=200,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
     except Exception as e:
         frappe.db.rollback()
@@ -1594,7 +1592,7 @@ def _get_customer_details(user_email=None, mobile_phone=None):
         return Response(
             json.dumps({"message": "Customer not found", "user_count": 0}),
             status=404,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
     if len(customer_details) >= 1:
@@ -1607,5 +1605,5 @@ def _get_customer_details(user_email=None, mobile_phone=None):
         return Response(
             json.dumps({"message": "Customer not found", "user_count": 0}),
             status=404,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
