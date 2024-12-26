@@ -52,6 +52,32 @@ USER_NOT_FOUND_MESSAGE = "User not found"
 NAME_AS_EMAIL = "name as email"
 
 
+def json_response(data, status=200):
+    """Return a standardized JSON response."""
+    return Response(
+        json.dumps(data), status=status, mimetype="application/json"
+    )
+
+
+def generate_totp():
+    """Generate TOTP token using 2FA secret."""
+    secret = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "2fa_secret_key")
+    totp = pyotp.TOTP(secret, interval=60)
+    return totp.now()
+
+
+def get_oauth_client(app_key):
+    """Fetch client_id and client_secret for an OAuth client."""
+    client_id, client_secret, _ = frappe.db.get_value(
+        OAUTH_CLIENT,
+        {"app_name": app_key},
+        ["client_id", "client_secret", "user"],
+    )
+    if not client_id:
+        raise frappe.ValidationError(_("Security Parameters are not valid"))
+    return client_id, client_secret
+
+
 # api for master token
 @frappe.whitelist(allow_guest=True)
 def generate_token_secure(api_key, api_secret, app_key):
@@ -82,11 +108,7 @@ def generate_token_secure(api_key, api_secret, app_key):
                 mimetype="application/json",
             )
         try:
-            client_id_value, client_secret_value = frappe.db.get_value(
-                OAUTH_CLIENT,
-                {"app_name": app_key},
-                ["client_id", "client_secret"],
-            )
+            client_id_value, client_secret_value = get_oauth_client(app_key)
         except Exception as e:
             return Response(
                 json.dumps({"message": "An unexpected error occured", "error": str(e)}),
@@ -190,11 +212,7 @@ def generate_token_secure_for_users(username, password, app_key):
                 status=401,
                 mimetype="application/json",
             )
-        client_id_value, client_secret_value = frappe.db.get_value(
-            OAUTH_CLIENT,
-            {"app_name": app_key},
-            ["client_id", "client_secret"],
-        )
+        client_id_value, client_secret_value = get_oauth_client(app_key)
 
         if client_id_value is None:
             return Response(
@@ -262,9 +280,7 @@ def whoami():
                 "user": frappe.session.user,
             }
         }
-        return Response(
-            json.dumps(response_content), status=200, mimetype="application/json"
-        )
+        return json_response(response_content,status=200)
     except Exception as e:
         frappe.throw(e)
 
@@ -273,10 +289,7 @@ def whoami():
 @frappe.whitelist(allow_guest=False)
 def decrypt_2fa_key(encrypted_key):
     """This function used for decrypting the 2FA encrypted Key"""
-
-    secret = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "2fa_secret_key")
-    totp = pyotp.TOTP(secret, interval=60)
-    current_totp = totp.now()
+    current_totp = generate_totp()
     encrypted = base64.b64decode(encrypted_key).decode()
     return current_totp, "".join(
         chr(ord(c) ^ ord(k))
@@ -395,10 +408,7 @@ def test_generate_2fa():
 # Api for encrypt details used for token
 @frappe.whitelist(allow_guest=True)
 def test_generate_token_encrypt(text_for_encryption):
-
-    secret = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "2fa_secret_key")
-    totp = pyotp.TOTP(secret, interval=60)
-    current_totp = totp.now()
+    current_totp = generate_totp()
     result = "".join(
         chr(ord(c) ^ ord(k))
         for c, k in zip(
@@ -412,10 +422,7 @@ def test_generate_token_encrypt(text_for_encryption):
 # Api for encrypt user details
 @frappe.whitelist(allow_guest=False)
 def test_generate_token_encrypt_for_user(text_for_encryption):
-
-    secret = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "2fa_secret_key")
-    totp = pyotp.TOTP(secret, interval=60)
-    current_totp = totp.now()
+    current_totp = generate_totp()
     result = "".join(
         chr(ord(c) ^ ord(k))
         for c, k in zip(
