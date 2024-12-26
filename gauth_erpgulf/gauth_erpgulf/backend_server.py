@@ -327,7 +327,9 @@ def generate_token_encrypt(encrypted_key):
         }
         files = []
         headers = {"Content-Type": APPLICATION_JSON}
-        response = requests.request("POST", url, data=payload, files=files)
+        response = requests.request(
+            "POST", url, headers=headers, data=payload, files=files
+        )
         if response.status_code == 200:
             result_data = json_response(response)
             return Response(
@@ -445,7 +447,9 @@ def generate_token_encrypt_for_user(encrypted_key):
         }
         files = []
         headers = {"Content-Type": APPLICATION_JSON}
-        response = requests.request("POST", url, data=payload, files=files)
+        response = requests.request(
+            "POST", url, headers=headers, data=payload, files=files
+        )
         qid = frappe.get_list(
             "User",
             fields=[
@@ -1427,83 +1431,77 @@ def make_payment_entry(amount, user, bid, reference):
         return str(e)
 
 
+def optimize_image_content(content, content_type):
+    """Optimize image content if required."""
+    args = {"content": content, "content_type": content_type}
+    if frappe.form_dict.max_width:
+        args["max_width"] = int(frappe.form_dict.max_width)
+    if frappe.form_dict.max_height:
+        args["max_height"] = int(frappe.form_dict.max_height)
+    return optimize_image(**args)
+
+
+def attach_field_to_doc(doc):
+    """Attach the file to a specific field in the document."""
+    attach_field = frappe.get_doc(frappe.form_dict.doctype, frappe.form_dict.docname)
+    setattr(attach_field, frappe.form_dict.fieldname, doc.file_url)
+    attach_field.save(ignore_permissions=True)
+
+
+def process_file_upload(file, ignore_permissions):
+    """Handle the file upload process."""
+    content = file.stream.read()
+    filename = file.filename
+    content_type = guess_type(filename)[0]
+
+    if frappe.form_dict.optimize and content_type.startswith("image/"):
+        content = optimize_image_content(content, content_type)
+
+    frappe.local.uploaded_file = content
+    frappe.local.uploaded_filename = filename
+
+    doc = frappe.get_doc(
+        {
+            "doctype": "File",
+            "attached_to_doctype": frappe.form_dict.doctype,
+            "attached_to_name": frappe.form_dict.docname,
+            "attached_to_field": frappe.form_dict.fieldname,
+            "folder": frappe.form_dict.folder or "Home",
+            "file_name": filename,
+            "file_url": frappe.form_dict.file_url,
+            "is_private": cint(frappe.form_dict.is_private),
+            "content": content,
+        }
+    ).save(ignore_permissions=ignore_permissions)
+
+    if frappe.form_dict.fieldname:
+        attach_field_to_doc(doc)
+
+    return doc.file_url
+
+
 @frappe.whitelist(allow_guest=True)
 def upload_file():
-    user = None
-    if frappe.session.user == "Guest":
-        if frappe.get_system_settings("allow_guests_to_upload_files"):
-            ignore_permissions = True
-        else:
-            raise frappe.PermissionError
-    else:
-        user: "User" = frappe.get_doc("User", frappe.session.user)
-        ignore_permissions = False
-
+    user, ignore_permissions = validate_user_permissions()
     files = frappe.request.files
     file_names = []
     urls = []
 
-    is_private = frappe.form_dict.is_private
-    doctype = frappe.form_dict.doctype
-    docname = frappe.form_dict.docname
-    fieldname = frappe.form_dict.fieldname
-    file_url = frappe.form_dict.file_url
-    folder = frappe.form_dict.folder or "Home"
-    method = frappe.form_dict.method
-    optimize = frappe.form_dict.optimize
-    content = None
-    filenumber = 0
     for key, file in files.items():
-        filenumber = filenumber + 1
         file_names.append(key)
-        file = files[key]
-        content = file.stream.read()
-        filename = file.filename
-
-        content_type = guess_type(filename)[0]
-        if optimize and content_type and content_type.startswith("image/"):
-            args = {"content": content, "content_type": content_type}
-            if frappe.form_dict.max_width:
-                args["max_width"] = int(frappe.form_dict.max_width)
-            if frappe.form_dict.max_height:
-                args["max_height"] = int(frappe.form_dict.max_height)
-            content = optimize_image(**args)
-
-        frappe.local.uploaded_file = content
-        frappe.local.uploaded_filename = filename
-
-        if content is not None and (
-            frappe.session.user == "Guest" or (user and not user.has_desk_access())
-        ):
-            guess_type(filename)[0]
-        if method:
-            method = frappe.get_attr(method)
-            is_whitelisted(method)
-            return method()
-        else:
-            doc = frappe.get_doc(
-                {
-                    "doctype": "File",
-                    "attached_to_doctype": doctype,
-                    "attached_to_name": docname,
-                    "attached_to_field": fieldname,
-                    "folder": folder,
-                    "file_name": filename,
-                    "file_url": file_url,
-                    "is_private": cint(is_private),
-                    "content": content,
-                }
-            ).save(ignore_permissions=ignore_permissions)
-            urls.append(doc.file_url)
-
-            if fieldname is not None:
-                attach_field = frappe.get_doc(
-                    doctype, docname
-                )  # .save(ignore_permissions = True)
-                setattr(attach_field, fieldname, doc.file_url)
-                attach_field.save(ignore_permissions=True)
-
+        urls.append(process_file_upload(file, ignore_permissions))
     return urls
+
+
+def validate_user_permissions():
+    """Validate user permissions and return user and ignore_permissions."""
+    if frappe.session.user == "Guest":
+        if frappe.get_system_settings("allow_guests_to_upload_files"):
+            return None, True
+        raise frappe.PermissionError
+    else:
+        user = frappe.get_doc("User", frappe.session.user)
+        return user, False
 
 
 def get_number_of_files(file_storage):
