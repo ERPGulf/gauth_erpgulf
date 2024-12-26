@@ -14,20 +14,19 @@ import random
 import base64
 import json
 import os
-import geoip2.database
-import frappe
-from erpnext.accounts.utils import get_balance_on, get_fiscal_year
 from email.utils import formataddr
 from email.message import EmailMessage
 import smtplib
 import ssl
 import re
+import geoip2.database
+import frappe
+from erpnext.accounts.utils import get_balance_on, get_fiscal_year
 from frappe.utils.response import Response
 import google.auth.transport.requests
 from google.oauth2 import service_account
 from frappe.utils import now_datetime
 from frappe.utils.data import sha256_hash
-import geoip2.database
 from frappe.core.doctype.user.user import User
 from frappe.core.doctype.user.user import update_password as _update_password_reset_key
 from frappe.utils.password import update_password as _update_password
@@ -268,7 +267,7 @@ def whoami():
 
 # api for decrypting encrypt key
 @frappe.whitelist(allow_guest=False)
-def decrypt_2FA(encrypted_key):
+def decrypt_2fa_key(encrypted_key):
     """This function used for decrypting the 2FA encrypted Key"""
 
     secret = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "2fa_secret_key")
@@ -290,7 +289,7 @@ def generate_token_encrypt(encrypted_key):
     try:
         try:
 
-            _, decrypted_key = decrypt_2FA(encrypted_key)
+            _, decrypted_key = decrypt_2fa_key(encrypted_key)
 
             api_key, api_secret, app_key = decrypted_key.split("::")
 
@@ -312,13 +311,13 @@ def generate_token_encrypt(encrypted_key):
                 mimetype="application/json",
             )
 
-        clientID, clientSecret, _ = frappe.db.get_value(
+        client_id, client_secret, _ = frappe.db.get_value(
             OAUTH_CLIENT,
             {"app_name": app_key},
             ["client_id", "client_secret", "user"],
         )
 
-        if clientID is None:
+        if client_id is None:
             return Response(
                 json.dumps(
                     {"message": "Security Parameters are not valid", "user_count": 0}
@@ -327,8 +326,8 @@ def generate_token_encrypt(encrypted_key):
                 mimetype="application/json",
             )
 
-        client_id = clientID
-        client_secret = clientSecret
+        client_id = client_id
+        client_secret = client_secret
         url = frappe.local.conf.host_name + OAUTH_TOKEN_URL
         payload = {
             "username": api_key,
@@ -362,7 +361,7 @@ def generate_token_encrypt(encrypted_key):
 
 
 @frappe.whitelist(allow_guest=False)
-def test_Encryption_xor(text_for_encryption, key):
+def test_encryption_xor(text_for_encryption, key):
     result = "".join(
         chr(ord(c) ^ ord(k))
         for c, k in zip(
@@ -373,7 +372,7 @@ def test_Encryption_xor(text_for_encryption, key):
 
 
 @frappe.whitelist(allow_guest=False)
-def test_Decryption_xor(text_for_decryption, key):
+def test_decryption_xor(text_for_decryption, key):
     encrypted = base64.b64decode(text_for_decryption).decode()  # Decode Base64
     return "".join(
         chr(ord(c) ^ ord(k))
@@ -382,7 +381,7 @@ def test_Decryption_xor(text_for_decryption, key):
 
 
 @frappe.whitelist(allow_guest=False)
-def test_generate_2FA():
+def test_generate_2fa():
 
     with open("io.claudion.com/api_encr.en", "r", encoding="utf-8") as file:
         secret = file.read().strip()
@@ -431,7 +430,7 @@ def generate_token_encrypt_for_user(encrypted_key):
     try:
         try:
 
-            current_totp, decrypted_key = decrypt_2FA(encrypted_key)
+            _, decrypted_key = decrypt_2fa_key(encrypted_key)
 
             api_key, api_secret, app_key = decrypted_key.split("::")
 
@@ -453,13 +452,13 @@ def generate_token_encrypt_for_user(encrypted_key):
                 mimetype="application/json",
             )
 
-        clientID, clientSecret, _ = frappe.db.get_value(
+        client_id, client_secret, _ = frappe.db.get_value(
             OAUTH_CLIENT,
             {"app_name": app_key},
             ["client_id", "client_secret", "user"],
         )
 
-        if clientID is None:
+        if client_id is None:
 
             return Response(
                 json.dumps(
@@ -469,8 +468,8 @@ def generate_token_encrypt_for_user(encrypted_key):
                 mimetype="application/json",
             )
 
-        client_id = clientID
-        client_secret = clientSecret
+        client_id = client_id
+        client_secret = client_secret
         url = frappe.local.conf.host_name + OAUTH_TOKEN_URL
         payload = {
             "username": api_key,
@@ -641,8 +640,6 @@ def g_generate_reset_password_key(
     send_email=True,
     password_expired=False,
 ):
-
-    from frappe.utils.data import sha256_hash
 
     if mobile == "":
         return Response(
@@ -1144,12 +1141,12 @@ def _get_access_token():
 
 # to validate ip
 @frappe.whitelist(allow_guest=True)
-def validate_country(IP_address):
+def validate_country(ip_address):
     """To validate IP address Country"""
     import geoip2.database
 
     reader = geoip2.database.Reader("geo-ip.mmdb")
-    response = reader.country(IP_address)
+    response = reader.country(ip_address)
 
     return response.country.name
 
@@ -1261,7 +1258,11 @@ def get_sms_id(provider):
         passw = frappe.db.get_value(
             "Company", default_company, "custom_vodafone_password"
         )
-        mask = frappe
+        mask = frappe.db.get_value("Company", default_company, "custom_vodafone_mask")
+        param_string = "?application=" + app + "&password=" + passw + "&mask=" + mask
+        return param_string
+
+
 @frappe.whitelist(allow_guest=True)
 def send_sms_vodafone(phone_number, message_text):  # send sms through Vodafone Qatar
     try:
@@ -1327,99 +1328,6 @@ def get_account_balance(customer=None):
     return Response(
         json.dumps({"data": result}), status=200, mimetype="application/json"
     )
-
-
-# @frappe.whitelist(allow_guest=True)
-# def validate_country_test(IP_address):
-#     """To validate IP address Country"""
-#     import geoip2.database
-
-#     reader = geoip2.database.Reader("geo-ip.mmdb")
-#     response = reader.country(IP_address)
-
-#     return response.country.name
-
-
-# @frappe.whitelist(allow_guest=True)
-# def check_country_restriction_test(*args, **kwargs):
-
-#     # return kwargs.get("ip_address")
-#     try:
-#         # source_ip_address = kwargs.get("ip_address")
-#         source_ip_address = frappe.local.request.headers.get("X-Forwarded-For")
-
-#         # check source_ip is listed in the table.
-#         restriction = frappe.get_all(
-#             "Countries and IP address",
-#             filters={
-#                 "parent": BACKEND_SERVER_SETTINGS,
-#                 "countries": source_ip_address,
-#             },
-#             fields=[
-#                 "countries",
-#                 "api_allow",
-#                 "desk_web_user_allow",
-#                 "desk_user_allow",
-#             ],
-#         )
-
-#         if (
-#             len(restriction) == 0
-#         ):  # if source_ip not in the table, find country of source_ip
-#             reader = geoip2.database.Reader("geo-ip.mmdb")
-#             response = reader.country(source_ip_address)
-#             user_country = response.country.name
-#             restriction = frappe.get_all(
-#                 "Countries and IP address",
-#                 filters={
-#                     "parent": BACKEND_SERVER_SETTINGS,
-#                     "countries": user_country,
-#                 },
-#                 fields=[
-#                     "countries",
-#                     "api_allow",
-#                     "desk_web_user_allow",
-#                     "desk_user_allow",
-#                 ],
-#             )
-
-#         if len(restriction) > 0:
-#             if frappe.local.request.path.startswith("/api/method/gauth_erpgulf"):
-
-#                 # check if the call is api
-#                 if restriction[0].get("api_allow") == 0:
-
-#                     frappe.throw(
-#                         "Access To this API from your location is not allowed for security reasons. "
-#                         f"IP: {source_ip_address}",
-#                         frappe.PermissionError,
-#                     )
-#                     return
-#             else:  # as its not api , this can be either system-user or web-user
-#                 user_type = frappe.get_all(
-#                     "User", fields=["user_type"], filters={"name": frappe.session.user}
-#                 )
-#                 if user_type[0].get("user_type") == "System User":
-#                     if restriction[0].get("desk_user_allow") == 0:
-#                         # return"system user"
-#                         frappe.msgprint(
-#                             "Access to this system-user from your location is not allowed for security reasons, please contact system administrator. "
-#                             + frappe.local.request.headers.get("X-Forwarded-For")
-#                         )
-#                         frappe.local.response["http_status_code"] = 403
-#                         # return "system user"
-#                 if user_type[0].get("user_type") == "Website User":
-#                     if restriction[0].get("desk_web_user_allow") == 0:
-#                         # return "website user"
-#                         frappe.msgprint(
-#                             "Access to this web-user from your location is not allowed for security reasons, please contact system administrator. "
-#                             + frappe.local.request.headers.get("X-Forwarded-For")
-#                         )
-#                         frappe.local.response["http_status_code"] = 403
-#                         # return "website user"
-
-#     except:
-#         pass
 
 
 @frappe.whitelist(allow_guest=True)
@@ -1570,7 +1478,6 @@ def make_payment_entry(amount, user, bid, reference):
         "account_currency": "QAR",
         "reference_name": "",
         "reference_type": "",
-        "reference_detail_no": "",
         "cost_center": "",
         "project": "",
         "party_type": "Customer",
@@ -1604,7 +1511,6 @@ def make_payment_entry(amount, user, bid, reference):
     journal_entry.append("accounts", credit_entry)
 
     try:
-        # a=10
         journal_entry.save(ignore_permissions=True)
         journal_entry.submit()
         # if submit:
