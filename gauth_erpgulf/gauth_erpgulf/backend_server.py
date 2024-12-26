@@ -127,9 +127,7 @@ def generate_token_secure(api_key, api_secret, app_key):
         if client_id_value is None:
             # return app_key
             return Response(
-                json.dumps(
-                    {"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}
-                ),
+                json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
@@ -221,9 +219,7 @@ def generate_token_secure_for_users(username, password, app_key):
         client_id_value, client_secret_value = get_oauth_client(app_key)
         if client_id_value is None:
             return Response(
-                json.dumps(
-                    {"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}
-                ),
+                json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
@@ -310,18 +306,14 @@ def generate_token_encrypt(encrypted_key):
             app_key = base64.b64decode(app_key).decode("utf-8")
         except Exception as e:
             return Response(
-                json.dumps(
-                    {"message":INVALID_SECURITY_PARAMETERS, "user_count": 0}
-                ),
+                json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
         client_id, client_secret = get_oauth_client(app_key)
         if client_id is None:
             return Response(
-                json.dumps(
-                    {"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}
-                ),
+                json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
@@ -356,6 +348,7 @@ def generate_token_encrypt(encrypted_key):
 
 @frappe.whitelist(allow_guest=False)
 def test_encryption_xor(text_for_encryption, key):
+    """to encrypt a text using xor"""
     result = "".join(
         chr(ord(c) ^ ord(k))
         for c, k in zip(
@@ -367,6 +360,7 @@ def test_encryption_xor(text_for_encryption, key):
 
 @frappe.whitelist(allow_guest=False)
 def test_decryption_xor(text_for_decryption, key):
+    """to decrypt a text using xor"""
     encrypted = base64.b64decode(text_for_decryption).decode()  # Decode Base64
     return "".join(
         chr(ord(c) ^ ord(k))
@@ -376,7 +370,7 @@ def test_decryption_xor(text_for_decryption, key):
 
 @frappe.whitelist(allow_guest=False)
 def test_generate_2fa():
-
+    """to generate a 2fa otp"""
     with open("io.claudion.com/api_encr.en", "r", encoding="utf-8") as file:
         secret = file.read().strip()
     totp = pyotp.TOTP(secret, interval=60)
@@ -387,6 +381,7 @@ def test_generate_2fa():
 # Api for encrypt details used for token
 @frappe.whitelist(allow_guest=True)
 def test_generate_token_encrypt(text_for_encryption):
+    """to generate a mastertoken using encrypted key"""
     current_totp = generate_totp()
     result = xor_encrypt_decrypt(text_for_encryption, current_totp)
     return base64.b64encode(result.encode()).decode()
@@ -395,6 +390,7 @@ def test_generate_token_encrypt(text_for_encryption):
 # Api for encrypt user details
 @frappe.whitelist(allow_guest=False)
 def test_generate_token_encrypt_for_user(text_for_encryption):
+    """to generate test encrypted key from a text"""
     current_totp = generate_totp()
     result = xor_encrypt_decrypt(text_for_encryption, current_totp)
     return base64.b64encode(result.encode()).decode()
@@ -403,6 +399,7 @@ def test_generate_token_encrypt_for_user(text_for_encryption):
 # API for encrypted user token
 @frappe.whitelist(allow_guest=False)
 def generate_token_encrypt_for_user(encrypted_key):
+    """to generate a usertoken using encrypted key"""
     try:
         try:
 
@@ -421,9 +418,7 @@ def generate_token_encrypt_for_user(encrypted_key):
             app_key = base64.b64decode(app_key).decode("utf-8")
         except Exception as e:
             return Response(
-                json.dumps(
-                    {"message":INVALID_SECURITY_PARAMETERS, "user_count": 0}
-                ),
+                json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
@@ -433,9 +428,7 @@ def generate_token_encrypt_for_user(encrypted_key):
         if client_id_value is None:
 
             return Response(
-                json.dumps(
-                    {"message":INVALID_SECURITY_PARAMETERS, "user_count": 0}
-                ),
+                json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
@@ -489,6 +482,7 @@ def generate_token_encrypt_for_user(encrypted_key):
 
 @frappe.whitelist(allow_guest=False)
 def get_user_name(user_email=None, mobile_phone=None):
+    """to get username from useremail and mobile phone"""
     if mobile_phone is not None:
         user_details = frappe.get_list(
             "User", filters={"mobile_no": mobile_phone}, fields=["name", "enabled"]
@@ -520,7 +514,8 @@ def get_user_name(user_email=None, mobile_phone=None):
 
 
 @frappe.whitelist(allow_guest=False)
-def check_user_name(user_email=None, mobile_phone=None, user_name=None):
+def check_user_name(user_email=None, mobile_phone=None):
+    """to check the username from useremail and mobile phone"""
     user_details_email = []
     user_details_mobile = []
 
@@ -541,10 +536,8 @@ def check_user_name(user_email=None, mobile_phone=None, user_name=None):
 
 @frappe.whitelist(allow_guest=False)
 def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
-    if (
-        check_user_name(user_email=email, mobile_phone=mobile_no, user_name=full_name)
-        > 0
-    ):
+    """to create a user"""
+    if check_user_name(user_email=email, mobile_phone=mobile_no) > 0:
         return Response(
             json.dumps({"message": "User already exists", "user_count": 1}),
             status=409,
@@ -563,8 +556,6 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
                 "roles": [{"role": role}],
             }
         ).insert()
-
-        # Create Customer document
         frappe.get_doc(
             {
                 "doctype": "Customer",
@@ -576,8 +567,6 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
                 "email": email,
             }
         ).insert()
-
-        # Generate reset password key
         return g_generate_reset_password_key(
             email, send_email=True, password_expired=False, mobile=mobile_no
         )
@@ -612,6 +601,7 @@ def g_generate_reset_password_key(
     send_email=True,
     password_expired=False,
 ):
+    """to generate a reset password key"""
 
     if mobile == "":
         return Response(
@@ -648,7 +638,7 @@ def g_generate_reset_password_key(
         subject = "OTP"
         if password_expired:
             url = "/update-password?key=" + key + "&password_expired=true"
-        link = get_url(url)
+        get_url(url)
         if send_email:
             send_email_oci(user, subject, updated_html_content)
         return Response(
@@ -670,9 +660,9 @@ def g_generate_reset_password_key(
         )
 
 
-# to send email to validate otp
 @frappe.whitelist(allow_guest=False)
 def send_email_oci(recipient, subject, body_html):
+    """send an email to recipient with subject"""
     sender = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sender")
     sender_name = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sender_name")
     user_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "user_smtp")
@@ -698,9 +688,9 @@ def send_email_oci(recipient, subject, body_html):
         return f"Error: {e}"
 
 
-# to check if email,mobile already exists
 @frappe.whitelist(allow_guest=False)
 def is_user_available(user_email=None, mobile_phone=None):
+    """to check if user is available or not"""
     response = ""
     status_code = 0
     try:
@@ -739,9 +729,9 @@ def is_user_available(user_email=None, mobile_phone=None):
         )
 
 
-# update user password
 @frappe.whitelist(allow_guest=False)
 def g_update_password(username, password):
+    """to update the user password"""
     try:
         if len(frappe.get_all("User", {"email": username})) < 1:
             return Response(
@@ -749,7 +739,6 @@ def g_update_password(username, password):
                 status=404,
                 mimetype=APPLICATION_JSON,
             )
-        # frappe api to update password
         _update_password(username, password)
         qid = frappe.get_list(
             "User",
@@ -777,6 +766,7 @@ def g_update_password(username, password):
 
 @frappe.whitelist(allow_guest=False)
 def g_delete_user(email, mobile_no):
+    """to delete the user"""
     try:
         if (
             len(
@@ -810,6 +800,7 @@ def g_delete_user(email, mobile_no):
 
 @frappe.whitelist(allow_guest=False)
 def validate_email(email_to_validate):
+    """to validate the user email"""
 
     blocked = False
     # check email in correct format or not
@@ -832,7 +823,6 @@ def validate_email(email_to_validate):
     domain_name = get_domain_name(email_to_validate)
 
     url = f"https://www2.istempmail.com/api/check/CirMirL3dAHELe8pKdUeG55KV3qy6weU/{domain_name}"
-    # url = "https://www2.istempmail.com/api/check/CirMirL3dAHELe8pKdUeG55KV3qy6weU/gmail.com"
     payload = {}
     headers = {}
 
@@ -919,6 +909,7 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
 
 @frappe.whitelist(allow_guest=False)
 def g_update_password_using_usertoken(password):
+    """to update user password using user token"""
     try:
         username = frappe.session.user
         if len(frappe.get_all("User", {"name": username})) < 1:
@@ -957,6 +948,7 @@ def g_update_password_using_usertoken(password):
 
 @frappe.whitelist(allow_guest=False)
 def g_update_password_using_reset_key(new_password, reset_key, username):
+    """to update user password using reset key"""
     try:
 
         if len(frappe.get_all("User", {"name": username})) < 1:
@@ -1016,6 +1008,7 @@ def send_firebase_data(
     client_token="",
     topic="",
 ):
+    """to send message to firebase"""
 
     url = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "url")
 
@@ -1026,13 +1019,12 @@ def send_firebase_data(
                     "topic": auction_id,  # auctionId: subcriber to that auction id,
                     "data": {
                         "notification_type": "auction_ended",
-                        "auctionId": auction_id,  # ////auctionId
+                        "auctionId": auction_id,
                     },
                 }
             }
         )
     else:
-        # frappe.throw(str(winner_amount))
         payload = json.dumps(
             {
                 "message": {
@@ -1156,11 +1148,10 @@ def handle_non_api_restrictions(restriction):
 
 @frappe.whitelist(allow_guest=False)
 def check_country_restriction(*args, **kwargs):
+    """to check the restriction based on country"""
 
     try:
         source_ip_address = frappe.local.request.headers.get("X-Forwarded-For")
-
-        # check source_ip is listed in the table.
         restriction = get_restriction_by_ip(source_ip_address)
         if not restriction:
             user_country = get_country_from_ip(source_ip_address)
@@ -1178,6 +1169,7 @@ def check_country_restriction(*args, **kwargs):
 
 
 def get_sms_id(provider):
+    """get teh sms id"""
     default_company = frappe.db.get_single_value("Global Defaults", "default_company")
     if provider == "twilio":
         return frappe.db.get_value("Company", default_company, "custom_twilio_id")
@@ -1196,13 +1188,13 @@ def get_sms_id(provider):
 
 
 @frappe.whitelist(allow_guest=True)
-def send_sms_vodafone(phone_number, message_text):  # send sms through Vodafone Qatar
+def send_sms_vodafone(phone_number, message_text):
+    """to send sms for vodafone"""
     try:
 
         phone_number = "+91" + phone_number
         url = "https://connectsms.vodafone.com.qa/SMSConnect/SendServlet"
-        # message_text = urllib.parse.quote(f"Your validation code for DallahMzad is {otp} Thank You.  \n \n  رمز التحقق الخاص بك لـ DallahMzad هو {otp} شكرًا لك.")
-        # payload = f'username={get_sms_id("experttexting")}&from=DEFAULT&to={phone_number}&text=Your%20validation%20code%20for%20DallahMzad%20is%20{otp}%20Thank%20You.'
+
         payload = (
             get_sms_id("vodafone")
             + "&content="
@@ -1225,8 +1217,7 @@ def send_sms_vodafone(phone_number, message_text):  # send sms through Vodafone 
 
 
 @frappe.whitelist(allow_guest=True)
-def send_sms_twilio(phone_number, otp):  # Send SMS OTP using twilio
-    # success response = 201 created
+def send_sms_twilio(phone_number, otp):
     try:
         import requests
 
@@ -1246,8 +1237,6 @@ def send_sms_twilio(phone_number, otp):  # Send SMS OTP using twilio
         else:
             return response.text
 
-        # if response.status_code  in (400,405,406,409 ):
-
     except Exception as e:
         return "Error in qr sending SMS   " + str(e)
 
@@ -1257,9 +1246,7 @@ def get_account_balance(customer=None):
     response_content = frappe.session.user
     balance = get_balance_on(party_type="Customer", party=response_content)
     result = {"balance": 0 - balance}
-    return Response(
-        json.dumps({"data": result}), status=200, mimetype=APPLICATION_JSON
-    )
+    return Response(json.dumps({"data": result}), status=200, mimetype=APPLICATION_JSON)
 
 
 @frappe.whitelist(allow_guest=True)
@@ -1290,10 +1277,9 @@ def send_firebase_notification(title, body, client_token="", topic=""):
         try:
             firebase_admin.get_app()
         except ValueError:
-            # If not, then initialize it
             cred = credentials.Certificate("firebase.json")
             firebase_admin.initialize_app(cred)
-        message =""
+        message = ""
         if client_token != "":
             message = messaging.Message(
                 notification=messaging.Notification(
@@ -1340,12 +1326,9 @@ def firebase_subscribe_to_topic(topic, fcm_token):
         )
 
     try:
-
-        # Check if app already exists
         try:
             firebase_admin.get_app()
         except ValueError:
-            # If not, then initialize it
             cred = credentials.Certificate("firebase.json")
             firebase_admin.initialize_app(cred)
 
@@ -1401,7 +1384,6 @@ def make_payment_entry(amount, user, bid, reference):
     )
     journal_entry.remark = reference
     debit_entry = {
-        # "account": "QIB Account - D",
         "account": "1310 - Debtors - D",
         "credit": amount,
         "credit_in_account_currency": amount,
@@ -1418,7 +1400,6 @@ def make_payment_entry(amount, user, bid, reference):
 
     credit_entry = {
         "account": "QIB Account - D",
-        # "account": "1310 - Debtors - D",
         "debit": amount,
         "debit_in_account_currency": amount,
         "account_currency": "QAR",
@@ -1428,14 +1409,7 @@ def make_payment_entry(amount, user, bid, reference):
         "cost_center": "",
         "project": "",
         "reference_detail_no": reference,
-        # "party_type": "Customer",
-        # "party": "mumtaz@erpgulf.com422"
     }
-
-    # for dimension in get_accounting_dimensions():
-    # 	debit_entry.update({dimension: item.get(dimension)})
-
-    # 	credit_entry.update({dimension: item.get(dimension)})
 
     journal_entry.append("accounts", debit_entry)
     journal_entry.append("accounts", credit_entry)
@@ -1443,7 +1417,6 @@ def make_payment_entry(amount, user, bid, reference):
     try:
         journal_entry.save(ignore_permissions=True)
         journal_entry.submit()
-
         return Response(
             json.dumps({"data": "JV Successfully created ", "message": ""}),
             status=200,
@@ -1456,7 +1429,6 @@ def make_payment_entry(amount, user, bid, reference):
         )
         frappe.flags.deferred_accounting_error = True
         return str(e)
-        # return  Response(json.dumps({"data": "There was an error in creating JV", "message": "Use token with higher privilage to enter JV" }), status=401, mimetype='application/json')
 
 
 @frappe.whitelist(allow_guest=True)
@@ -1474,12 +1446,6 @@ def upload_file():
     files = frappe.request.files
     file_names = []
     urls = []
-    # filecount = 0
-    # for key, file in files.items():
-    #     filecount = filecount + 1
-    #     file_names.append(key)
-
-    # return file_names
 
     is_private = frappe.form_dict.is_private
     doctype = frappe.form_dict.doctype
@@ -1514,16 +1480,12 @@ def upload_file():
         if content is not None and (
             frappe.session.user == "Guest" or (user and not user.has_desk_access())
         ):
-            filetype = guess_type(filename)[0]
-            # if filetype not in ALLOWED_MIMETYPES:
-            #     frappe.throw(_("You can only upload JPG, PNG, PDF, TXT or Microsoft documents."))
-
+            guess_type(filename)[0]
         if method:
             method = frappe.get_attr(method)
             is_whitelisted(method)
             return method()
         else:
-            # return frappe.get_doc(
             doc = frappe.get_doc(
                 {
                     "doctype": "File",
@@ -1550,11 +1512,6 @@ def upload_file():
 
 
 def get_number_of_files(file_storage):
-    # Implement your logic to count the number of files
-    # Adjust this based on the actual structure of the FileStorage object
-    # For example, if FileStorage has a method to get the number of files, use that
-
-    # Example: Assuming a method called get_num_files() on FileStorage
     if hasattr(file_storage, "get_num_files") and callable(file_storage.get_num_files):
         return file_storage.get_num_files()
     else:
