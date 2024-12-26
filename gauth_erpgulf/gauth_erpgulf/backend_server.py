@@ -831,11 +831,11 @@ def validate_email(email_to_validate):
     headers = {}
 
     try:
-        response = requests.get(url, headers=headers, data=payload)
+        response = requests.get(url, headers=headers, data=payload,timeout=10)
         api_response = response.json()
         blocked = api_response.get("blocked", False)
 
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         pass
 
     if blocked is True:
@@ -855,7 +855,7 @@ def validate_email(email_to_validate):
     )
 
     try:
-        with open(domain_js_path, "r") as file:
+        with open(domain_js_path, "r",encoding="utf-8") as file:
             domain_js_content = file.read()
 
         domains_list = json.loads(domain_js_content)
