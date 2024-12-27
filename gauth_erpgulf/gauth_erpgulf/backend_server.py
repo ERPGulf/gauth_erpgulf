@@ -80,7 +80,7 @@ def generate_totp():
 @frappe.whitelist(allow_guest=False)
 def get_oauth_client(app_key):
     """Fetch client_id and client_secret for an OAuth client."""
-    client_id, client_secret, _ = frappe.db.get_value(
+    client_id,client_secret, _ = frappe.db.get_value(
         OAUTH_CLIENT,
         {"app_name": app_key},
         ["client_id", "client_secret", "user"],
@@ -290,7 +290,9 @@ def decrypt_2fa_key(encrypted_key):
     """This function used for decrypting the 2FA encrypted Key"""
     current_totp = generate_totp()
     encrypted = base64.b64decode(encrypted_key).decode()
-    return current_totp, xor_encrypt_decrypt(encrypted, current_totp)
+    return current_totp, "".join(
+        chr(ord(c) ^ ord(k)) for c, k in zip(encrypted, current_totp * (len(encrypted) // len(current_totp) + 1))
+    )
 
 
 @frappe.whitelist(allow_guest=False)
@@ -310,12 +312,15 @@ def generate_token_encrypt(encrypted_key):
             app_key = base64.b64decode(app_key).decode("utf-8")
         except Exception as e:
             return Response(
-                json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
+                json.dumps({"message": str(e), "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
+
             )
-        client_id, client_secret = get_oauth_client(app_key)
-        if client_id is None:
+        client_id, client_secret= get_oauth_client(app_key)
+        client_id_value=client_id 
+        client_secret_value=client_secret
+        if client_id_value is None:
             return Response(
                 json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
                 status=401,
@@ -326,16 +331,16 @@ def generate_token_encrypt(encrypted_key):
             "username": api_key,
             "password": api_secret,
             "grant_type": "password",
-            "client_id": client_id,
-            "client_secret": client_secret,
+            "client_id": client_id_value,
+            "client_secret": client_secret_value,
         }
         files = []
         headers = {"Content-Type": APPLICATION_JSON}
         response = requests.request(
-            "POST", url, headers=headers, data=payload, files=files
+            "POST", url, data=payload, files=files
         )
         if response.status_code == 200:
-            result_data = json_response(response)
+            result_data = json.loads(response.text)
             return Response(
                 json.dumps({"data": result_data}),
                 status=200,
@@ -429,7 +434,7 @@ def generate_token_encrypt_for_user(encrypted_key):
                 mimetype=APPLICATION_JSON,
             )
 
-        client_id_value, client_secret_value, _ = get_oauth_client(app_key)
+        client_id_value, client_secret_value = get_oauth_client(app_key)
 
         if client_id_value is None:
 
@@ -452,7 +457,7 @@ def generate_token_encrypt_for_user(encrypted_key):
         files = []
         headers = {"Content-Type": APPLICATION_JSON}
         response = requests.request(
-            "POST", url, headers=headers, data=payload, files=files
+            "POST", url, data=payload, files=files
         )
         qid = frappe.get_list(
             "User",
@@ -464,7 +469,7 @@ def generate_token_encrypt_for_user(encrypted_key):
             filters={"email": ["like", api_key]},
         )
         if response.status_code == 200:
-            result_data = response.json()
+            result_data = json.loads(response.text)
             result_data["refresh_token"] = "XXXXXXX"
             result = {
                 "token": result_data,
@@ -1481,7 +1486,7 @@ def process_file_upload(file, ignore_permissions):
             "attached_to_field": frappe.form_dict.fieldname,
             "folder": frappe.form_dict.folder or "Home",
             "file_name": filename,
-            "file_url": frappe.form_dict.file_url,
+            "file_url": frappe.form_dict.fileurl,
             "is_private": cint(frappe.form_dict.is_private),
             "content": content,
         }
@@ -1505,7 +1510,7 @@ def upload_file():
         urls.append(process_file_upload(file, ignore_permissions))
     return urls
 
-@frappe.whitelist(allow_guest=False)
+@frappe.whitelist(allow_guest=True)
 def validate_user_permissions():
     """Validate user permissions and return user and ignore_permissions."""
     if frappe.session.user == "Guest":
