@@ -871,7 +871,7 @@ def validate_email(email_to_validate):
 
             return json_response({"blocked": False})
 
-    except Exception as e:
+    except Exception :
         return Response(
             json.dumps({"blocked": False}), status=400, mimetype=APPLICATION_JSON
         )
@@ -1482,7 +1482,7 @@ def process_file_upload(file, ignore_permissions):
 
 @frappe.whitelist(allow_guest=True)
 def upload_file():
-    user, ignore_permissions = validate_user_permissions()
+    _, ignore_permissions = validate_user_permissions()
     files = frappe.request.files
     file_names = []
     urls = []
