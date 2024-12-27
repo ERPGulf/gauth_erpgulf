@@ -62,7 +62,6 @@ def xor_encrypt_decrypt(text, key):
         chr(ord(c) ^ ord(k)) for c, k in zip(text, key * (len(text) // len(key) + 1))
     )
 
-
 @frappe.whitelist(allow_guest=False)
 def json_response(data, status=200):
     """Return a standardized JSON response."""
@@ -193,7 +192,6 @@ def generate_token_secure(api_key, api_secret, app_key):
             mimetype=APPLICATION_JSON,
         )
 
-
 # Api for user token
 @frappe.whitelist(allow_guest=False)
 def generate_token_secure_for_users(username, password, app_key):
@@ -290,9 +288,7 @@ def decrypt_2fa_key(encrypted_key):
     """This function used for decrypting the 2FA encrypted Key"""
     current_totp = generate_totp()
     encrypted = base64.b64decode(encrypted_key).decode()
-    return current_totp, "".join(
-        chr(ord(c) ^ ord(k)) for c, k in zip(encrypted, current_totp * (len(encrypted) // len(current_totp) + 1))
-    )
+    return current_totp,xor_encrypt_decrypt(encrypted,current_totp)
 
 
 @frappe.whitelist(allow_guest=False)
@@ -390,7 +386,7 @@ def test_generate_2fa():
 
 
 # Api for encrypt details used for token
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=False)
 def test_generate_token_encrypt(text_for_encryption):
     """to generate a mastertoken using encrypted key"""
     current_totp = generate_totp()
@@ -604,7 +600,6 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
             status=500,
             mimetype=APPLICATION_JSON,
         )
-
 
 # to generate reset key for new user
 @frappe.whitelist(allow_guest=False)
@@ -1000,7 +995,7 @@ def g_update_password_using_reset_key(new_password, reset_key, username):
         )
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=False)
 def login_time():
     """To get the Login Details of user"""
 
@@ -1011,7 +1006,7 @@ def login_time():
     return doc
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=False)
 def send_firebase_data(
     auction_id,
     notification_type,
@@ -1078,7 +1073,7 @@ def _get_access_token():
 
 
 # to validate ip
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=False)
 def validate_country(ip_address):
     """To validate IP address Country"""
     import geoip2.database
@@ -1206,7 +1201,7 @@ def get_sms_id(provider):
         return param_string
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=False)
 def send_sms_vodafone(phone_number, message_text):
     """to send sms for vodafone"""
     try:
@@ -1234,7 +1229,7 @@ def send_sms_vodafone(phone_number, message_text):
         return "Error in qr sending SMS   " + str(e)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=False)
 def send_sms_twilio(phone_number, otp):
     try:
         import requests
@@ -1259,7 +1254,7 @@ def send_sms_twilio(phone_number, otp):
         return "Error in qr sending SMS   " + str(e)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=False)
 def get_account_balance(customer=None):
     response_content = frappe.session.user
     balance = get_balance_on(party_type="Customer", party=response_content)
@@ -1267,7 +1262,7 @@ def get_account_balance(customer=None):
     return Response(json.dumps({"data": result}), status=200, mimetype=APPLICATION_JSON)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=False)
 def time():
     server_time = frappe.utils.now()
     unix_time = frappe.utils.get_datetime(frappe.utils.now_datetime()).timestamp()
@@ -1275,7 +1270,7 @@ def time():
     return api_response
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=False)
 def send_firebase_notification(title, body, client_token="", topic=""):
     import firebase_admin
     from firebase_admin import credentials, exceptions, messaging
@@ -1381,7 +1376,7 @@ def firebase_subscribe_to_topic(topic, fcm_token):
         return frappe.response
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=False)
 def make_payment_entry(amount, user, bid, reference):
 
     if amount == 0:
@@ -1510,7 +1505,7 @@ def upload_file():
         urls.append(process_file_upload(file, ignore_permissions))
     return urls
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=False)
 def validate_user_permissions():
     """Validate user permissions and return user and ignore_permissions."""
     if frappe.session.user == "Guest":
