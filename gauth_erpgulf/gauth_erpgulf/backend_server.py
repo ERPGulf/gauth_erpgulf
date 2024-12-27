@@ -42,7 +42,6 @@ from werkzeug.wrappers import Response
 import firebase_admin
 from firebase_admin import credentials, exceptions, messaging
 
-
 # Constants
 OAUTH_CLIENT = "OAuth Client"
 OAUTH_TOKEN_URL = "/api/method/frappe.integrations.oauth2.get_token"
@@ -94,12 +93,10 @@ def get_oauth_client(app_key):
 def generate_token_secure(api_key, api_secret, app_key):
     """
     Generates a secure token using the provided API credentials.
-
     Args:
         api_key (str): The API key provided by the service.
         api_secret (str): The API secret associated with the API key.
         app_key (str): An application-specific key or identifier.
-
     Returns:
         Response: A JSON response containing the secure token or error message.
     """
@@ -128,7 +125,6 @@ def generate_token_secure(api_key, api_secret, app_key):
             )
 
         if client_id_value is None:
-            # return app_key
             return Response(
                 json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
                 status=401,
