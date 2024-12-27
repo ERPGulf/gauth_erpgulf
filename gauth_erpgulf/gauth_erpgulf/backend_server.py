@@ -55,6 +55,7 @@ INVALID_SECURITY_PARAMETERS = "Security Parameters are not valid"
 APPLICATION_JSON = "application/json"
 
 
+@frappe.whitelist(allow_guest=False)
 def xor_encrypt_decrypt(text, key):
     """Encrypt or decrypt text using XOR operation."""
     return "".join(
@@ -62,11 +63,13 @@ def xor_encrypt_decrypt(text, key):
     )
 
 
+@frappe.whitelist(allow_guest=False)
 def json_response(data, status=200):
     """Return a standardized JSON response."""
     return Response(json.dumps(data), status=status, mimetype=APPLICATION_JSON)
 
 
+@frappe.whitelist(allow_guest=False)
 def generate_totp():
     """Generate TOTP token using 2FA secret."""
     secret = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "2fa_secret_key")
@@ -74,6 +77,7 @@ def generate_totp():
     return totp.now()
 
 
+@frappe.whitelist(allow_guest=False)
 def get_oauth_client(app_key):
     """Fetch client_id and client_secret for an OAuth client."""
     client_id, client_secret, _ = frappe.db.get_value(
@@ -1053,6 +1057,7 @@ def send_firebase_data(
 
 
 # to get access token for request to firebase
+@frappe.whitelist(allow_guest=False)
 def _get_access_token():
     """Retrieve a valid access token that can be used to authorize requests. FCM
 
@@ -1079,6 +1084,7 @@ def validate_country(ip_address):
     return response.country.name
 
 
+@frappe.whitelist(allow_guest=False)
 def get_restriction_by_ip(ip_address):
     """Fetch restrictions by IP address."""
     return frappe.get_all(
@@ -1096,6 +1102,7 @@ def get_restriction_by_ip(ip_address):
     )
 
 
+@frappe.whitelist(allow_guest=False)
 def get_country_from_ip(ip_address):
     """Retrieve the country name from an IP address."""
     reader = geoip2.database.Reader("geo-ip.mmdb")
@@ -1103,6 +1110,7 @@ def get_country_from_ip(ip_address):
     return response.country.name
 
 
+@frappe.whitelist(allow_guest=False)
 def get_restriction_by_country(country):
     """Fetch restrictions by country."""
     return frappe.get_all(
@@ -1120,6 +1128,7 @@ def get_restriction_by_country(country):
     )
 
 
+@frappe.whitelist(allow_guest=False)
 def handle_api_restrictions(restriction, ip_address):
     """Handle API access restrictions."""
     if restriction[0].get("api_allow") == 0:
@@ -1129,6 +1138,7 @@ def handle_api_restrictions(restriction, ip_address):
         )
 
 
+@frappe.whitelist(allow_guest=False)
 def deny_access(user_type):
     """Deny access and send an appropriate response."""
     frappe.msgprint(
@@ -1137,6 +1147,7 @@ def deny_access(user_type):
     frappe.local.response["http_status_code"] = 403
 
 
+@frappe.whitelist(allow_guest=False)
 def handle_non_api_restrictions(restriction):
     """Handle restrictions for non-API access."""
     user_type = frappe.get_value("User", {"name": frappe.session.user}, "user_type")
@@ -1170,6 +1181,7 @@ def check_country_restriction(*args, **kwargs):
         frappe.log_error(f"Error in country restriction check: {str(e)}")
 
 
+@frappe.whitelist(allow_guest=False)
 def get_sms_id(provider):
     """get teh sms id"""
     default_company = frappe.db.get_single_value("Global Defaults", "default_company")
@@ -1431,6 +1443,7 @@ def make_payment_entry(amount, user, bid, reference):
         return str(e)
 
 
+@frappe.whitelist(allow_guest=False)
 def optimize_image_content(content, content_type):
     """Optimize image content if required."""
     args = {"content": content, "content_type": content_type}
@@ -1440,14 +1453,14 @@ def optimize_image_content(content, content_type):
         args["max_height"] = int(frappe.form_dict.max_height)
     return optimize_image(**args)
 
-
+@frappe.whitelist(allow_guest=False)
 def attach_field_to_doc(doc):
     """Attach the file to a specific field in the document."""
     attach_field = frappe.get_doc(frappe.form_dict.doctype, frappe.form_dict.docname)
     setattr(attach_field, frappe.form_dict.fieldname, doc.file_url)
     attach_field.save(ignore_permissions=True)
 
-
+@frappe.whitelist(allow_guest=False)
 def process_file_upload(file, ignore_permissions):
     """Handle the file upload process."""
     content = file.stream.read()
@@ -1480,7 +1493,7 @@ def process_file_upload(file, ignore_permissions):
     return doc.file_url
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=False)
 def upload_file():
     _, ignore_permissions = validate_user_permissions()
     files = frappe.request.files
@@ -1492,7 +1505,7 @@ def upload_file():
         urls.append(process_file_upload(file, ignore_permissions))
     return urls
 
-
+@frappe.whitelist(allow_guest=False)
 def validate_user_permissions():
     """Validate user permissions and return user and ignore_permissions."""
     if frappe.session.user == "Guest":
@@ -1503,7 +1516,7 @@ def validate_user_permissions():
         user = frappe.get_doc("User", frappe.session.user)
         return user, False
 
-
+@frappe.whitelist(allow_guest=False)
 def get_number_of_files(file_storage):
     if hasattr(file_storage, "get_num_files") and callable(file_storage.get_num_files):
         return file_storage.get_num_files()
