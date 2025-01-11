@@ -1,5 +1,5 @@
 function getStandardConfirmationMessage() {
-    return __('This process will take a long time depending on the log size and will continue running in the background even if you close this window.The updates will be available in the Error Log.<br>Do you want to continue?'
+    return __('This process will take a long time depending on the log size and will continue running in the background even if you close this window.The updates will be available in the Error Log.Do you want to continue?'
 );
 }
 frappe.ui.form.on("Backend Server Settings", {

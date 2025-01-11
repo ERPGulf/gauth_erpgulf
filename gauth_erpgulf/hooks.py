@@ -149,13 +149,12 @@ doctype_js = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-#     "cron": {
-#         "20 21 * * *": [
-#             "gauth_erpgulf.gauth_erpgulf.web_logging.enqueue_parse_nginx_logs"
-#         ]
-#     },
-# }
+scheduler_events = {
+    "cron": {
+        "0 2 * * *": [
+            "gauth_erpgulf.gauth_erpgulf.web_logging.enqueue_parse_nginx_logs"
+        ]
+    },
 # 	"all": [
 # 		"gauth_erpgulf.tasks.all"
 # 	],
@@ -171,7 +170,7 @@ doctype_js = {
 # 	"monthly": [
 # 		"gauth_erpgulf.tasks.monthly"
 # 	],
-# }
+}
 
 # Testing
 # -------

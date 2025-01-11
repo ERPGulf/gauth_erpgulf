@@ -23,7 +23,7 @@ def delete_all_web_access_logs():  #  dont call this directly . will get timeout
     """
     # return "Use it for emergency only"
 
-    doctype_name = "Web access log"
+    doctype_name = "Web Access Log"
     records = frappe.get_all(doctype_name, pluck="name")
 
     if not records:
@@ -55,12 +55,12 @@ def enqueue_parse_nginx_logs():
     """
     Enqueue the parse_nginx_logs function to run in the background.
     """
+    # print("Hello")
     # return "Executed If activated on guath setting only"
-    # if frappe.get_value("Backend Server Settings", None, "activate_scheduled_update"):
-    frappe.log_error("Log Parsing Activated","Log Parsing")
-    frappe.enqueue("gauth_erpgulf.gauth_erpgulf.web_logging.parse_nginx_logs", timeout=14400)
-    # frappe.enqueue("gauth_erpgulf.gauth_erpgulf.web_logging.test", timeout=14400)
-
+    result = frappe.get_value("Backend Server Settings", None, "activate_scheduled_update")  
+    if int(result)!=0:
+        frappe.log_error("Log Parsing Activated","Log Parsing")
+        frappe.enqueue("gauth_erpgulf.gauth_erpgulf.web_logging.parse_nginx_logs", timeout=14400)
     return "Nginx log parsing has been started as a background job."
 
 
@@ -123,18 +123,19 @@ def parse_nginx_logs():  # dont call this directly . will get timeout error - ca
         fieldname=["date", "time"],
         order_by="date DESC, time DESC",
     )
+    frappe.log_error(f"Latest Log fetching", "Fetching")
 
     if latest_log:
         # Combine date and time into a single datetime object
         latest_datetime_str = f"{latest_log[0]} {latest_log[1]}"
-        latest_datetime = datetime.strptime(latest_datetime_str, "%Y-%m-%d %H:%M:%S.%f")
+        latest_datetime = datetime.strptime(latest_datetime_str, "%Y-%m-%d %H:%M:%S")
         latest_datetime = latest_datetime.replace(tzinfo=timezone.utc)
     else:
         # If no records exist, parse all logs
         latest_datetime = None
 
     records_added = 0
-
+    frappe.log_error(f"Opening Log file path", "Opening path")
     # Open and parse the Nginx log file
     with open(log_file_path, "r") as log_file:
         for line in log_file:
