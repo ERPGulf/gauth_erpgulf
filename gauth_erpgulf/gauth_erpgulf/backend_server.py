@@ -862,8 +862,10 @@ def g_delete_user(email, mobile_no):
         ):
             return Response(
                 json.dumps(
-                    {"message": USER_NOT_FOUND_MESSAGE,
-                            "user_count": 0}
+                    {
+                    "message": USER_NOT_FOUND_MESSAGE,
+                    "user_count": 0
+                    }
                     ),
                 status=404,
                 mimetype=APPLICATION_JSON,
@@ -1057,9 +1059,10 @@ def g_update_password_using_reset_key(new_password, reset_key, username):
         if len(frappe.get_all("User", {"name": username})) < 1:
             return Response(
                 json.dumps(
-                    {"message": USER_NOT_FOUND_MESSAGE,
-                            "user_count": 0}
-                           ),
+                    {
+                        "message": USER_NOT_FOUND_MESSAGE,
+                            "user_count": 0
+                    }),
                 status=404,
                 mimetype=APPLICATION_JSON,
             )
@@ -1099,7 +1102,9 @@ def login_time():
 
     username = frappe.session.user
     doc = frappe.get_all(
-        "User Log Details", fields=["time"], filters={"username": ["like", username]}
+        "User Log Details",
+        fields=["time"],
+        filters={"username": ["like", username]}
     )
     return doc
 
@@ -1157,7 +1162,7 @@ def send_firebase_data(
 # to get access token for request to firebase
 @frappe.whitelist(allow_guest=False)
 def _get_access_token():
-    """Retrieve a valid access token that can be used to authorize requests. FCM
+    """Retrieve a valid access token it can be used to authorize requests.FCM
 
     :return: Access token.
     """
@@ -1188,7 +1193,7 @@ def get_restriction_by_ip(source_ip_address):
         "Countries and IP address",
         filters={
             "parent": BACKEND_SERVER_SETTINGS,
-            "countries":source_ip_address
+            "countries": source_ip_address
         },
         fields=[
             "countries",
@@ -1197,23 +1202,6 @@ def get_restriction_by_ip(source_ip_address):
             "desk_user_allow",
         ],
     )
-    # for restriction in restrictions:
-    #     country_entry = restriction.get("countries")
-    #     try:
-    #         # Check if it's a valid CIDR block and if the IP is within the range
-    #         if "/" in country_entry:
-    #             if ipaddress.ip_address(source_ip_address) in ipaddress.ip_network(country_entry):
-    #                 return [restriction]
-    #         else:
-    #             # Treat it as a single IP address
-    #             if source_ip_address == country_entry:
-    #                 return [restriction]
-    #     except ValueError:
-    #         # Ignore invalid IP or CIDR formats in the database
-    #         frappe.log_error(f"Invalid IP or CIDR format: {country_entry}", "IP Restriction Error")
-
-    # # No matching restrictions found
-    # return []
 
 
 @frappe.whitelist(allow_guest=False)
@@ -1245,11 +1233,11 @@ def get_restriction_by_country(country):
 @frappe.whitelist(allow_guest=False)
 def handle_api_restrictions(restriction, ip_address):
     """Handle API access restrictions."""
-    if restriction[0].get("api_allow") == 0:
+    if restriction and restriction[0].get("api_allow") == 0:
         frappe.throw(
-            "Access To this API  is not allowed " f"IP: {ip_address}",
-                        frappe.PermissionError,
-                    )
+            msg=f"Access to this API is not allowed. IP: {ip_address}",
+            exc=frappe.PermissionError
+        )
         return
 
 
@@ -1313,7 +1301,9 @@ def check_country_restriction(*args, **kwargs):
 @frappe.whitelist(allow_guest=False)
 def get_sms_id(provider):
     """Get the SMS ID"""
-    default_company = frappe.db.get_single_value("Global Defaults", "default_company")
+    default_company = frappe.db.get_single_value(
+        "Global Defaults", "default_company"
+        )
 
     if provider == "twilio":
         return frappe.db.get_value(
@@ -1339,7 +1329,6 @@ def get_sms_id(provider):
             "?application=" + app + "&password=" + passwd + "&mask=" + mask
         )
         return param_string
-
 
 
 @frappe.whitelist(allow_guest=False)
@@ -1416,7 +1405,6 @@ def get_account_balance():
 
 
 @frappe.whitelist(allow_guest=False)
-
 def time():
     """To get the Unix and server time"""
 
@@ -1431,9 +1419,7 @@ def time():
             "unix_time": unix_time
         }
     }
-
     return api_response
-
 
 
 @frappe.whitelist(allow_guest=False)
@@ -1486,58 +1472,46 @@ def send_firebase_notification(title, body, client_token="", topic=""):
         return frappe.response
 
 
+
+
 @frappe.whitelist(allow_guest=False)
 def firebase_subscribe_to_topic(topic, fcm_token):
-
-    if fcm_token == "" and topic == "":
+    if not fcm_token or not topic:
         return Response(
-            json.dumps(
-                {
+            json.dumps({
                 "message": "Provide FCM Token and topic to send a message.",
-                    "message_sent": 0,
-                }
-            ),
+                "message_sent": 0,
+            }),
             status=417,
-            mimetype=APPLICATION_JSON,
+            mimetype="application/json",
         )
 
     try:
-        try:
-            firebase_admin.get_app()
-        except ValueError:
+        if not firebase_admin._apps:
             cred = credentials.Certificate("firebase.json")
             firebase_admin.initialize_app(cred)
 
-        try:
-            response = messaging.subscribe_to_topic(fcm_token, topic)
-            if response.failure_count > 0:
-                return Response(
-                    json.dumps({"data": "Failed to Firebase topic"}),
-                    status=400,
-                    mimetype=APPLICATION_JSON,
-                )
-            else:
-                return json_response(
-                    {"data": "Successfully subscribed to Firebase topic"}
-                )
-        except Exception as e:
+        response = messaging.subscribe_to_topic([fcm_token], topic)
+
+        if response.failure_count > 0:
             return Response(
-                json.dumps(
-                    {
-                    "data":"Error subscribing to Firebase topic."
-                    }
-                ),
+                json.dumps({"message": "Failed to subscribe to Firebase topic"}),
                 status=400,
-                mimetype=APPLICATION_JSON,
+                mimetype="application/json",
             )
+        else:
+            return json_response({"message": "Successfully subscribed"})
 
     except Exception as e:
         error_message = str(e)
-        frappe.response["message"] = "Failed to send firebase message"
-        frappe.response["error"] = error_message
-        frappe.response["http_status_code"] = 500
-        return frappe.response
-
+        return Response(
+            json.dumps({
+                "message": "Error subscribing to Firebase topic.",
+                "error": error_message
+            }),
+            status=500,
+            mimetype="application/json",
+        )
 
 @frappe.whitelist(allow_guest=False)
 def make_payment_entry(amount, user, bid, reference):
