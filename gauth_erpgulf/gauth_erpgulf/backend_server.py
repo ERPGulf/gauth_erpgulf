@@ -29,6 +29,7 @@ from frappe.utils.password import update_password as _update_password
 from frappe.utils import get_url
 import pyotp
 import requests
+import ipaddress
 from werkzeug.wrappers import Response
 import firebase_admin
 from firebase_admin import credentials, exceptions, messaging
@@ -1807,18 +1808,18 @@ def send_email_sparkpost(Subject=None, Text=None, To=None, From=None):
 @frappe.whitelist(allow_guest=True)
 def enable_api_call(*args, **kwargs):
     settings = frappe.get_single("Backend Server Settings")
-    if  settings.enable_api_logs==0:
+    if  settings.enable_api_logs == 0:
         return
     try:
-        doc=frappe.get_doc({
+        doc = frappe.get_doc({
             "doctype": "API Log",
-            "api_url":frappe.local.request.path,
-            "user_session":frappe.session.user,
-            "method":frappe.local.request.method,
-            "input_parameters": json.dumps(frappe.local.form_dict) if frappe.local.form_dict else "No Parameters",
-            "response": json.dumps(frappe.local.response) if hasattr(frappe.local, 'response') else "No Response",
-            "status":frappe.local.response.get('http_status_code', 200) if hasattr(frappe.local, 'response') else 200,
-            "time":frappe.utils.now(),
+            "api_url" : frappe.local.request.path,
+            "user_session" : frappe.session.user,
+            "method" : frappe.local.request.method,
+            "input_parameters" : json.dumps(frappe.local.form_dict) if frappe.local.form_dict else "No Parameters",
+            "response" : json.dumps(frappe.local.response) if hasattr(frappe.local, 'response') else "No Response",
+            "status" : frappe.local.response.get('http_status_code', 200) if hasattr(frappe.local, 'response') else 200,
+            "time" : frappe.utils.now(),
         })
         doc.insert(ignore_permissions=True)
         frappe.db.commit()
@@ -1843,11 +1844,6 @@ def log_request_source(*args, **kwargs):
         frappe.throw(f"Unable to determine the country: {str(e)}")
 
 
-
-
-
-import ipaddress
-
 @frappe.whitelist(allow_guest=False)
 def get_restriction_by_ip_1(source_ip_address):
     """Fetch restrictions by IP address or CIDR block."""
@@ -1863,23 +1859,27 @@ def get_restriction_by_ip_1(source_ip_address):
             "desk_user_allow",
         ],
     )
-
-    # Check if the IP address matches any specific IP or CIDR block
     for restriction in restrictions:
         country_entry = restriction.get("countries")
 
         try:
-            # Check if it's a valid CIDR block and if the IP is within the range
+
             if "/" in country_entry:
-                if ipaddress.ip_address(source_ip_address) in ipaddress.ip_network(country_entry):
+                ip_addr = ipaddress.ip_address(source_ip_address)
+                ip_network = ipaddress.ip_network(country_entry)
+
+                if ip_addr in ip_network:
                     return [restriction]
+
             else:
                 # Treat it as a single IP address
                 if source_ip_address == country_entry:
                     return [restriction]
         except ValueError:
             # Ignore invalid IP or CIDR formats in the database
-            frappe.log_error(f"Invalid IP or CIDR format: {country_entry}", "IP Restriction Error")
+            frappe.log_error(
+                f"Invalid IP or CIDR format: {country_entry}",
+                "IP Restriction Error")
 
     # No matching restrictions found
     return []
