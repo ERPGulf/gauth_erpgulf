@@ -658,72 +658,75 @@ def g_generate_reset_password_key(
     send_email=True,
     password_expired=False,
 ):
-    """to generate a reset password key"""
+    """To generate a reset password key"""
 
-    if mobile == "":
+    if not mobile:
         return Response(
-            json.dumps(
-                {"message": "Mobile or Email  not found",
-                 "user_count": 0}
-                ),
+            json.dumps({
+                "message": "Mobile or Email not found",
+                "user_count": 0
+            }),
             status=404,
-            mimetype=APPLICATION_JSON,
+            mimetype=APPLICATION_JSON
         )
     try:
         if len(
-        frappe.get_all(
-            "User",
-            filters={"name": user, "mobile_no": mobile}
-        )
-    ) < 1:
+            frappe.get_all(
+                "User",
+                filters={"name": user, "mobile_no": mobile}
+            )
+        ) < 1:
             return Response(
-            json.dumps(
-                {
+                json.dumps({
                     "status": "error",
                     "message": "User not found"
-                }
-            ),
-            mimetype="application/json"
-        )
+                }),
+                mimetype="application/json"
+            )
 
         key = str(secrets.randbelow(900000) + 100000)
         doc2 = frappe.get_doc("User", user)
         doc2.reset_password_key = sha256_hash(key)
         doc2.last_reset_password_key_generated_on = now_datetime()
         doc2.save(ignore_permissions=True)
+
         url = "/update-password?key=" + key
+        if password_expired:
+            url += "&password_expired=true"
+        get_url(url)
+
         msg = frappe.get_doc("Email Template", "gauth erpgulf")
-        message = msg.response_html
-        message = message.replace("xxxxxx", key)
+        message = msg.response_html.replace("xxxxxx", key)
+
         name = frappe.get_all(
             "User",
             fields=["full_name"],
-            filters={"name": user, "mobile_no": mobile},
+            filters={"name": user, "mobile_no": mobile}
         )
         full_name = name[0].get("full_name")
         updated_html_content = message.replace("John Deo", full_name)
         subject = "OTP"
-        if password_expired:
-            url = "/update-password?key=" + key + "&password_expired=true"
-        get_url(url)
+
         if send_email:
             send_email_oci(user, subject, updated_html_content)
+
         return Response(
-            json.dumps(
-                {
-                    "reset_key": "XXXXXX",
-                    "generated_time": str(now_datetime()),
-                    "URL": "XXXXXXXX",
-                }
-            ),
+            json.dumps({
+                "reset_key": key,
+                "generated_time": str(now_datetime()),
+                "URL": url
+            }),
             status=200,
-            mimetype=APPLICATION_JSON,
+            mimetype=APPLICATION_JSON
         )
     except Exception as e:
         return Response(
-            json.dumps({"message": e, "user_count": 0}),
+            json.dumps({
+                "message": str(e),
+                "user_count": 0
+            }),
             status=500,
-            mimetype=APPLICATION_JSON,
+            mimetype=APPLICATION_JSON
         )
 
 
