@@ -216,7 +216,6 @@ def validate_otp_to_generate_user_token(user, user_otp):
         )
 
 
-# using frappe cache
 @frappe.whitelist(allow_guest=True)
 def generate_token_encrypt_for_user_2fa(encrypted_key):
     """Generate a user token using an encrypted key."""
