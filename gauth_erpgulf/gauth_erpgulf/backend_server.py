@@ -1885,9 +1885,6 @@ def get_restriction_by_ip_1(source_ip_address):
     return []
 
 
-
-
-
 # API for encrypted user token
 @frappe.whitelist(allow_guest=False)
 def test_generate_token_encrypt_for_user_2fa(encrypted_key):
