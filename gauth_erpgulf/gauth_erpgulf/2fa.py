@@ -13,7 +13,6 @@ from frappe.utils import cint, get_datetime, get_url, time_diff_in_seconds
 from frappe.utils.background_jobs import enqueue
 from frappe.utils.password import decrypt, encrypt
 import random
-import base64
 import json
 import os
 import secrets
@@ -38,14 +37,17 @@ from google.oauth2 import service_account
 from frappe.utils import now_datetime
 from frappe.utils.data import sha256_hash
 from frappe.core.doctype.user.user import User
-from frappe.core.doctype.user.user import update_password as _update_password_reset_key
-from frappe.utils.password import update_password as _update_password
+from frappe.core.doctype.user.user import update_password
+from frappe.utils.password import update_password
 from frappe.utils import get_url
 import pyotp
 import requests
 from werkzeug.wrappers import Response
 import firebase_admin
 from firebase_admin import credentials, exceptions, messaging
+from pyotp import TOTP
+from frappe import _
+
 
 PARENT_FOR_DEFAULTS = "__2fa"
 OAUTH_CLIENT = "OAuth Client"
@@ -63,36 +65,10 @@ OAUTH_TOKEN_URL = "/api/method/frappe.integrations.oauth2.get_token"
 FIELD_NAME_AS_ID = "name"
 FULL_NAME_ALIAS = "full_name"
 
-import frappe
-import smtplib
-import ssl
-import json
-import os
-from email.message import EmailMessage
-from email.utils import formataddr
-from base64 import b32encode
-from pyotp import TOTP
-import requests
-from frappe import _
-
-
-import frappe
-import smtplib
-import ssl
-import json
-import os
-from email.message import EmailMessage
-from email.utils import formataddr
-from base64 import b32encode
-from pyotp import TOTP
-import requests
-from frappe import _
-
-
 def send_email_oci(recipient, subject, otp):
     """Send an email to the recipient with subject."""
     sender = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sender")
-    sender_name = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sender_name")
+    sender_name = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS,"sender_name")
     user_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "user_smtp")
     password_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "password_smtp")
     host = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "host")
@@ -137,12 +113,13 @@ def set_default(key, value):
 def clear_default(key):
     frappe.defaults.clear_default(key, parent=PARENT_FOR_DEFAULTS)
 
+
 @frappe.whitelist(allow_guest=True)
 def get_otpsecret_for_(user):
     otp_secret = get_default(user + "_otpsecret")
     if otp_secret:
-        # Correcting the `decrypt` call to remove the unexpected 'key' argument
-        return decrypt(otp_secret)  # Ensure `decrypt` function works without 'key'
+
+        return decrypt(otp_secret)
 
     # Generate a new OTP secret if it doesn't exist
     otp_secret = b32encode(os.urandom(10)).decode("utf-8")
@@ -353,6 +330,7 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
         return response
     except Exception as e:
         frappe.log_error(message=str(e), title="2FA Token Generation Error")
+
 
 @frappe.whitelist(allow_guest=False)
 def xor_encrypt_decrypt(text, key):
