@@ -670,19 +670,19 @@ def g_generate_reset_password_key(
             mimetype=APPLICATION_JSON,
         )
     try:
-        if len(frappe.get_all(
-        "User",
-        filters={"name": user, "mobile_no": mobile}
-        )) < 1:
-
+        if len(
+        frappe.get_all(
+            "User",
+            filters={"name": user, "mobile_no": mobile}
+        )
+        ) < 1:
             return Response(
-                json.dumps(
-                    {"message": "Email or Mobile number not found",
-                     "user_count": 0}
-                ),
-                status=404,
-                mimetype=APPLICATION_JSON,
-            )
+            json.dumps({
+                "status": "error",
+                "message": "User not found"
+            }),
+            mimetype="application/json"
+        )
 
         key = str(secrets.randbelow(900000) + 100000)
         doc2 = frappe.get_doc("User", user)
@@ -762,8 +762,14 @@ def is_user_available(user_email=None, mobile_phone=None):
     response = ""
     status_code = 0
     try:
+
         if mobile_phone is not None:
-            mobile_count = len(frappe.get_all("User", {"mobile_no": mobile_phone}))
+            mobile_count = len(
+                frappe.get_all(
+                    "User",
+                    filters={"mobile_no": mobile_phone}
+                )
+            )
         else:
             mobile_count = 0
         if user_email is not None:
@@ -787,7 +793,9 @@ def is_user_available(user_email=None, mobile_phone=None):
                         "user_count": 0}
             status_code = 404
         return Response(
-            json.dumps(response), status=status_code, mimetype=APPLICATION_JSON
+            json.dumps(response),
+            status=status_code,
+            mimetype=APPLICATION_JSON
         )
 
     except Exception as e:
@@ -917,7 +925,7 @@ def validate_email(email_to_validate):
             json.dumps(
                 {
                     "blocked": True,
-                    "reason": "Temporary email not accepted. Please provide your company email",
+                    "reason": "Temporary email not accepted.",
                 }
             ),
             status=200,
@@ -938,7 +946,7 @@ def validate_email(email_to_validate):
             return json_response(
                 {
                     "blocked": True,
-                    "reason": "Public email not accepted. Please provide your company email",
+                    "reason": "Public email not accepted",
                 }
             )
         else:
@@ -947,7 +955,9 @@ def validate_email(email_to_validate):
 
     except Exception:
         return Response(
-            json.dumps({"blocked": False}), status=400, mimetype=APPLICATION_JSON
+            json.dumps({"blocked": False}),
+            status=400,
+            mimetype=APPLICATION_JSON
         )
 
 
@@ -958,7 +968,11 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
         if (
             len(
                 frappe.get_all(
-                    "User", {"name": username, "email": email, "mobile_no": mobile_no}
+                    "User", {
+                        "name": username,
+                        "email": email,
+                        "mobile_no": mobile_no
+                        }
                 )
             )
             < 1
@@ -1103,7 +1117,7 @@ def send_firebase_data(
         payload = json.dumps(
             {
                 "message": {
-                    "topic": auction_id,  # auctionId: subcriber to that auction id,
+                    "topic": auction_id,
                     "data": {
                         "notification_type": "auction_ended",
                         "auctionId": auction_id,
@@ -1228,7 +1242,7 @@ def handle_api_restrictions(restriction, ip_address):
     """Handle API access restrictions."""
     if restriction[0].get("api_allow") == 0:
         frappe.throw(
-            "Access To this API from your location is not allowed for security reasons. " f"IP: {ip_address}",
+            "Access To this API  is not allowed " f"IP: {ip_address}",
                         frappe.PermissionError,
                     )
         return
@@ -1238,7 +1252,7 @@ def handle_api_restrictions(restriction, ip_address):
 def deny_access(user_type):
     """Deny access and send an appropriate response."""
     frappe.throw(
-            f"Access to this {user_type} from your location is not allowed for security reasons, please contact system administrator. "
+            f"Access to this {user_type} from your location is not allowed "
             + frappe.local.request.headers.get("X-Forwarded-For")
         )
     frappe.local.response["http_status_code"] = 403
@@ -1246,17 +1260,26 @@ def deny_access(user_type):
     # frappe.local.response["http_status_code"] = 403
 
 
-
-
 @frappe.whitelist(allow_guest=False)
 def handle_non_api_restrictions(restriction):
     """Handle restrictions for non-API access."""
-    user_type =frappe.get_all("User", fields=["user_type"], filters={"name": frappe.session.user})
-    if user_type[0].get("user_type") == "System User" and restriction[0].get("desk_user_allow") == 0:
+    user_type = frappe.get_all(
+        "User",
+        fields=["user_type"],
+        filters={"name": frappe.session.user}
+    )
+
+    if (
+        user_type[0].get("user_type") == "System User"
+        and restriction[0].get("desk_user_allow") == 0
+    ):
         deny_access("system user")
         return "system user"
 
-    if user_type[0].get("user_type") == "Website User" and restriction[0].get("desk_web_user_allow") == 0:
+    if (
+        user_type[0].get("user_type") == "Website User"
+        and restriction[0].get("desk_web_user_allow") == 0
+    ):
         deny_access("web user")
         return "web user"
 
@@ -1264,8 +1287,6 @@ def handle_non_api_restrictions(restriction):
 @frappe.whitelist(allow_guest=True)
 def check_country_restriction(*args, **kwargs):
     """to check the restriction based on country"""
-
-
     try:
         source_ip_address = frappe.local.request.headers.get("X-Forwarded-For")
         restriction = get_restriction_by_ip(source_ip_address)
@@ -1280,31 +1301,40 @@ def check_country_restriction(*args, **kwargs):
             else:
                 handle_non_api_restrictions(restriction)
                 return
-
-
     except Exception :
         pass
 
 
-
 @frappe.whitelist(allow_guest=False)
 def get_sms_id(provider):
-    """get teh sms id"""
+    """Get the SMS ID"""
     default_company = frappe.db.get_single_value("Global Defaults", "default_company")
+
     if provider == "twilio":
-        return frappe.db.get_value("Company", default_company, "custom_twilio_id")
-    if provider == "experttexting":
         return frappe.db.get_value(
-            "Company", default_company, "custom_experttexting_id"
+            "Company", default_company, "custom_twilio_id"
         )
+
+    if provider == "expertexting":
+        return frappe.db.get_value(
+            "Company", default_company, "custom_expertexting_id"
+        )
+
     if provider == "vodafone":
-        app = frappe.db.get_value("Company", default_company, "custom_vodafone_app")
-        passw = frappe.db.get_value(
+        app = frappe.db.get_value(
+            "Company", default_company, "custom_vodafone_app"
+        )
+        passwd = frappe.db.get_value(
             "Company", default_company, "custom_vodafone_password"
         )
-        mask = frappe.db.get_value("Company", default_company, "custom_vodafone_mask")
-        param_string = "?application=" + app + "&password=" + passw + "&mask=" + mask
+        mask = frappe.db.get_value(
+            "Company", default_company, "custom_vodafone_mask"
+        )
+        param_string = (
+            "?application=" + app + "&password=" + passwd + "&mask=" + mask
+        )
         return param_string
+
 
 
 @frappe.whitelist(allow_guest=False)
@@ -1325,7 +1355,10 @@ def send_sms_vodafone(phone_number, message_text):
         )
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-        response = requests.request("GET", url + payload, headers=headers, data="")
+        response = requests.get(
+                        url + payload,
+                        headers=headers
+                    )
         if response.status_code in (200, 201):
             return True
         else:
@@ -1342,8 +1375,15 @@ def send_sms_twilio(phone_number, otp):
         phone_number = "+91" + phone_number
         parts = get_sms_id("twilio").split(":")
 
-        url = f"https://api.twilio.com/2010-04-01/Accounts/{parts[0]}/Messages.json"
-        payload = f"To={phone_number}&From=phone&Body=Your%20DallahMzad%OTP Verification code{otp}"
+        url = (
+            f"https://api.twilio.com/2010-04-01/Accounts/"
+            f"{parts[0]}/Messages.json"
+        )
+        payload = (
+            f"To={phone_number}&From=phone&Body="
+            f"Your%20DallahMzad%20OTP%20Verification%20code%20{otp}"
+        )
+
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
             "Authorization": f"Basic {parts[1]}",
@@ -1365,16 +1405,30 @@ def get_account_balance():
     response_content = frappe.session.user
     balance = get_balance_on(party_type="Customer", party=response_content)
     result = {"balance": 0 - balance}
-    return Response(json.dumps({"data": result}), status=200, mimetype=APPLICATION_JSON)
+    return Response(json.dumps({"data": result}),
+                    status=200,
+                    mimetype=APPLICATION_JSON)
 
 
 @frappe.whitelist(allow_guest=False)
+
 def time():
     """To get the Unix and server time"""
+
     server_time = frappe.utils.now()
-    unix_time = frappe.utils.get_datetime(frappe.utils.now_datetime()).timestamp()
-    api_response = {"data": {"serverTime": server_time, "unix_time": unix_time}}
+    unix_time = frappe.utils.get_datetime(
+        frappe.utils.now_datetime()
+    ).timestamp()
+
+    api_response = {
+        "data": {
+            "serverTime": server_time,
+            "unix_time": unix_time
+        }
+    }
+
     return api_response
+
 
 
 @frappe.whitelist(allow_guest=False)
@@ -1385,7 +1439,7 @@ def send_firebase_notification(title, body, client_token="", topic=""):
         return Response(
             json.dumps(
                 {
-                    "message": "Please provide either client token or topic to send message to Firebase",
+                    "message": "Provide client token or topic for Fb message",
                     "message_sent": 0,
                 }
             ),
@@ -1434,7 +1488,7 @@ def firebase_subscribe_to_topic(topic, fcm_token):
         return Response(
             json.dumps(
                 {
-                    "message": "Please provide FCM Token and  topic to send message to Firebase",
+                "message": "Provide FCM Token and topic to send a message.",
                     "message_sent": 0,
                 }
             ),
@@ -1453,7 +1507,7 @@ def firebase_subscribe_to_topic(topic, fcm_token):
             response = messaging.subscribe_to_topic(fcm_token, topic)
             if response.failure_count > 0:
                 return Response(
-                    json.dumps({"data": "Failed to subscribe to Firebase topic"}),
+                    json.dumps({"data": "Failed to Firebase topic"}),
                     status=400,
                     mimetype=APPLICATION_JSON,
                 )
@@ -1465,7 +1519,7 @@ def firebase_subscribe_to_topic(topic, fcm_token):
             return Response(
                 json.dumps(
                     {
-                        "data": "Error happened while trying to  subscribe to Firebase topic"
+                    "data":"Error subscribing to Firebase topic."
                     }
                 ),
                 status=400,
@@ -1631,8 +1685,7 @@ def validate_user_permissions():
 def get_number_of_files(file_storage):
     """To get the number of total files"""
     if (hasattr(file_storage, "get_num_files") and
-        callable(file_storage.get_num_files)):
-
+            callable(file_storage.get_num_files)):
         return file_storage.get_num_files()
     else:
         return 0
@@ -1665,10 +1718,10 @@ def _get_customer_details(user_email=None, mobile_phone=None):
         )
     else:
         return Response(
-        json.dumps({
-            "message": "Customer not found",
-            "user_count": 0
-        }),
+            json.dumps({
+                "message": "Customer not found",
+                "user_count": 0
+            }),
             status=404,
             mimetype=APPLICATION_JSON,
         )
@@ -1689,6 +1742,7 @@ def _get_customer_details(user_email=None, mobile_phone=None):
             mimetype=APPLICATION_JSON,
         )
 
+
 @frappe.whitelist(allow_guest=True)
 def send_sms_expertexting(phone_number, otp):
     """Send an SMS to given phone number"""
@@ -1696,7 +1750,9 @@ def send_sms_expertexting(phone_number, otp):
         phone_number = "+974" + phone_number
         url = "https://www.expertexting.com/ExptRestApi/sms/json/Message/Send"
         message_text = urllib.parse.quote(
-            f"Your validation code for DallahMzad is {otp}. شكراً لك {otp} رمز التحقق الخاص بك في DallahMzad.\n\nThank You."
+            f"Your validation code for DallahMzad is {otp}. "
+            f"رمز التحقق الخاص بك في DallahMzad هو {otp}.\n\n"
+            "شكراً لك.\n\nThank You."
         )
         payload = (
             f'username={get_sms_id("expertexting")}'
