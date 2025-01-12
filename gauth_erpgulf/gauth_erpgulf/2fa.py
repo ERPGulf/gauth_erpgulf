@@ -158,12 +158,13 @@ def validate_otp_to_generate_user_token(user, user_otp):
         # return customer_data
         if not otp_data:
             return Response(
-                json.dumps(
-                {"success": False, "message": "OTP expired or not found"}
-                    ),
-                status=400,
-                mimetype="application/json",
-            )
+                    json.dumps({
+                        "success": False,
+                        "message": "OTP expired or not found"
+                    }),
+                    status=400,
+                    mimetype="application/json",
+                )
 
         # Check expiration with a buffer time
         if frappe.utils.now_datetime() > otp_data["expires_at"]:
@@ -282,7 +283,9 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
             except json.JSONDecodeError as json_error:
                 return Response(
                     json.dumps(
-                        {"message": "Invalid JSON response", "error": str(json_error)}
+                        {"message": "Invalid JSON response",
+                         "error": str(json_error)
+                         }
                     ),
                     status=500,
                     mimetype=APPLICATION_JSON,
@@ -307,7 +310,7 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
                 status=400,
                 mimetype="application/json",
             )
-        expires=frappe.utils.now_datetime() + timedelta(seconds=60)
+        expires = frappe.utils.now_datetime() + timedelta(seconds=60)
         frappe.cache().set_value(
             f"otp_{api_key}",
             {
