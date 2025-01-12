@@ -282,7 +282,9 @@ def generate_token_secure_for_users(username, password, app_key):
                 "user": qid[0] if qid else {},
             }
             return Response(
-                json.dumps({"data": result}), status=200, mimetype=APPLICATION_JSON
+                json.dumps({"data": result}),
+                status=200,
+                mimetype=APPLICATION_JSON
             )
         else:
             frappe.local.response.http_status_code = 401
@@ -345,7 +347,8 @@ def generate_token_encrypt(encrypted_key):
         client_secret_value = client_secret
         if client_id_value is None:
             return Response(
-                json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
+                json.dumps({"message": INVALID_SECURITY_PARAMETERS,
+                            "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
@@ -391,7 +394,6 @@ def test_encryption_xor(text_for_encryption, key):
     )
 
     return base64.b64encode(result.encode()).decode()
-
 
 
 @frappe.whitelist(allow_guest=False)
@@ -529,7 +531,9 @@ def get_user_name(user_email=None, mobile_phone=None):
     """to get username from useremail and mobile phone"""
     if mobile_phone is not None:
         user_details = frappe.get_list(
-            "User", filters={"mobile_no": mobile_phone}, fields=["name", "enabled"]
+            "User",
+            filters={"mobile_no": mobile_phone},
+            fields=["name", "enabled"]
         )
     elif user_email is not None:
         user_details = frappe.get_list(
@@ -569,7 +573,9 @@ def check_user_name(user_email=None, mobile_phone=None):
         )
     if mobile_phone is not None:
         user_details_mobile = frappe.get_list(
-            "User", filters={"mobile_no": mobile_phone}, fields=["name", "enabled"]
+            "User",
+            filters={"mobile_no": mobile_phone},
+            fields=["name", "enabled"]
         )
 
     if len(user_details_email) >= 1 or len(user_details_mobile) >= 1:
@@ -664,7 +670,11 @@ def g_generate_reset_password_key(
             mimetype=APPLICATION_JSON,
         )
     try:
-        if len(frappe.get_all("User", filters={"name": user, "mobile_no": mobile})) < 1:
+        if len(frappe.get_all(
+        "User",
+        filters={"name": user, "mobile_no": mobile}
+        )) < 1:
+
             return Response(
                 json.dumps(
                     {"message": "Email or Mobile number not found",
@@ -719,9 +729,12 @@ def g_generate_reset_password_key(
 def send_email_oci(recipient, subject, body_html):
     """send an email to recipient with subject"""
     sender = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sender")
-    sender_name = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sender_name")
-    user_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "user_smtp")
-    password_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "password_smtp")
+    sender_name = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS,
+                                             "sender_name")
+    user_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS,
+                                           "user_smtp")
+    password_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS,
+                                               "password_smtp")
     host = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "host")
     port = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "port")
     msg = EmailMessage()
@@ -770,7 +783,8 @@ def is_user_available(user_email=None, mobile_phone=None):
             }
             status_code = 200
         if mobile_count < 1 and email_count < 1:
-            response = {"message": "Mobile and Email does not exist", "user_count": 0}
+            response = {"message": "Mobile and Email does not exist",
+                        "user_count": 0}
             status_code = 404
         return Response(
             json.dumps(response), status=status_code, mimetype=APPLICATION_JSON
@@ -826,7 +840,9 @@ def g_delete_user(email, mobile_no):
         if (
             len(
                 frappe.get_all(
-                    "User", {"name": email, "email": email, "mobile_no": mobile_no}
+                    "User", {"name": email,
+                             "email": email,
+                             "mobile_no": mobile_no}
                 )
             )
             < 1
@@ -1546,7 +1562,8 @@ def optimize_image_content(content, content_type):
 @frappe.whitelist(allow_guest=False)
 def attach_field_to_doc(doc):
     """Attach the file to a specific field in the document."""
-    attach_field = frappe.get_doc(frappe.form_dict.doctype, frappe.form_dict.docname)
+    attach_field = frappe.get_doc(frappe.form_dict.doctype,
+                                  frappe.form_dict.docname)
     setattr(attach_field, frappe.form_dict.fieldname, doc.file_url)
     attach_field.save(ignore_permissions=True)
 
@@ -1613,7 +1630,9 @@ def validate_user_permissions():
 @frappe.whitelist(allow_guest=False)
 def get_number_of_files(file_storage):
     """To get the number of total files"""
-    if hasattr(file_storage, "get_num_files") and callable(file_storage.get_num_files):
+    if (hasattr(file_storage, "get_num_files") and
+        callable(file_storage.get_num_files)):
+
         return file_storage.get_num_files()
     else:
         return 0
@@ -1646,10 +1665,10 @@ def _get_customer_details(user_email=None, mobile_phone=None):
         )
     else:
         return Response(
-            json.dumps(
-                {"message": "Customer not found",
-                        "user_count": 0}
-                ),
+        json.dumps({
+            "message": "Customer not found",
+            "user_count": 0
+        }),
             status=404,
             mimetype=APPLICATION_JSON,
         )
@@ -1670,17 +1689,22 @@ def _get_customer_details(user_email=None, mobile_phone=None):
             mimetype=APPLICATION_JSON,
         )
 
-
 @frappe.whitelist(allow_guest=True)
 def send_sms_expertexting(phone_number, otp):
-    """ "To send an SMS to given phone Number"""
+    """Send an SMS to given phone number"""
     try:
         phone_number = "+974" + phone_number
-        url = "https://www.experttexting.com/ExptRestApi/sms/json/Message/Send"
+        url = "https://www.expertexting.com/ExptRestApi/sms/json/Message/Send"
         message_text = urllib.parse.quote(
-            f"Your validation code for DallahMzad is {otp} Thank You.  \n \n  رمز التحقق الخاص بك لـ DallahMzad هو {otp} شكرًا لك."
+            f"Your validation code for DallahMzad is {otp}. شكراً لك {otp} رمز التحقق الخاص بك في DallahMzad.\n\nThank You."
         )
-        payload = f'username={get_sms_id("experttexting")}&from=DEFAULT&to={phone_number}&text={message_text}&type=unicode'
+        payload = (
+            f'username={get_sms_id("expertexting")}'
+            f'&from=DEFAULT'
+            f'&to={phone_number}'
+            f'&text={message_text}'
+            f'&type=unicode'
+        )
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
         response = requests.request(
@@ -1695,9 +1719,9 @@ def send_sms_expertexting(phone_number, otp):
             return True
         else:
             return False
-
     except Exception as e:
-        return "Error in qr sending SMS   " + str(e)
+        frappe.log_error(f"Error in sending SMS: {e}")
+        return False
 
 
 @frappe.whitelist(allow_guest=True)
@@ -1747,7 +1771,8 @@ def payment_gateway_log(reference, amount, user, bid):
 @frappe.whitelist(allow_guest=False)
 def send_email_sparkpost(Subject=None, Text=None, To=None, From=None):
     """To send an Email"""
-    url = frappe.db.get_single_value("Backend Server Settings", "sparkpost_url")
+    url = frappe.db.get_single_value("Backend Server Settings",
+                                     "sparkpost_url")
     if not To:
         return Response(
             json.dumps(
@@ -1822,11 +1847,12 @@ def send_email_sparkpost(Subject=None, Text=None, To=None, From=None):
         )
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=False)
 def enable_api_call(*args, **kwargs):
     settings = frappe.get_single("Backend Server Settings")
-    if  settings.enable_api_logs == 0:
+    if settings.enable_api_logs == 0:
         return
+
     try:
         doc = frappe.get_doc({
             "doctype": "API Log",
@@ -1846,7 +1872,7 @@ def enable_api_call(*args, **kwargs):
         doc.save()
         return doc
     except Exception as e:
-        pass
+        frappe.log_error(message=str(e), title="API Log Error")
 
 
 @frappe.whitelist(allow_guest=True)
