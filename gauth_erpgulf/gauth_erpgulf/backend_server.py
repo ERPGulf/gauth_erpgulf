@@ -1915,14 +1915,20 @@ def enable_api_call(*args, **kwargs):
         return
 
     try:
-        doc= frappe.get_doc({
-            "doctype": "API Log",
+        doc = frappe.get_doc({
+            "doctype": "API log",
             "api_url": frappe.local.request.path,
             "user_session": frappe.session.user,
             "method": frappe.local.request.method,
-            "input_parameters": json.dumps(frappe.local.form_dict) if frappe.local.form_dict else "No Parameters",
-            "response": json.dumps(frappe.local.response) if hasattr(frappe.local, 'response') else "No Response",
-            "status": frappe.local.response.get('http_status_code', 200) if hasattr(frappe.local, 'response') else 200,
+            "input_parameters": json.dumps(
+                frappe.local.form_dict
+            ) if frappe.local.form_dict else "No Parameters",
+            "response": json.dumps(
+                frappe.local.response
+            ) if hasattr(frappe.local, "response") else "No Response",
+            "status": frappe.local.response.get(
+                "http_status_code", 200
+            ) if hasattr(frappe.local, "response") else 200,
             "time": frappe.utils.now(),
         })
         doc.insert(ignore_permissions=True)
@@ -1930,7 +1936,10 @@ def enable_api_call(*args, **kwargs):
         doc.save()
         return doc
     except Exception as e:
-        frappe.log_error(message=str(e), title="API Log Error")
+        frappe.log_error(
+            message=str(e),
+            title="API Log Error"
+        )
 
 
 @frappe.whitelist(allow_guest=True)
