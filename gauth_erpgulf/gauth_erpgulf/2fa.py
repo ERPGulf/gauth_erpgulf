@@ -126,7 +126,7 @@ def get_otpsecret_for_(user):
     otp_secret = get_default(user + "_otpsecret")
     if otp_secret:
         # Correcting the `decrypt` call to remove the unexpected 'key' argument
-        return decrypt(otp_secret)  # Ensure `decrypt` function works without 'key'
+        return decrypt(otp_secret)
 
     # Generate a new OTP secret if it doesn't exist
     otp_secret = b32encode(os.urandom(10)).decode("utf-8")
@@ -226,7 +226,6 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
             _, decrypted_key = decrypt_2fa_key(encrypted_key)
             api_key, api_secret, app_key = decrypted_key.split("::")
 
-
         except ValueError:
             return Response(
                 json.dumps({"message": "2FA token expired or invalid"}),
@@ -301,9 +300,6 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
         existing_otp = frappe.cache().get_value(f"otp_{api_key}")
         current_time = frappe.utils.now_datetime()
         otp_expiry = existing_otp["expires_at"]
-
-
-
         if existing_otp and current_time < otp_expiry:
             return {
                 "success": False,
@@ -311,9 +307,6 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
             }
         # Generate OTP
         otp = authenticate_for_2factor1(api_key)
-
-
-
         # Validate OTP length
 
         expires = frappe.utils.now_datetime() + timedelta(seconds=60)
