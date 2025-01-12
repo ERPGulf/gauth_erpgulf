@@ -675,12 +675,14 @@ def g_generate_reset_password_key(
             "User",
             filters={"name": user, "mobile_no": mobile}
         )
-        ) < 1:
+    ) < 1:
             return Response(
-            json.dumps({
-                "status": "error",
-                "message": "User not found"
-            }),
+            json.dumps(
+                {
+                    "status": "error",
+                    "message": "User not found"
+                }
+            ),
             mimetype="application/json"
         )
 
