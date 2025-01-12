@@ -65,12 +65,19 @@ OAUTH_TOKEN_URL = "/api/method/frappe.integrations.oauth2.get_token"
 FIELD_NAME_AS_ID = "name"
 FULL_NAME_ALIAS = "full_name"
 
+
 def send_email_oci(recipient, subject, otp):
     """Send an email to the recipient with subject."""
     sender = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sender")
-    sender_name = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS,"sender_name")
-    user_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "user_smtp")
-    password_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "password_smtp")
+    sender_name = frappe.db.get_single_value(
+                BACKEND_SERVER_SETTINGS, "sender_name"
+                )
+    user_smtp = frappe.db.get_single_value(
+        BACKEND_SERVER_SETTINGS, "user_smtp"
+        )
+    password_smtp = frappe.db.get_single_value(
+        BACKEND_SERVER_SETTINGS, "password_smtp"
+        )
     host = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "host")
     port = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "port")
     msg = EmailMessage()
@@ -151,7 +158,9 @@ def validate_otp_to_generate_user_token(user, user_otp):
         # return customer_data
         if not otp_data:
             return Response(
-                json.dumps({"success": False, "message": "OTP expired or not found"}),
+                json.dumps(
+                {"success": False, "message": "OTP expired or not found"}
+                    ),
                 status=400,
                 mimetype="application/json",
             )
@@ -234,7 +243,9 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
         client_id_value, client_secret_value = get_oauth_client(app_key)
         if client_id_value is None:
             return Response(
-                json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
+                json.dumps(
+                    {"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}
+                    ),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
@@ -281,7 +292,7 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
         if existing_otp and frappe.utils.now_datetime() < existing_otp["expires_at"]:
             return {
                 "success": False,
-                "message": "An OTP already exists. Please validate the current OTP.",
+                "message": "An OTP already exists",
             }
 
         # Generate OTP
@@ -290,16 +301,18 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
         # Validate OTP length
         if len(otp) != 6 or not otp.isdigit():
             return Response(
-                json.dumps({"message": "Invalid OTP generated. Please try again."}),
+                json.dumps(
+                    {"message": "Invalid OTP generated. Please try again."}
+                    ),
                 status=400,
                 mimetype="application/json",
             )
-
+        expires=frappe.utils.now_datetime() + timedelta(seconds=60)
         frappe.cache().set_value(
             f"otp_{api_key}",
             {
                 "otp": otp,
-                "expires_at": frappe.utils.now_datetime() + timedelta(seconds=600),
+                "expires_at":expires,
                 # "user": api_key,
                 "token": result_data,
                 # "user": qid[0] if qid else {},
@@ -316,7 +329,9 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
         except Exception as e:
             frappe.log_error(str(e), "Email Template or Sending Error")
             return Response(
-                json.dumps({"message": "Email template not found or sending failed"}),
+                json.dumps(
+                    {"message": "Email template not found or sending failed"}
+                    ),
                 status=500,
                 mimetype="application/json",
             )
