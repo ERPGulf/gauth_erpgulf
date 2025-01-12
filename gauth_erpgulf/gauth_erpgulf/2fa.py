@@ -283,8 +283,6 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
         if response.status_code == 200:
             try:
                 result_data = response.json()
-
-
             except json.JSONDecodeError as json_error:
                 return Response(
                     json.dumps(
