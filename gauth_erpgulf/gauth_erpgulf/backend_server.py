@@ -1684,7 +1684,11 @@ def send_sms_expertexting(phone_number, otp):
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
         response = requests.request(
-            "POST", url, headers=headers, data=payload, timeout=10
+            "POST",
+            url,
+            headers=headers,
+            data=payload,
+            timeout=10
         )
 
         if response.status_code in (200, 201):
@@ -1701,9 +1705,12 @@ def test_redirect_url():
     """Redirectig to Url"""
     redirect_url = "https://doodles.google/search/"
 
-    response_data = {"data": "Redirecting to here", "redirect_url": redirect_url}
+    response_data = {"data": "Redirecting to here",
+                     "redirect_url": redirect_url}
     return Response(
-        json.dumps(response_data), status=303, mimetype="text/html; charset=utf-8"
+        json.dumps(response_data),
+        status=303,
+        mimetype="text/html; charset=utf-8"
     )
 
 
@@ -1732,7 +1739,8 @@ def payment_gateway_log(reference, amount, user, bid):
         ).insert(ignore_permissions=True)
         return "Successfully logged Payment gateway initialization"
     except Exception as e:
-        frappe.log_error(title="Payment logging failed", message=frappe.get_traceback())
+        frappe.log_error(title="Payment logging failed",
+                         message=frappe.get_traceback())
         return "Error in payment gateway log  " + str(e)
 
 
@@ -1751,7 +1759,7 @@ def send_email_sparkpost(Subject=None, Text=None, To=None, From=None):
     if not Text:
         return Response(
             json.dumps(
-                {"message": "At least one of text or html needs to exist in content"}
+                {"message": "text or html needs to exist in content"}
             ),
             status=404,
             mimetype="application/json",
@@ -1787,38 +1795,50 @@ def send_email_sparkpost(Subject=None, Text=None, To=None, From=None):
         }
 
         response = requests.request(
-            "POST", url, headers=headers, data=payload, timeout=10
+            "POST",
+            url, headers=headers,
+            data=payload,
+            timeout=10
         )
 
         if response.status_code == 200:
-            return Response(response.text, status=200, mimetype="application/json")
+            return Response(response.text,
+                            status=200,
+                            mimetype="application/json")
         else:
 
             return Response(
-                response.text, status=response.status_code, mimetype="application/json"
+                response.text,
+                status=response.status_code,
+                mimetype="application/json"
             )
 
     except Exception as e:
 
         return Response(
-            json.dumps({"message": str(e)}), status=500, mimetype="application/json"
+            json.dumps(
+                {"message": str(e)}),
+            status=500, mimetype="application/json"
         )
 
 
 @frappe.whitelist(allow_guest=True)
 def enable_api_call(*args, **kwargs):
     settings = frappe.get_single("Backend Server Settings")
-    if  settings.enable_api_logs== 0:
+    if  settings.enable_api_logs == 0:
         return
     try:
-        doc= frappe.get_doc({
+        doc = frappe.get_doc({
             "doctype": "API Log",
             "api_url": frappe.local.request.path,
             "user_session": frappe.session.user,
             "method": frappe.local.request.method,
-            "input_parameters": json.dumps(frappe.local.form_dict) if frappe.local.form_dict else "No Parameters",
-            "response": json.dumps(frappe.local.response) if hasattr(frappe.local, 'response') else "No Response",
-            "status": frappe.local.response.get('http_status_code', 200) if hasattr(frappe.local, 'response') else 200,
+            "input_parameters": json.dumps(
+                frappe.local.form_dict) if frappe.local.form_dict else "",
+            "response": json.dumps(frappe.local.response)
+                if hasattr(frappe.local, 'response') else "",
+            "status": frappe.local.response.get('http_status_code', 200)
+                if hasattr(frappe.local, 'response') else 500,
             "time": frappe.utils.now(),
         })
         doc.insert(ignore_permissions=True)
