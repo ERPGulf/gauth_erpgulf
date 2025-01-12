@@ -300,8 +300,6 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
                 "success": False,
                 "message": "An OTP already exists",
             }
-
-
         # Generate OTP
         otp = authenticate_for_2factor1(api_key)
         otp = str(otp)
@@ -358,13 +356,12 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
 def xor_encrypt_decrypt(text, key):
     """Encrypt or decrypt text using XOR operation."""
     return "".join(
-    chr(ord(c) ^ ord(k))
-    for c, k in zip(
-        text,
-        key * ((len(text) // len(key)) + 1)
+        chr(ord(c) ^ ord(k))
+        for c, k in zip(
+            text,
+            key * ((len(text) // len(key)) + 1)
+        )
     )
-)
-
 
 
 @frappe.whitelist(allow_guest=True)
