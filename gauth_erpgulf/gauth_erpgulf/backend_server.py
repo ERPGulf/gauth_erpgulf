@@ -50,6 +50,19 @@ GEO_IP_DATABASE = "geo-ip.mmdb"
 COUNTRIES_AND_IP_ADDRESS = "Countries and IP address"
 APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded"
 
+@frappe.whitelist(allow_guest=True)
+def get_backend_server_settings(*keys):
+    """
+    Fetch multiple settings from the BACKEND_SERVER_SETTINGS doctype in a single call.
+
+    Args:
+        keys (list): List of keys to fetch.
+
+    Returns:
+        dict: Dictionary with keys and their corresponding values.
+    """
+    return {key: frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, key) for key in keys}
+
 
 @frappe.whitelist(allow_guest=False)
 def is_api_request():
@@ -94,7 +107,8 @@ def json_response(data, status=200):
 @frappe.whitelist(allow_guest=False)
 def generate_totp():
     """Generate TOTP token using 2FA secret."""
-    secret = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "2fa_secret_key")
+    settings = get_backend_server_settings("2fa_secret_key")
+    secret = settings["2fa_secret_key"]
     totp = pyotp.TOTP(secret, interval=60)
     return totp.now()
 
@@ -676,12 +690,14 @@ def g_generate_reset_password_key(
 @frappe.whitelist(allow_guest=False)
 def send_email_oci(recipient, subject, body_html):
     """send an email to recipient with subject"""
-    sender = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sender")
-    sender_name = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sender_name")
-    user_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "user_smtp")
-    password_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "password_smtp")
-    host = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "host")
-    port = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "port")
+    settings = get_backend_server_settings("sender", "sender_name", "user_smtp", "password_smtp", "host", "port")
+    sender = settings["sender"]
+    sender_name = settings["sender_name"]
+    user_smtp = settings["user_smtp"]
+    password_smtp = settings["password_smtp"]
+    host = settings["host"]
+    port = settings["port"]
+
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = formataddr((sender_name, sender))
@@ -1023,8 +1039,8 @@ def send_firebase_data(
     topic="",
 ):
     """to send message to firebase"""
-
-    url = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "url")
+    settings = get_backend_server_settings("url")
+    url = settings["url"]
 
     if notification_type == "auction_ended":
         payload = json.dumps(
@@ -1660,7 +1676,8 @@ def payment_gateway_log(reference, amount, user, bid):
 @frappe.whitelist(allow_guest=False)
 def send_email_sparkpost(subject=None, text=None, to=None, from_=None):
     """To send an Email"""
-    url = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sparkpost_url")
+    settings = get_backend_server_settings("sparkpost_url")
+    url = settings["sparkpost_url"]
     if not to:
         return Response(
             json.dumps({"message": "At least one valid recipient is required"}),
@@ -1805,8 +1822,8 @@ def get_restriction_by_ip_1(source_ip_address):
         except ValueError:
             # Ignore invalid IP or CIDR formats in the database
             frappe.log_error(
-                f"Invalid IP or CIDR format: {country_entry}", "IP Restriction Error"
-            )
+                f"Invalid IP or CIDR format: {country_entry}",
+                "IP Restriction Error")
 
     # No matching restrictions found
     return []
@@ -1844,7 +1861,8 @@ def test_generate_token_encrypt_for_user_2fa(encrypted_key):
         if client_id_value is None:
 
             return Response(
-                json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
+                json.dumps({"message": INVALID_SECURITY_PARAMETERS,
+                            "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
