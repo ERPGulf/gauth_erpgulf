@@ -1,52 +1,48 @@
 import os
-from base64 import b32encode, b64encode
-from io import BytesIO
-import pyotp
-import base64
-import frappe
-from datetime import timedelta
-import frappe.defaults
-from frappe import _
-from frappe.permissions import ALL_USER_ROLE
-from frappe.utils import cint, get_datetime, get_url, time_diff_in_seconds
-from frappe.utils.background_jobs import enqueue
-from frappe.utils.password import decrypt, encrypt
 import random
 import json
-import os
 import secrets
+import string
+import re
+import base64
+import pyotp
+from base64 import b32encode, b64encode
+from io import BytesIO
+from datetime import timedelta
 from email.utils import formataddr
 from email.message import EmailMessage
 import smtplib
-import ipaddress
 import ssl
-import string
+import ipaddress
 import urllib.parse
-import re
-import geoip2.database
-import frappe
-from frappe.utils import cint
-from mimetypes import guess_type
-from frappe.utils.image import optimize_image
-from frappe import _, is_whitelisted, ping
-from erpnext.accounts.utils import get_balance_on, get_fiscal_year
-from frappe.utils.response import Response
-import google.auth.transport.requests
-from google.oauth2 import service_account
-from frappe.utils import now_datetime
-from frappe.utils.data import sha256_hash
-from frappe.core.doctype.user.user import User
-from frappe.core.doctype.user.user import update_password
-from frappe.utils.password import update_password
-from frappe.utils import get_url
-import pyotp
 import requests
 from werkzeug.wrappers import Response
+import geoip2.database
 import firebase_admin
 from firebase_admin import credentials, exceptions, messaging
 from pyotp import TOTP
-from frappe import _
+from google.oauth2 import service_account
+import google.auth.transport.requests
 
+# Frappe and ERPNext imports
+import frappe
+import frappe.defaults
+from frappe import _, is_whitelisted, ping
+from frappe.permissions import ALL_USER_ROLE
+from frappe.utils import (
+    cint,
+    get_datetime,
+    get_url,
+    time_diff_in_seconds,
+    now_datetime,
+    sha256_hash,
+)
+from frappe.utils.background_jobs import enqueue
+from frappe.utils.image import optimize_image
+from frappe.utils.password import encrypt, decrypt, update_password
+from frappe.utils.response import Response
+from frappe.core.doctype.user.user import User
+from erpnext.accounts.utils import get_balance_on, get_fiscal_year
 
 PARENT_FOR_DEFAULTS = "__2fa"
 OAUTH_CLIENT = "OAuth Client"

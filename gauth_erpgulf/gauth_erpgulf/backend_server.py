@@ -51,7 +51,6 @@ COUNTRIES_AND_IP_ADDRESS = "Countries and IP address"
 APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded"
 
 
-
 @frappe.whitelist(allow_guest=False)
 def is_api_request():
     path = frappe.request.path
@@ -1248,7 +1247,7 @@ def send_sms_twilio(phone_number, otp):
         phone_number = "+91" + phone_number
         parts = get_sms_id("twilio").split(":")
 
-        url =f"https://api.twilio.com/2010-04-01/Accounts/{parts[0]}/Messages.json"
+        url = f"https://api.twilio.com/2010-04-01/Accounts/{parts[0]}/Messages.json"
 
         payload = (
             f"To={phone_number}&From=phone&Body="
