@@ -47,11 +47,6 @@ APPLICATION_JSON = "application/json"
 
 
 @frappe.whitelist(allow_guest=False)
-def getToken2(self):
-    pass
-
-
-@frappe.whitelist(allow_guest=False)
 def is_api_request():
     path = frappe.request.path
     headers = frappe.request.headers
