@@ -2,6 +2,8 @@ WEB_ACCESS_LOG = "Web Access Log"
 import frappe
 import re
 from datetime import datetime, timezone
+
+
 @frappe.whitelist(allow_guest=True)
 def delete_all_web_access_logs_async():
     """
@@ -10,10 +12,13 @@ def delete_all_web_access_logs_async():
     Returns:
         str: A message indicating the deletion process has started.
     """
-    return "Use it for emergency only"
+    # return "Use it for emergency only"
 
     # Enqueue the deletion process as a background job
-    frappe.enqueue("gauth_erpgulf.gauth_erpgulf.web_logging.delete_all_web_access_logs", timeout=14400)
+    frappe.enqueue(
+        "gauth_erpgulf.gauth_erpgulf.web_logging.delete_all_web_access_logs",
+        timeout=14400,
+    )
     return "Deletion of Web Access Log records has been started as a background job."
 
 
@@ -49,19 +54,22 @@ def delete_all_web_access_logs():  #  dont call this directly . will get timeout
     )
 
 
-
-
 @frappe.whitelist(allow_guest=True)
 def enqueue_parse_nginx_logs():
     """
     Enqueue the parse_nginx_logs function to run in the background.
     """
     # return "Executed If activated on guath setting only"
-    result = frappe.get_value("Backend Server Settings", None, "activate_scheduled_update")  
-    if int(result)!=0:
-        frappe.log_error("Log Parsing Activated","Log Parsing")
-        frappe.enqueue("gauth_erpgulf.gauth_erpgulf.web_logging.parse_nginx_logs", timeout=14400)
+    result = frappe.get_value(
+        "Backend Server Settings", None, "activate_scheduled_update"
+    )
+    if int(result) != 0:
+        frappe.log_error("Log Parsing Activated", "Log Parsing")
+        frappe.enqueue(
+            "gauth_erpgulf.gauth_erpgulf.web_logging.parse_nginx_logs", timeout=14400
+        )
     return "Nginx log parsing has been started as a background job."
+
 
 def parse_nginx_logs():  # dont call this directly . will get timeout error - call enqueue_parse_nginx_logs
     """
@@ -134,12 +142,12 @@ def parse_nginx_logs():  # dont call this directly . will get timeout error - ca
                     doc.insert(ignore_permissions=True)
                     records_added += 1
 
-    frappe.db.commit() # Commit all changes to the database
+    frappe.db.commit()  # Commit all changes to the database
     frappe.db.set_value(
         "Backend Server Settings",
         None,  # This assumes there is only one Backend Server Settings record
         "last_updated_date",
-        frappe.utils.now_datetime()  # Set the current timestamp
+        frappe.utils.now_datetime(),  # Set the current timestamp
     )
     frappe.log_error(
         f"Successfully added {records_added} new log records.", "Nginx Log Parsing"

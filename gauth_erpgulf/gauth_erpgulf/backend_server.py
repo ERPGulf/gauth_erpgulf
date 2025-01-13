@@ -1248,7 +1248,8 @@ def send_sms_twilio(phone_number, otp):
         phone_number = "+91" + phone_number
         parts = get_sms_id("twilio").split(":")
 
-        url = f"https://api.twilio.com/2010-04-01/Accounts/" f"{parts[0]}/Messages.json"
+        url =f"https://api.twilio.com/2010-04-01/Accounts/{parts[0]}/Messages.json"
+
         payload = (
             f"To={phone_number}&From=phone&Body="
             f"Your%20DallahMzad%20OTP%20Verification%20code%20{otp}"
