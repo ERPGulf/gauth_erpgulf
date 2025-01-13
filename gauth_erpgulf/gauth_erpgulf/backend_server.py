@@ -52,7 +52,6 @@ APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded"
 
 
 
-
 @frappe.whitelist(allow_guest=False)
 def is_api_request():
     path = frappe.request.path
@@ -314,7 +313,7 @@ def generate_token_encrypt(encrypted_key):
             api_key, api_secret, app_key = decrypted_key.split("::")
         except ValueError:
             return Response(
-                json.dumps({"message":TWO_FA_TOKEN_EXPIRED, "user_count": 0}),
+                json.dumps({"message": TWO_FA_TOKEN_EXPIRED, "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
@@ -429,7 +428,7 @@ def generate_token_encrypt_for_user(encrypted_key):
 
         except ValueError:
             return Response(
-                json.dumps({"message":TWO_FA_TOKEN_EXPIRED, "user_count": 0}),
+                json.dumps({"message": TWO_FA_TOKEN_EXPIRED, "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
@@ -1084,7 +1083,7 @@ def _get_access_token():
 def validate_country(ip_address):
     """To validate IP address Country"""
 
-    reader = geoip2.database.Reader("geo-ip.mmdb")
+    reader = geoip2.database.Reader(GEO_IP_DATABASE)
     response = reader.country(ip_address)
 
     return response.country.name
@@ -1108,7 +1107,7 @@ def get_restriction_by_ip(source_ip_address):
 @frappe.whitelist(allow_guest=False)
 def get_country_from_ip(ip_address):
     """Retrieve the country name from an IP address."""
-    reader = geoip2.database.Reader("geo-ip.mmdb")
+    reader = geoip2.database.Reader(GEO_IP_DATABASE)
     response = reader.country(ip_address)
     return response.country.name
 
@@ -1179,7 +1178,6 @@ def check_country_restriction(*args, **kwargs):
     try:
         source_ip_address = frappe.local.request.headers.get("X-Forwarded-For")
         restriction = get_restriction_by_ip(source_ip_address)
-        # return restriction
         if not restriction:
             user_country = get_country_from_ip(source_ip_address)
             restriction = get_restriction_by_country(user_country)
@@ -1257,7 +1255,7 @@ def send_sms_twilio(phone_number, otp):
         )
 
         headers = {
-            "Content-Type":APPLICATION_FORM_URLENCODED,
+            "Content-Type": APPLICATION_FORM_URLENCODED,
             "Authorization": f"Basic {parts[1]}",
         }
 
@@ -1604,7 +1602,7 @@ def send_sms_expertexting(phone_number, otp):
             f"&text={message_text}"
             f"&type=unicode"
         )
-        headers = {"Content-Type":APPLICATION_FORM_URLENCODED}
+        headers = {"Content-Type": APPLICATION_FORM_URLENCODED}
 
         response = requests.request(
             "POST", url, headers=headers, data=payload, timeout=10
@@ -1766,10 +1764,10 @@ def log_request_source(*args, **kwargs):
         source_ip_address = frappe.local.request.headers.get("X-Forwarded-For")
         if not source_ip_address:
             frappe.throw("Unable to retrieve the IP address from headers.")
-        reader = geoip2.database.Reader("geo-ip.mmdb")
+        reader = geoip2.database.Reader(GEO_IP_DATABASE)
         response = reader.country(source_ip_address)
         user_country = response.country.name
-        return source_ip_address
+        return source_ip_address, user_country
     except Exception as e:
         frappe.throw(f"Unable to determine the country: {str(e)}")
 
@@ -1827,7 +1825,7 @@ def test_generate_token_encrypt_for_user_2fa(encrypted_key):
 
         except ValueError:
             return Response(
-                json.dumps({"message":TWO_FA_TOKEN_EXPIRED, "user_count": 0}),
+                json.dumps({"message": TWO_FA_TOKEN_EXPIRED, "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
