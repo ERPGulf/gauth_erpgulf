@@ -103,6 +103,7 @@ def xor_encrypt_decrypt(text, key):
         for c, k in zip(text, repeated_key)
     )
 
+
 @frappe.whitelist(allow_guest=False)
 def json_response(data, status=200):
     """Return a standardized JSON response."""
@@ -255,8 +256,10 @@ def generate_token_secure_for_users(username, password, app_key):
         if client_id_value is None:
             return Response(
                 json.dumps(
-                    {"message": INVALID_SECURITY_PARAMETERS,
-                    "user_count": 0}),
+                    {
+                        "message": INVALID_SECURITY_PARAMETERS,
+                        "user_count": 0
+                    }),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
@@ -290,7 +293,10 @@ def generate_token_secure_for_users(username, password, app_key):
             }
             return Response(
                 json.dumps(
-                {"data": result}),
+                {
+                    "data": result
+                }
+                ),
                 status=200,
                 mimetype=APPLICATION_JSON
             )
@@ -478,8 +484,8 @@ def generate_token_encrypt_for_user(encrypted_key):
             return Response(
                 json.dumps(
                     {
-                    "message": INVALID_SECURITY_PARAMETERS,
-                    "user_count": 0
+                        "message": INVALID_SECURITY_PARAMETERS,
+                        "user_count": 0
                     }
                     ),
                 status=401,
@@ -666,8 +672,8 @@ def g_generate_reset_password_key(
         return Response(
             json.dumps(
                 {
-                "message": "Mobile or Email not found",
-                "user_count": 0
+                    "message": "Mobile or Email not found",
+                    "user_count": 0
                 }
                 ),
             status=404,
@@ -676,7 +682,7 @@ def g_generate_reset_password_key(
     try:
         if len(frappe.get_all(
             "User",
-            filters={"name": user,"mobile_no": mobile})) < 1:
+            filters= {"name": user,"mobile_no": mobile})) < 1:
             return Response(
                 json.dumps({"status": "error", "message": "User not found"}),
                 mimetype=APPLICATION_JSON,
@@ -699,8 +705,9 @@ def g_generate_reset_password_key(
         name = frappe.get_all(
             "User",
             fields=["full_name"],
-            filters={"name": user,
-                     "mobile_no": mobile
+            filters={
+                        "name": user,
+                        "mobile_no": mobile
                     }
         )
         full_name = name[0].get("full_name")
@@ -713,9 +720,10 @@ def g_generate_reset_password_key(
         return Response(
             json.dumps(
                 {
-                "reset_key": key,
-                "generated_time": str(now_datetime()),
-                "URL": url}
+                    "reset_key": key,
+                    "generated_time": str(now_datetime()),
+                    "URL": url
+                }
             ),
             status=200,
             mimetype=APPLICATION_JSON,
@@ -855,9 +863,9 @@ def g_delete_user(email, mobile_no):
                 frappe.get_all(
                     "User",
                     {
-                    "name": email,
-                    "email": email,
-                    "mobile_no": mobile_no
+                        "name": email,
+                        "email": email,
+                        "mobile_no": mobile_no
                     }
                 )
             )
@@ -865,8 +873,9 @@ def g_delete_user(email, mobile_no):
         ):
             return Response(
                 json.dumps(
-                    {"message": USER_NOT_FOUND_MESSAGE,
-                     "user_count": 0
+                    {
+                        "message": USER_NOT_FOUND_MESSAGE,
+                        "user_count": 0
                     }),
                 status=404,
                 mimetype=APPLICATION_JSON,
@@ -881,8 +890,8 @@ def g_delete_user(email, mobile_no):
         )
         return json_response(
             {
-            "message": "User successfully deleted",
-            "user_count": 1
+                "message": "User successfully deleted",
+                "user_count": 1
             })
     except Exception as e:
         return Response(
@@ -988,9 +997,9 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
                 frappe.get_all(
                     "User",
                     {
-                    "name": username,
-                    "email": email,
-                    "mobile_no": mobile_no
+                        "name": username,
+                        "email": email,
+                        "mobile_no": mobile_no
                     }
                 )
             )
@@ -999,8 +1008,8 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
             return Response(
                 json.dumps(
                     {
-                    "message": USER_NOT_FOUND_MESSAGE,
-                    "user_count": 0
+                        "message": USER_NOT_FOUND_MESSAGE,
+                        "user_count": 0
                     }
                     ),
                 status=404,
@@ -1008,9 +1017,9 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
             )
 
         frappe.db.set_value("User", username, "enabled", enable_user)
-        status_message =(
-                        f"User successfully {'enabled' if enable_user else 'disabled'}"
-                        )
+        status_message = (
+                            f"User successfully {'enabled' if enable_user else 'disabled'}"
+                         )
 
         return json_response(
             {
@@ -1036,8 +1045,8 @@ def g_update_password_using_usertoken(password):
             return Response(
                 json.dumps(
                     {
-                    "message": USER_NOT_FOUND_MESSAGE,
-                    "user_count": 0
+                        "message": USER_NOT_FOUND_MESSAGE,
+                        "user_count": 0
                     }
                     ),
                 status=404,
@@ -1080,8 +1089,8 @@ def g_update_password_using_reset_key(new_password, reset_key, username):
             return Response(
                 json.dumps(
                     {
-                    "message": USER_NOT_FOUND_MESSAGE,
-                    "user_count": 0
+                        "message": USER_NOT_FOUND_MESSAGE,
+                        "user_count": 0
                     }
                     ),
                 status=404,
@@ -1347,9 +1356,9 @@ def get_sms_id(provider):
             "custom_vodafone_mask"
             )
         param_string = (
-        "?application=" + app +
-        "&password=" + passwd +
-        "&mask=" + mask
+            "?application=" + app +
+            "&password=" + passwd +
+            "&mask=" + mask
         )
         return param_string
 
@@ -2104,8 +2113,8 @@ def resend_otp_for_reset_key(user):
     return Response(
         json.dumps(
             {
-            "success": True,
-            "message": "OTP resent successfully"
+                "success": True,
+                "message": "OTP resent successfully"
             }
             ),
         status=200,

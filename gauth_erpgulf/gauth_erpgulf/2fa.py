@@ -443,4 +443,4 @@ def resend_otp(user):
                 ),
             status=500,
             mimetype="application/json",
-        )
+       )
