@@ -292,13 +292,11 @@ def generate_token_secure_for_users(username, password, app_key):
                 "user": qid[0] if qid else {},
             }
             return Response(
-                json.dumps(
-                {
+                json.dumps({
                     "data": result
-                }
-                ),
+                }),
                 status=200,
-                mimetype=APPLICATION_JSON
+                mimetype=APPLICATION_JSON,
             )
         else:
             frappe.local.response.http_status_code = 401
@@ -682,7 +680,8 @@ def g_generate_reset_password_key(
     try:
         if len(frappe.get_all(
             "User",
-            filters= {"name": user,"mobile_no": mobile})) < 1:
+            filters={"name": user, "mobile_no": mobile}
+            )) < 1:
             return Response(
                 json.dumps({"status": "error", "message": "User not found"}),
                 mimetype=APPLICATION_JSON,

@@ -1,13 +1,13 @@
-WEB_ACCESS_LOG = "Web Access Log"
 import frappe
 import re
 from datetime import datetime, timezone
+WEB_ACCESS_LOG = "Web Access Log"
 
 
 @frappe.whitelist(allow_guest=True)
 def delete_all_web_access_logs_async():
     """
-    Enqueue a background job to delete all records from the 'Web Access Log' doctype.
+    Enqueue a background job to clear 'Web Access Log' records.
 
     Returns:
         str: A message indicating the deletion process has started.
@@ -19,10 +19,10 @@ def delete_all_web_access_logs_async():
         "gauth_erpgulf.gauth_erpgulf.web_logging.delete_all_web_access_logs",
         timeout=14400,
     )
-    return "Deletion of Web Access Log records has been started as a background job."
+    return "Deletion of Web Access Log records has been started."
 
 
-def delete_all_web_access_logs():  #  dont call this directly . will get timeout error - call delete_all_web_access_logs_async
+def delete_all_web_access_logs():
     """
     Actual function to delete all records from the 'Web Access Log' doctype.
     This function is intended to be run in the background.
@@ -33,7 +33,10 @@ def delete_all_web_access_logs():  #  dont call this directly . will get timeout
     records = frappe.get_all(doctype_name, pluck="name")
 
     if not records:
-        frappe.log_error("No records found in Web Access Log.", "Delete Web Access Log")
+        frappe.log_error(
+                            "No records found in Web Access Log.",
+                            "Delete Web Access Log"
+                        )
         return
 
     records_deleted = 0
@@ -66,12 +69,13 @@ def enqueue_parse_nginx_logs():
     if int(result) != 0:
         frappe.log_error("Log Parsing Activated", "Log Parsing")
         frappe.enqueue(
-            "gauth_erpgulf.gauth_erpgulf.web_logging.parse_nginx_logs", timeout=14400
+            "gauth_erpgulf.gauth_erpgulf.web_logging.parse_nginx_logs",
+            timeout=14400
         )
     return "Nginx log parsing has been started as a background job."
 
 
-def parse_nginx_logs():  # dont call this directly . will get timeout error - call enqueue_parse_nginx_logs
+def parse_nginx_logs():
     """
     Parse Nginx logs and insert records into the 'Web Access Log' doctype.
     Only records newer than the latest existing entry in the doctype are added.
@@ -100,7 +104,10 @@ def parse_nginx_logs():  # dont call this directly . will get timeout error - ca
     if latest_log:
         # Combine date and time into a single datetime object
         latest_datetime_str = f"{latest_log[0]} {latest_log[1]}"
-        latest_datetime = datetime.strptime(latest_datetime_str, "%Y-%m-%d %H:%M:%S")
+        latest_datetime = datetime.strptime(
+                                                latest_datetime_str,
+                                                "%Y-%m-%d %H:%M:%S"
+                                            )
         latest_datetime = latest_datetime.replace(tzinfo=timezone.utc)
     else:
         # If no records exist, parse all logs
@@ -120,7 +127,11 @@ def parse_nginx_logs():  # dont call this directly . will get timeout error - ca
                 # Process only newer records
                 if not latest_datetime or log_datetime > latest_datetime:
                     request_parts = match.group("request").split()
-                    api_type = request_parts[0] if len(request_parts) > 0 else "UNKNOWN"
+                    api_type = (
+                        request_parts[0]
+                        if len(request_parts) > 0
+                        else "UNKNOWN"
+                    )
 
                     # Create a new record in the 'Web Access Log' doctype
                     doc = frappe.get_doc(
@@ -150,6 +161,7 @@ def parse_nginx_logs():  # dont call this directly . will get timeout error - ca
         frappe.utils.now_datetime(),  # Set the current timestamp
     )
     frappe.log_error(
-        f"Successfully added {records_added} new log records.", "Nginx Log Parsing"
+        f"Successfully added {records_added} new log records.",
+        "Nginx Log Parsing"
     )
     return f"Successfully added {records_added} new log records."
