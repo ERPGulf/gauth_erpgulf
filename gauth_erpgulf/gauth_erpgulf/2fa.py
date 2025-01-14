@@ -58,13 +58,18 @@ FIELD_NAME_AS_ID = "name"
 FULL_NAME_ALIAS = "full_name"
 
 
-
 def send_email_oci(recipient, subject, otp):
     """Send an email to the recipient with subject."""
     sender = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sender")
-    sender_name = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "sender_name")
-    user_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "user_smtp")
-    password_smtp = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "password_smtp")
+    sender_name = frappe.db.get_single_value(
+        BACKEND_SERVER_SETTINGS,
+        "sender_name")
+    user_smtp = frappe.db.get_single_value(
+        BACKEND_SERVER_SETTINGS,
+        "user_smtp")
+    password_smtp = frappe.db.get_single_value(
+            BACKEND_SERVER_SETTINGS,
+            "password_smtp")
     host = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "host")
     port = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "port")
     msg = EmailMessage()
@@ -143,7 +148,8 @@ def validate_otp_to_generate_user_token(user, user_otp):
         )
         if not otp_data:
             return Response(
-                json.dumps({"success": False, "message": "OTP expired or not found"}),
+                json.dumps({"success": False,
+                            "message": "OTP expired or not found"}),
                 status=400,
                 mimetype=APPLICATION_JSON,
             )
@@ -223,7 +229,8 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
 
         if client_id_value is None:
             return Response(
-                json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
+                json.dumps({"message": INVALID_SECURITY_PARAMETERS,
+                            "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
@@ -248,7 +255,8 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
             except json.JSONDecodeError as json_error:
                 return Response(
                     json.dumps(
-                        {"message": "Invalid JSON response", "error": str(json_error)}
+                        {"message": "Invalid JSON response",
+                         "error": str(json_error)}
                     ),
                     status=500,
                     mimetype=APPLICATION_JSON,
@@ -286,7 +294,9 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
         except Exception as e:
             frappe.log_error(str(e), "Email Template or Sending Error")
             return Response(
-                json.dumps({"message": "Email template not found or sending failed"}),
+                json.dumps(
+                    {"message": "Email template not found or sending failed"}
+                    ),
                 status=500,
                 mimetype=APPLICATION_JSON,
             )
@@ -306,14 +316,16 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
 def xor_encrypt_decrypt(text, key):
     """Encrypt or decrypt text using XOR operation."""
     return "".join(
-        chr(ord(c) ^ ord(k)) for c, k in zip(text, key * ((len(text) // len(key)) + 1))
+        chr(ord(c) ^ ord(k))
+        for c, k in zip(text, key * ((len(text) // len(key)) + 1))
     )
 
 
 @frappe.whitelist(allow_guest=True)
 def generate_totp():
     """Generate TOTP token using 2FA secret."""
-    secret = frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, "2fa_secret_key")
+    secret = frappe.db.get_single_value(
+        BACKEND_SERVER_SETTINGS, "2fa_secret_key")
     totp = pyotp.TOTP(secret, interval=60)
     return totp.now()
 
@@ -371,7 +383,7 @@ def resend_otp(user):
             otp = generate_totp_without_leading_zero(totp)
             otp_data = {
                 "otp": otp,
-                "expires_at": frappe.utils.now_datetime() + timedelta(seconds=600),
+                "expires_at": now_datetime() + timedelta(seconds=600),
             }
             frappe.cache().set_value(f"otp_{user}", otp_data)
 
@@ -399,7 +411,7 @@ def resend_otp(user):
                 )
             message = email_template.response_html
             message = message.format(otp=otp)
-            updated_html_content = message.replace("John Deo",user)
+            updated_html_content = message.replace("John Deo", user)
             subject = "Your OTP Code (Resent)"
             send_email_oci(user_email, subject, updated_html_content)
         except Exception as e:
@@ -414,15 +426,13 @@ def resend_otp(user):
             )
 
         return Response(
-            json.dumps(
-                {
-                "success": True,
-                "message": "OTP resent successfully"
-                }
-                ),
-            status=200,
-            mimetype="application/json",
-        )
+                json.dumps({
+                    "success": True,
+                    "message": "OTP resent successfully"
+                }),
+                status=200,
+                mimetype="application/json",
+            )
 
     except Exception as e:
         frappe.log_error(message=str(e), title="Resend OTP Error")
@@ -434,4 +444,3 @@ def resend_otp(user):
             status=500,
             mimetype="application/json",
         )
-
