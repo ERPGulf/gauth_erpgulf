@@ -337,3 +337,101 @@ def get_oauth_client(app_key):
     if not client_id:
         raise frappe.ValidationError(_(INVALID_SECURITY_PARAMETERS))
     return client_id, client_secret
+
+
+@frappe.whitelist(allow_guest=True)
+def generate_totp_without_leading_zero(totp):
+    """Generate TOTP without leading zeros."""
+    while True:
+        token = totp.now()
+        if token[0] != "0":
+            return token
+
+
+@frappe.whitelist(allow_guest=True)
+def resend_otp(user):
+    """
+    Resend the OTP to the user's email.
+    Args:
+        user (str): The user identifier (e.g., email or username).
+    Returns:
+        JSON Response indicating success or failure.
+    """
+    try:
+        # Check if an OTP exists in the cache
+        otp_data = frappe.cache().get_value(f"otp_{user}")
+        otp_secret = get_otpsecret_for_(user)
+        totp = TOTP(otp_secret, digits=6)
+
+        if otp_data and frappe.utils.now_datetime() < otp_data["expires_at"]:
+            # Use existing OTP if it's still valid
+            otp = otp_data["otp"]
+        else:
+            # Generate a new OTP if the existing one is expired or missing
+            otp = generate_totp_without_leading_zero(totp)
+            otp_data = {
+                "otp": otp,
+                "expires_at": frappe.utils.now_datetime() + timedelta(seconds=600),
+            }
+            frappe.cache().set_value(f"otp_{user}", otp_data)
+
+        # Get user email
+        customer_data = frappe.get_all(
+            "Customer",
+            fields=["customer_name as email"],
+            filters={"customer_name": ["like", user]},
+        )
+        if not customer_data or "email" not in customer_data[0]:
+            return Response(
+                json.dumps({"success": False,
+                            "message": "User email not found"}),
+                status=400,
+                mimetype="application/json",
+            )
+
+        user_email = customer_data[0]["email"]
+
+        # Resend the OTP via email
+        try:
+            email_template = frappe.get_doc(
+                "Email Template",
+                "Claudion OTP"
+                )
+            message = email_template.response_html
+            message = message.format(otp=otp)
+            updated_html_content = message.replace("John Deo",user)
+            subject = "Your OTP Code (Resent)"
+            send_email_oci(user_email, subject, updated_html_content)
+        except Exception as e:
+            frappe.log_error(str(e),
+                             "Email Template or Sending Error")
+            return Response(
+                json.dumps(
+                    {"message": "Email template not found or sending failed"}
+                    ),
+                status=500,
+                mimetype="application/json",
+            )
+
+        return Response(
+            json.dumps(
+                {
+                "success": True,
+                "message": "OTP resent successfully"
+                }
+                ),
+            status=200,
+            mimetype="application/json",
+        )
+
+    except Exception as e:
+        frappe.log_error(message=str(e), title="Resend OTP Error")
+        return Response(
+            json.dumps(
+                {"message": "Failed to resend OTP",
+                 "error": str(e)}
+                ),
+            status=500,
+            mimetype="application/json",
+        )
+

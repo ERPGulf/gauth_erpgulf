@@ -29,6 +29,7 @@ from frappe.utils.password import update_password as _update_password
 from frappe.utils import get_url
 import pyotp
 import requests
+from datetime import timedelta
 import ipaddress
 from werkzeug.wrappers import Response
 import firebase_admin
@@ -1023,7 +1024,9 @@ def login_time():
 
     username = frappe.session.user
     doc = frappe.get_all(
-        "User Log Details", fields=["time"], filters={"username": ["like", username]}
+        "User Log Details",
+        fields=["time"],
+        filters={"username": ["like", username]}
     )
     return doc
 
@@ -1109,7 +1112,8 @@ def get_restriction_by_ip(source_ip_address):
     """Fetch restrictions by IP address."""
     return frappe.get_all(
         COUNTRIES_AND_IP_ADDRESS,
-        filters={"parent": BACKEND_SERVER_SETTINGS, "countries": source_ip_address},
+        filters={"parent": BACKEND_SERVER_SETTINGS,
+                 "countries": source_ip_address},
         fields=[
             "countries",
             "api_allow",
@@ -1169,7 +1173,9 @@ def deny_access(user_type):
 def handle_non_api_restrictions(restriction):
     """Handle restrictions for non-API access."""
     user_type = frappe.get_all(
-        "User", fields=["user_type"], filters={"name": frappe.session.user}
+        "User",
+        fields=["user_type"],
+        filters={"name": frappe.session.user}
     )
 
     if (
@@ -1210,20 +1216,37 @@ def check_country_restriction(*args, **kwargs):
 @frappe.whitelist(allow_guest=False)
 def get_sms_id(provider):
     """Get the SMS ID"""
-    default_company = frappe.db.get_single_value("Global Defaults", "default_company")
+    default_company = frappe.db.get_single_value(
+        "Global Defaults",
+        "default_company"
+        )
 
     if provider == "twilio":
-        return frappe.db.get_value("Company", default_company, "custom_twilio_id")
+        return frappe.db.get_value(
+            "Company",
+            default_company,
+            "custom_twilio_id"
+            )
 
     if provider == "expertexting":
-        return frappe.db.get_value("Company", default_company, "custom_expertexting_id")
+        return frappe.db.get_value(
+            "Company",
+            default_company,
+            "custom_expertexting_id")
 
     if provider == "vodafone":
-        app = frappe.db.get_value("Company", default_company, "custom_vodafone_app")
+        app = frappe.db.get_value(
+            "Company",
+            default_company,
+            "custom_vodafone_app")
         passwd = frappe.db.get_value(
             "Company", default_company, "custom_vodafone_password"
         )
-        mask = frappe.db.get_value("Company", default_company, "custom_vodafone_mask")
+        mask = frappe.db.get_value(
+            "Company",
+            default_company,
+            "custom_vodafone_mask"
+            )
         param_string = "?application=" + app + "&password=" + passwd + "&mask=" + mask
         return param_string
 
@@ -1291,7 +1314,9 @@ def get_account_balance():
     response_content = frappe.session.user
     balance = get_balance_on(party_type="Customer", party=response_content)
     result = {"balance": 0 - balance}
-    return Response(json.dumps({"data": result}), status=200, mimetype=APPLICATION_JSON)
+    return Response(json.dumps({"data": result}),
+                    status=200,
+                    mimetype=APPLICATION_JSON)
 
 
 @frappe.whitelist(allow_guest=False)
@@ -1301,7 +1326,10 @@ def time():
     server_time = frappe.utils.now()
     unix_time = frappe.utils.get_datetime(frappe.utils.now_datetime()).timestamp()
 
-    api_response = {"data": {"serverTime": server_time, "unix_time": unix_time}}
+    api_response = {"data": {
+        "serverTime": server_time,
+        "unix_time": unix_time
+        }}
     return api_response
 
 
@@ -1361,7 +1389,7 @@ def firebase_subscribe_to_topic(topic, fcm_token):
         return Response(
             json.dumps(
                 {
-                    "message": "Provide FCM Token and topic to send a message.",
+                    "message": "Provide FCM Token and topic to send message.",
                     "message_sent": 0,
                 }
             ),
@@ -1378,7 +1406,7 @@ def firebase_subscribe_to_topic(topic, fcm_token):
 
         if response.failure_count > 0:
             return Response(
-                json.dumps({"message": "Failed to subscribe to Firebase topic"}),
+                json.dumps({"message": "Failed to subscribe Firebase topic"}),
                 status=400,
                 mimetype=APPLICATION_JSON,
             )
@@ -1481,7 +1509,10 @@ def optimize_image_content(content, content_type):
 @frappe.whitelist(allow_guest=False)
 def attach_field_to_doc(doc):
     """Attach the file to a specific field in the document."""
-    attach_field = frappe.get_doc(frappe.form_dict.doctype, frappe.form_dict.docname)
+    attach_field = frappe.get_doc(
+        frappe.form_dict.doctype,
+        frappe.form_dict.docname
+        )
     setattr(attach_field, frappe.form_dict.fieldname, doc.file_url)
     attach_field.save(ignore_permissions=True)
 
@@ -1548,7 +1579,8 @@ def validate_user_permissions():
 @frappe.whitelist(allow_guest=False)
 def get_number_of_files(file_storage):
     """To get the number of total files"""
-    if hasattr(file_storage, "get_num_files") and callable(file_storage.get_num_files):
+    if (hasattr(file_storage, "get_num_files") and
+        callable(file_storage.get_num_files)):
         return file_storage.get_num_files()
     else:
         return 0
@@ -1638,9 +1670,11 @@ def test_redirect_url():
     """Redirectig to Url"""
     redirect_url = "https://doodles.google/search/"
 
-    response_data = {"data": "Redirecting to here", "redirect_url": redirect_url}
+    response_data = {"data": "Redirecting here", "redirect_url": redirect_url}
     return Response(
-        json.dumps(response_data), status=303, mimetype="text/html; charset=utf-8"
+        json.dumps(response_data),
+        status=303,
+        mimetype="text/html; charset=utf-8"
     )
 
 
@@ -1669,7 +1703,8 @@ def payment_gateway_log(reference, amount, user, bid):
         ).insert(ignore_permissions=True)
         return "Successfully logged Payment gateway initialization"
     except Exception as e:
-        frappe.log_error(title="Payment logging failed", message=frappe.get_traceback())
+        frappe.log_error(title="Payment logging failed",
+                         message=frappe.get_traceback())
         return "Error in payment gateway log  " + str(e)
 
 
@@ -1680,7 +1715,7 @@ def send_email_sparkpost(subject=None, text=None, to=None, from_=None):
     url = settings["sparkpost_url"]
     if not to:
         return Response(
-            json.dumps({"message": "At least one valid recipient is required"}),
+            json.dumps({"message": "At least one valid recipient is needed"}),
             status=404,
             mimetype=APPLICATION_JSON,
         )
@@ -1721,17 +1756,23 @@ def send_email_sparkpost(subject=None, text=None, to=None, from_=None):
         )
 
         if response.status_code == 200:
-            return Response(response.text, status=200, mimetype=APPLICATION_JSON)
+            return Response(response.text,
+                            status=200,
+                            mimetype=APPLICATION_JSON)
         else:
 
             return Response(
-                response.text, status=response.status_code, mimetype=APPLICATION_JSON
+                response.text,
+                status=response.status_code,
+                mimetype=APPLICATION_JSON
             )
 
     except Exception as e:
 
         return Response(
-            json.dumps({"message": str(e)}), status=500, mimetype=APPLICATION_JSON
+            json.dumps({"message": str(e)}),
+            status=500,
+            mimetype=APPLICATION_JSON
         )
 
 
@@ -1851,7 +1892,8 @@ def test_generate_token_encrypt_for_user_2fa(encrypted_key):
             app_key = base64.b64decode(app_key).decode("utf-8")
         except Exception as e:
             return Response(
-                json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
+                json.dumps({"message": INVALID_SECURITY_PARAMETERS,
+                            "user_count": 0}),
                 status=401,
                 mimetype=APPLICATION_JSON,
             )
@@ -1912,3 +1954,55 @@ def test_generate_token_encrypt_for_user_2fa(encrypted_key):
             status=500,
             mimetype=APPLICATION_JSON,
         )
+
+
+
+
+@frappe.whitelist(allow_guest=True)
+def resend_otp_for_reset_key(user):
+    cache_key = f"reset_key_{user}"
+    otp_data = frappe.cache().get_value(f"otp_{user}")
+
+
+
+
+    if otp_data and now_datetime() < otp_data["expires_at"]:
+        otp = otp_data["otp"]
+    else:
+        # Regenerate key if expired
+        otp = str(random.randint(100000, 999999))
+        frappe.cache().set_value(
+            cache_key, {
+                "key": otp,
+                "expires_at": now_datetime() + timedelta(minutes=10)
+                }
+        )
+
+    # Resend the OTP via email
+    try:
+        email_template = frappe.get_doc(
+            "Email Template",
+            "Claudion OTP"
+            )
+        message = email_template.response_html.replace("{otp}", otp)
+        subject = "Your OTP Code (Resent)"
+        send_email_oci(user, subject, message)
+    except Exception as e:
+        frappe.log_error(str(e), "Resend OTP Email Error")
+        return Response(
+            json.dumps(
+                {"message": "Email template not found or sending failed"}
+                ),
+            status=500,
+            mimetype="application/json",
+        )
+
+    return Response(
+        json.dumps(
+            {"success":True,
+            "message": "OTP resent successfully"}
+            ),
+        status=200,
+        mimetype="application/json",
+    )
+
