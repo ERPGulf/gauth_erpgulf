@@ -1800,7 +1800,7 @@ def generate_random_password(length=10):
     """To generate a Random Password"""
 
     characters = string.ascii_letters + string.digits + string.punctuation
-    return "".join(random.choices(characters, k=length))
+    return ''.join(secrets.choice(characters) for _ in range(length))
 
 
 @frappe.whitelist(allow_guest=False)
@@ -2037,7 +2037,6 @@ def test_generate_token_encrypt_for_user_2fa(encrypted_key):
             "client_secret": client_secret,
         }
         files = []
-        headers = {"Content-Type": APPLICATION_JSON}
         response = requests.request("POST", url, data=payload, files=files)
         qid = frappe.get_list(
             "User",
@@ -2081,14 +2080,13 @@ def resend_otp_for_reset_key(user):
         otp = otp_data["otp"]
     else:
         # Regenerate key if expired
-        otp = str(random.randint(100000, 999999))
+        otp = str(secrets.randbelow(900000) + 100000)
         frappe.cache().set_value(
             cache_key, {
                 "key": otp,
                 "expires_at": now_datetime() + timedelta(minutes=10)
                 }
         )
-
     # Resend the OTP via email
     try:
         email_template = frappe.get_doc(
