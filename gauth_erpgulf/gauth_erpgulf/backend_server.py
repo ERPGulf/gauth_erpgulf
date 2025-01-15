@@ -160,7 +160,9 @@ def generate_token_secure(api_key, api_secret, app_key):
             client_id_value, client_secret_value = get_oauth_client(app_key)
         except ValueError as ve:
             return Response(
-                json.dumps({"message": "An unexpected error occured", "error": str(ve)}),
+                json.dumps(
+                    {"message": "An unexpected error occured", "error": str(ve)}
+                ),
                 status=500,
                 mimetype=APPLICATION_JSON,
             )
@@ -607,8 +609,21 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
                 "email": email,
             }
         ).insert()
-        return g_generate_reset_password_key(
-            email, send_email=True, password_expired=False, mobile=mobile_no
+        otp = g_generate_reset_password_key(
+            email, send_email=True, password_expired=False, mobile=mobile_no, return_otp=True
+        )
+        frappe.cache().set_value(
+            f"otp_{email}",
+            {
+                "otp": otp,
+                "expires_at": frappe.utils.now_datetime() + timedelta(seconds=600),
+                "user":email,
+            },
+        )
+        return Response(
+            json.dumps({"data": "OTP verification is required"}),
+            status=200,
+            mimetype="application/json"
         )
     except ValueError as ve:
         return Response(
@@ -640,6 +655,7 @@ def g_generate_reset_password_key(
     mobile="",
     send_email=True,
     password_expired=False,
+    return_otp=False
 ):
     """To generate a reset password key"""
 
@@ -680,12 +696,17 @@ def g_generate_reset_password_key(
         if send_email:
             send_email_oci(user, subject, updated_html_content)
 
+        if return_otp:
+            return key
+
         return Response(
-            json.dumps(
-                {"reset_key": key, "generated_time": str(now_datetime()), "URL": url}
-            ),
+            json.dumps({
+                "reset_key": "XXXXXX",
+                "generated_time": str(now_datetime()),
+                "URL": "XXXXXXXX",
+            }),
             status=200,
-            mimetype=APPLICATION_JSON,
+            mimetype="application/json",
         )
     except ValueError as ve:
         return Response(
@@ -914,7 +935,7 @@ def validate_email(email_to_validate):
 
             return json_response({"blocked": False})
 
-    except ValueError as ve:
+    except ValueError:
         return Response(
             json.dumps({"blocked": False}), status=400, mimetype=APPLICATION_JSON
         )
@@ -1282,7 +1303,7 @@ def send_sms_twilio(phone_number, otp):
         phone_number = "+91" + phone_number
         parts = get_sms_id("twilio").split(":")
 
-        url = f"https://api.twilio.com/2010-04-01/Accounts/" f"{parts[0]}/Messages.json"
+        url = f"https://api.twilio.com/2010-04-01/Accounts/{parts[0]}/Messages.json"
 
         payload = (
             f"To={phone_number}&From=phone&Body="
