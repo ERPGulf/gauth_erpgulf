@@ -308,7 +308,6 @@ def decrypt_2fa_key(encrypted_key):
     encrypted = base64.b64decode(encrypted_key).decode()
     return current_totp, xor_encrypt_decrypt(encrypted, current_totp)
 
-
 @frappe.whitelist(allow_guest=False)
 def generate_token_encrypt(encrypted_key):
     """This function creates the master token using the encrypted key"""
@@ -538,6 +537,8 @@ def check_user_name(user_email=None, mobile_phone=None):
 @frappe.whitelist(allow_guest=False)
 def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
     """to create a user"""
+
+
     if check_user_name(user_email=email, mobile_phone=mobile_no) > 0:
         return Response(
             json.dumps({"message": "User already exists", "user_count": 1}),
@@ -587,13 +588,6 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
             "OTP verification is required", status=STATUS_200
         )
     except ValueError as ve:
-        return Response(
-            json.dumps({"message": str(ve), "user_count": 0}),
-            status=400,
-            mimetype=APPLICATION_JSON,
-        )
-
-    except ValueError as ve:
         error_message = str(ve)
 
         if "common password" in error_message:
@@ -602,7 +596,14 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
                 json.dumps(formatted_message), status=400, mimetype=APPLICATION_JSON
             )
 
-        return generate_error_response(error_message, error=str(ve), status=STATUS_500)
+        return Response(
+            json.dumps({"message": error_message, "user_count": 0}),
+            status=400,
+            mimetype=APPLICATION_JSON,
+        )
+
+    except Exception as e:
+        return generate_error_response(str(e), error=str(e), status=STATUS_500)
 
 
 # to generate reset key for new user
@@ -800,6 +801,7 @@ def g_delete_user(email, mobile_no):
         return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
+
 @frappe.whitelist(allow_guest=False)
 def validate_email(email_to_validate):
     """To validate the user email"""
@@ -912,7 +914,6 @@ def g_update_password_using_usertoken(password):
                 status=STATUS,
                 mimetype=APPLICATION_JSON,
             )
-
         _update_password(username, password, logout_all_sessions=True)
         qid = frappe.get_all(
             "Customer",
@@ -928,7 +929,6 @@ def g_update_password_using_usertoken(password):
             "message": "Password successfully updated",
             "user_details": qid[0] if qid else {},
         }
-        result = {"blocked": True, "reason": "Temporary email not accepted."}
         return generate_success_response(result, status=STATUS_200)
 
     except ValueError as ve:
