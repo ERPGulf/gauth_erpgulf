@@ -586,12 +586,7 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
         return generate_success_response(
             "OTP verification is required", status=STATUS_200
         )
-    except ValueError as ve:
-        return Response(
-            json.dumps({"message": str(ve), "user_count": 0}),
-            status=400,
-            mimetype=APPLICATION_JSON,
-        )
+    
 
     except ValueError as ve:
         error_message = str(ve)
