@@ -2106,7 +2106,7 @@ def resend_otp_for_reset_key(user):
                 {"message": "Email template not found or sending failed"}
                 ),
             status=500,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
     return Response(
@@ -2117,5 +2117,5 @@ def resend_otp_for_reset_key(user):
             }
             ),
         status=200,
-        mimetype="application/json",
+        mimetype=APPLICATION_JSON,
     )
