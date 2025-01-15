@@ -12,7 +12,7 @@ def delete_all_web_access_logs_async():
     Returns:
         str: A message indicating the deletion process has started.
     """
-    # return "Use it for emergency only"
+
 
     # Enqueue the deletion process as a background job
     frappe.enqueue(
@@ -27,7 +27,7 @@ def delete_all_web_access_logs():
     Actual function to delete all records from the 'Web Access Log' doctype.
     This function is intended to be run in the background.
     """
-    # return "Use it for emergency only"
+
 
     doctype_name = WEB_ACCESS_LOG
     records = frappe.get_all(doctype_name, pluck="name")
@@ -62,7 +62,7 @@ def enqueue_parse_nginx_logs():
     """
     Enqueue the parse_nginx_logs function to run in the background.
     """
-    # return "Executed If activated on guath setting only"
+
     result = frappe.get_value(
         "Backend Server Settings", None, "activate_scheduled_update"
     )
@@ -80,9 +80,9 @@ def parse_nginx_logs():
     Parse Nginx logs and insert records into the 'Web Access Log' doctype.
     Only records newer than the latest existing entry in the doctype are added.
     """
-    # return "Executet If activated on guath setting only"
 
-    frappe.log_error(f"Result fetched: parsing", "Nginx Log")
+
+    frappe.log_error("Result fetched: parsing", "Nginx Log")
     log_file_path = "/var/log/nginx/access.log"
 
     # Regular expression to parse Nginx logs
@@ -99,7 +99,7 @@ def parse_nginx_logs():
         fieldname=["date", "time"],
         order_by="date DESC, time DESC",
     )
-    frappe.log_error(f"Latest Log fetching", "Fetching")
+    frappe.log_error("Latest Log fetching", "Fetching")
 
     if latest_log:
         # Combine date and time into a single datetime object
@@ -114,7 +114,7 @@ def parse_nginx_logs():
         latest_datetime = None
 
     records_added = 0
-    frappe.log_error(f"Opening Log file path", "Opening path")
+    frappe.log_error("Opening Log file path", "Opening path")
     # Open and parse the Nginx log file
     with open(log_file_path, "r") as log_file:
         for line in log_file:

@@ -586,7 +586,12 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
         return generate_success_response(
             "OTP verification is required", status=STATUS_200
         )
-    
+    except ValueError as ve:
+        return Response(
+            json.dumps({"message": str(ve), "user_count": 0}),
+            status=400,
+            mimetype=APPLICATION_JSON,
+        )
 
     except ValueError as ve:
         error_message = str(ve)
@@ -659,9 +664,7 @@ def g_generate_reset_password_key(
             mimetype="application/json",
         )
     except ValueError as ve:
-        return generate_error_response(
-            "Unexpected Error Occured", error=str(ve), status=STATUS_500
-        )
+        return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
 @frappe.whitelist(allow_guest=False)
@@ -733,9 +736,7 @@ def is_user_available(user_email=None, mobile_phone=None):
         )
 
     except ValueError as e:
-        return generate_error_response(
-            "Unexpected Error Occured", error=str(e), status=STATUS_500
-        )
+        return generate_error_response(ERROR, error=str(e), status=STATUS_500)
 
 
 @frappe.whitelist(allow_guest=False)
@@ -766,9 +767,7 @@ def g_update_password(username, password):
         # frappe.db.commit()
         return json_response(result)
     except ValueError as ve:
-        return generate_error_response(
-            "Unexpected Error Occured", error=str(ve), status=STATUS_500
-        )
+        return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
 @frappe.whitelist(allow_guest=False)
@@ -798,9 +797,7 @@ def g_delete_user(email, mobile_no):
         )
         return json_response({"message": "User successfully deleted", "user_count": 1})
     except ValueError as ve:
-        return generate_error_response(
-            "Unexpected Error Occured", error=str(ve), status=STATUS_500
-        )
+        return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
 @frappe.whitelist(allow_guest=False)
@@ -901,9 +898,7 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
         )
 
     except ValueError as ve:
-        return generate_error_response(
-            "Unexpected Error Occured", error=str(ve), status=STATUS_500
-        )
+        return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
 @frappe.whitelist(allow_guest=False)
@@ -937,9 +932,7 @@ def g_update_password_using_usertoken(password):
         return generate_success_response(result, status=STATUS_200)
 
     except ValueError as ve:
-        return generate_error_response(
-            "Unexpected Error Occured", error=str(ve), status=STATUS_500
-        )
+        return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
 @frappe.whitelist(allow_guest=False)
@@ -1679,9 +1672,7 @@ def send_email_sparkpost(subject=None, text=None, to=None, from_=None):
             )
 
     except ValueError as ve:
-        return generate_error_response(
-            "Unexpected Error Occured", error=str(ve), status=STATUS_500
-        )
+        return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
 @frappe.whitelist(allow_guest=False)
