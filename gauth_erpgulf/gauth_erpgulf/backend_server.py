@@ -374,8 +374,8 @@ def generate_token_encrypt(encrypted_key):
             "client_secret": client_secret_value,
         }
         files = []
-        headers = {"Content-Type": APPLICATION_JSON}
-        response = requests.request("POST", url, data=payload, files=files)
+        
+        response = requests.request("POST", url, data=payload, files=files,timeout=10)
         if response.status_code == 200:
             result_data = json.loads(response.text)
             return Response(
@@ -501,7 +501,6 @@ def generate_token_encrypt_for_user(encrypted_key):
             "client_secret": client_secret,
         }
         files = []
-        headers = {"Content-Type": APPLICATION_JSON}
         response = requests.request("POST", url, data=payload, files=files)
         qid = frappe.get_list(
             "User",
