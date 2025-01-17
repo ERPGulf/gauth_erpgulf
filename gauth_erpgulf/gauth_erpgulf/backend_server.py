@@ -681,9 +681,11 @@ def g_generate_reset_password_key(
         if not frappe.get_all(
             "User",
             filters={
-                "name": recipient, "mobile_no": mobile
-                }
-            ):
+                "name": recipient,
+                "mobile_no": mobile,
+            },
+        ):
+
             return Response(
                 json.dumps(
                     {
@@ -894,12 +896,13 @@ def g_delete_user(email, mobile_no):
         )
         _ = frappe.db.delete(
             "Customer",
-                {
-                    "name": email,
-                    "customer_name": email,
-                    "mobile_no": mobile_no
-                },
+            {
+                "name": email,
+                "customer_name": email,
+                "mobile_no": mobile_no,
+            },
         )
+
         return json_response(
                 {
                     "message": "User successfully deleted",
@@ -925,6 +928,7 @@ def validate_email(email_to_validate):
         return re.match(
                 r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email
             ) is not None
+    
     def get_domain_name(email):
         """
         Extract the domain name from the email address.
@@ -944,9 +948,9 @@ def validate_email(email_to_validate):
 
     domain_name = get_domain_name(email_to_validate)
 
-    url = url = (
-            f"https://www2.istempmail.com/api/check/"
-            f"CirMirL3dAHELe8pKdUeG55KV3qy6weU/{domain_name}"
+    url = (
+        f"https://www2.istempmail.com/api/check/"
+        f"CirMirL3dAHELe8pKdUeG55KV3qy6weU/{domain_name}"
 )
 
     payload = {}
@@ -1039,8 +1043,8 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
                 "enabled", enable_user
             )
         status_message = (
-    f"User successfully {'enabled' if enable_user else 'disabled'}"
-)
+            f"User successfully {'enabled' if enable_user else 'disabled'}"
+        )
         return json_response(
             {
                 "message": status_message,
