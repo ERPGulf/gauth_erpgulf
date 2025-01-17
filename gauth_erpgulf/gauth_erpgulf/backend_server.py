@@ -593,7 +593,7 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
         password = generate_random_password(10)
 
     # Check if user already exists
-    if check_user_name(user_email=email,mobile_phone=mobile_no) > 0:
+    if check_user_name(user_email=email, mobile_phone=mobile_no) > 0:
         return Response(
             json.dumps({"message": "User already exists", "user_count": 1}),
             status=409,
@@ -678,7 +678,12 @@ def g_generate_reset_password_key(
         )
 
     try:
-        if not frappe.get_all("User", filters={"name": recipient, "mobile_no": mobile}):
+        if not frappe.get_all(
+            "User",
+            filters={
+                "name": recipient, "mobile_no": mobile
+                }
+            ):
             return Response(
                 json.dumps(
                     {
@@ -879,7 +884,12 @@ def g_delete_user(email, mobile_no):
 
         _ = (
             frappe.db.delete(
-                "User", {"name": email, "email": email, "mobile_no": mobile_no}
+                "User",
+                {
+                    "name": email,
+                    "email": email,
+                    "mobile_no": mobile_no
+                }
             ),
         )
         _ = frappe.db.delete(
@@ -913,10 +923,8 @@ def validate_email(email_to_validate):
         Check if the email format is valid using regex.
         """
         return re.match(
-    r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email
-) is not None
-
-
+                r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email
+            ) is not None
     def get_domain_name(email):
         """
         Extract the domain name from the email address.
@@ -937,8 +945,8 @@ def validate_email(email_to_validate):
     domain_name = get_domain_name(email_to_validate)
 
     url = url = (
-    f"https://www2.istempmail.com/api/check/"
-    f"CirMirL3dAHELe8pKdUeG55KV3qy6weU/{domain_name}"
+            f"https://www2.istempmail.com/api/check/"
+            f"CirMirL3dAHELe8pKdUeG55KV3qy6weU/{domain_name}"
 )
 
     payload = {}
@@ -954,7 +962,8 @@ def validate_email(email_to_validate):
         return Response(
             json.dumps({
                 "blocked": True,
-                "reason": "Temporary email not accepted. Please provide your company email",
+                "reason": "Temporary email not accepted."
+                "Please provide your company email",
             }),
             status=200,
             mimetype=APPLICATION_JSON,
@@ -1026,26 +1035,23 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
             )
 
         frappe.db.set_value(
-            "User", username,
-            "enabled", enable_user
+                "User", username,
+                "enabled", enable_user
             )
         status_message = (
     f"User successfully {'enabled' if enable_user else 'disabled'}"
 )
-
-
         return json_response(
             {
                 "message": status_message,
                 "user_count": 1,
             }
         )
-
     except ValueError as ve:
         return generate_error_response(
-            ERROR,
-            error=str(ve),
-            status=STATUS_500
+                ERROR,
+                error=str(ve),
+                status=STATUS_500
             )
 
 
@@ -1298,7 +1304,8 @@ def get_restriction_by_ip_1(source_ip_address):
         except ValueError:
             # Ignore invalid IP or CIDR formats in the database
             frappe.log_error(
-                f"Invalid IP or CIDR format:{country_entry}", "IP Restriction Error"
+                f"Invalid IP or CIDR format:{country_entry}",
+                "IP Restriction Error"
             )
     return []
 
