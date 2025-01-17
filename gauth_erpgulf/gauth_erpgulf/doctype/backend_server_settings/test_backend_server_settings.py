@@ -5,4 +5,4 @@ from frappe.tests.utils import FrappeTestCase
 
 
 class TestBackendServerSettings(FrappeTestCase):
-	pass
+    pass  # Indented with 4 spaces

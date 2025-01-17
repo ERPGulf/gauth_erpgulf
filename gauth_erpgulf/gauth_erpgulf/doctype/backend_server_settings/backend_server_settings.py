@@ -5,4 +5,4 @@ from frappe.model.document import Document
 
 
 class BackendServerSettings(Document):
-	pass
+    pass  # Indented with 4 spaces

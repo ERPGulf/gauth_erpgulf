@@ -12,8 +12,6 @@ def delete_all_web_access_logs_async():
     Returns:
         str: A message indicating the deletion process has started.
     """
-
-
     # Enqueue the deletion process as a background job
     frappe.enqueue(
         "gauth_erpgulf.gauth_erpgulf.web_logging.delete_all_web_access_logs",
@@ -31,7 +29,6 @@ def delete_all_web_access_logs():
 
     doctype_name = WEB_ACCESS_LOG
     records = frappe.get_all(doctype_name, pluck="name")
-
     if not records:
         frappe.log_error(
                             "No records found in Web Access Log.",
@@ -84,14 +81,12 @@ def parse_nginx_logs():
 
     frappe.log_error("Result fetched: parsing", "Nginx Log")
     log_file_path = "/var/log/nginx/access.log"
-
     # Regular expression to parse Nginx logs
     log_pattern = re.compile(
         r"(?P<remote_addr>[^ ]*) [^ ]* [^ ]* \[(?P<time_local>[^\]]*)\] "
         r'"(?P<request>[^"]*)" (?P<status>[0-9]*) (?P<body_bytes_sent>[0-9]*) '
         r'"(?P<http_referer>[^"]*)" "(?P<http_user_agent>[^"]*)"'
     )
-
     # Fetch the latest log datetime from the 'Web Access Log' doctype
     latest_log = frappe.db.get_value(
         WEB_ACCESS_LOG,

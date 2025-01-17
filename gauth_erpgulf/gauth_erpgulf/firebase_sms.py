@@ -10,7 +10,7 @@ from frappe.utils.image import optimize_image
 from werkzeug.wrappers import Response
 from mimetypes import guess_type
 import google.auth.transport.requests
-from frappe.utils import now_datetime,cint
+from frappe.utils import now_datetime, cint
 from firebase_admin import credentials, messaging
 from google.oauth2 import service_account
 from erpnext.accounts.utils import get_balance_on
@@ -21,14 +21,14 @@ from gauth_erpgulf.gauth_erpgulf.backend_server import(
     generate_success_response,
     )
 APPLICATION_JSON = "application/json"
-STATUS_500=500
-STATUS_200=200
+STATUS_500 = 500
+STATUS_200 = 200
 ERROR = "An unexpected error occured"
-COMPANY="Company"
+COMPANY = "Company"
 NAME_AS_EMAIL = "name as email"
 STATUS = 404
-APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded"
-   
+APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded" 
+
 
 @frappe.whitelist(allow_guest=True)
 def test_redirect_url():
@@ -37,7 +37,9 @@ def test_redirect_url():
 
     response_data = {"data": "Redirecting here", "redirect_url": redirect_url}
     return Response(
-        json.dumps(response_data), status=303, mimetype="text/html; charset=utf-8"
+        json.dumps(response_data),
+        status=303,
+        mimetype="text/html; charset=utf-8"
     )
 
 
@@ -60,7 +62,6 @@ def payment_gateway_log(reference, amount, user, bid):
     except ValueError as ve:
         frappe.log_error(title="Payment logging failed", message=frappe.get_traceback())
         return "Error in payment gateway log  " + str(ve)
- 
 
 
 @frappe.whitelist(allow_guest=False)
