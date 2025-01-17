@@ -19,7 +19,7 @@ import frappe
 from frappe.core.doctype.user.user import update_password
 from frappe.utils.data import sha256_hash
 from frappe.utils.password import update_password as _update_password
-from frappe.utils import get_url, now_datetime
+from frappe.utils import now_datetime
 import pyotp
 import requests
 from werkzeug.wrappers import Response
@@ -97,6 +97,7 @@ def xor_encrypt_decrypt(text, key):
     repeated_key = key * ((len(text) // len(key)) + 1)
 
     return "".join(chr(ord(c) ^ ord(k)) for c, k in zip(text, repeated_key))
+
 
 @frappe.whitelist(allow_guest=False)
 def json_response(data, status=STATUS_200):
@@ -206,8 +207,6 @@ def generate_token_secure(api_key, api_secret, app_key):
 def generate_token_secure_for_users(username, password, app_key):
     """
     Generate a secure token for user authentication.
-    Returns:
-        str: A securely generated token for the user.
     """
     frappe.log_error(
         title="Login attempt",
@@ -328,7 +327,6 @@ def generate_token_encrypt(encrypted_key):
             "client_secret": client_secret_value,
         }
         files = []
-
         response = requests.request("POST", url, data=payload, files=files, timeout=10)
         if response.status_code == STATUS_200:
             result_data = json.loads(response.text)
@@ -392,7 +390,6 @@ def test_generate_token_encrypt_for_user(text_for_encryption):
     return base64.b64encode(result.encode()).decode()
 
 
-# API for encrypted user token
 @frappe.whitelist(allow_guest=False)
 def generate_token_encrypt_for_user(encrypted_key):
     """to generate a usertoken using encrypted key"""
@@ -401,14 +398,12 @@ def generate_token_encrypt_for_user(encrypted_key):
         _, decrypted_key = decrypt_2fa_key(encrypted_key)
         api_key, api_secret, app_key = decrypted_key.split("::")
 
-        # Decode the app_key
         try:
             app_key = base64.b64decode(app_key).decode("utf-8")
         except (ValueError, base64.binascii.Error):
             return generate_error_response(
                 INVALID_SECURITY_PARAMETERS, error="Invalid app_key format", status=401
             )
-
         # Retrieve OAuth client credentials
         client_id_value, client_secret_value = get_oauth_client(app_key)
         if not client_id_value:
@@ -417,7 +412,6 @@ def generate_token_encrypt_for_user(encrypted_key):
                 error="Invalid client ID or secret",
                 status=401,
             )
-
         # Prepare payload for token request
         client_id = client_id_value
         client_secret = client_secret_value
@@ -432,14 +426,12 @@ def generate_token_encrypt_for_user(encrypted_key):
 
         # Make the token request
         response = requests.post(url, data=payload, timeout=10)
-
         # Fetch user details
         qid = frappe.get_list(
             "User",
             fields=[FIELD_NAME_AS_ID, FULL_NAME_ALIAS, MOBILE_NO_ALIAS],
             filters={"email": ["like", api_key]},
         )
-
         if response.status_code == STATUS_200:
             result_data = json.loads(response.text)
             result_data["refresh_token"] = "XXXXXXX"
@@ -516,11 +508,13 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
     """to create a user"""
     if not password:
         password = generate_random_password(10)
+
+    # Check if user already exists
     if check_user_name(user_email=email, mobile_phone=mobile_no) > 0:
         return Response(
             json.dumps({"message": "User already exists", "user_count": 1}),
             status=409,
-            mimetype=APPLICATION_JSON,
+            mimetype="application/json",
         )
 
     try:
@@ -535,6 +529,7 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
                 "roles": [{"role": role}],
             }
         ).insert()
+
         frappe.get_doc(
             {
                 "doctype": "Customer",
@@ -546,94 +541,99 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
                 "email": email,
             }
         ).insert()
-        otp = g_generate_reset_password_key(
-            email,
-            send_email=True,
-            password_expired=False,
-            mobile=mobile_no,
-            return_otp=True,
+
+        reset_data = g_generate_reset_password_key(
+            email, mobile=mobile_no, send_email=True, mask_key=False
         )
+
+        # Store the reset key in cache
+        cache_key = f"reset_key_{email}"
         frappe.cache().set_value(
-            f"otp_{email}",
+            cache_key,
             {
-                "otp": otp,
-                "expires_at": frappe.utils.now_datetime() + timedelta(seconds=600),
-                "user": email,
+                "key": reset_data["reset_key"],
+                "expires_at": now_datetime() + timedelta(minutes=10),
+                "email": email,
             },
         )
-        return generate_success_response(
-            "OTP verification is required", status=STATUS_200
+
+        # Mask the reset key in API response
+        # reset_data["reset_key"] = "XXXXXX"
+        # reset_data["URL"] = "xxxxxx"
+
+        return Response(
+            json.dumps(
+                {
+                    "message": "User created successfully. Verification required.",
+                    "reset_key": "XXXXXX",
+                    "verification_url": "xxxxxx",
+                }
+            ),
+            status=200,
+            mimetype="application/json",
         )
-
     except ValueError as ve:
-        error_message = str(ve)
-
-        if "common password" in error_message:
-            formatted_message = {"message": {"password": error_message}}
-            return Response(
-                json.dumps(formatted_message), status=400, mimetype=APPLICATION_JSON
-            )
-
-        return generate_error_response(error_message, error=str(ve), status=STATUS_500)
+        return generate_error_response(
+            "An unexpected error occurred", error=str(ve), status=STATUS_500
+        )
 
 
 # to generate reset key for new user
 @frappe.whitelist(allow_guest=False)
 def g_generate_reset_password_key(
-    user, mobile="", send_email=True, password_expired=False, return_otp=False
+    recipient, mobile="", send_email=True, password_expired=False, mask_key=True
 ):
     """To generate a reset password key"""
 
     if not mobile:
         return Response(
             json.dumps({"message": "Mobile or Email not found", "user_count": 0}),
-            status=STATUS,
-            mimetype=APPLICATION_JSON,
-        )
-    try:
-        if len(frappe.get_all("User", filters={"name": user, "mobile_no": mobile})) < 1:
-            return Response(
-                json.dumps({"status": "error", "message": "User not found"}),
-                mimetype=APPLICATION_JSON,
-            )
-
-        key = str(secrets.randbelow(900000) + 100000)
-        doc2 = frappe.get_doc("User", user)
-        doc2.reset_password_key = sha256_hash(key)
-        doc2.last_reset_password_key_generated_on = now_datetime()
-        doc2.save(ignore_permissions=True)
-
-        url = "/update-password?key=" + key
-        if password_expired:
-            url += "&password_expired=true"
-        get_url(url)
-
-        msg = frappe.get_doc("Email Template", "gauth erpgulf")
-        message = msg.response_html.replace("{otp}", key)
-        name = frappe.get_all(
-            "User", fields=["full_name"], filters={"name": user, "mobile_no": mobile}
-        )
-        full_name = name[0].get("full_name")
-        updated_html_content = message.replace("John Deo", full_name)
-        subject = "OTP"
-
-        if send_email:
-            send_email_oci(user, subject, updated_html_content)
-
-        if return_otp:
-            return key
-
-        return Response(
-            json.dumps(
-                {
-                    "reset_key": "XXXXXX",
-                    "generated_time": str(now_datetime()),
-                    "URL": "XXXXXXXX",
-                }
-            ),
-            status=STATUS_200,
+            status=404,
             mimetype="application/json",
         )
+
+    try:
+        if not frappe.get_all("User", filters={"name": recipient, "mobile_no": mobile}):
+            return Response(
+                json.dumps(
+                    {"message": "Email or Mobile number not found", "user_count": 0}
+                ),
+                status=404,
+                mimetype="application/json",
+            )
+
+        # Generate reset password key
+        key = str(secrets.randbelow(900000) + 100000)
+        doc = frappe.get_doc("User", recipient)
+        doc.reset_password_key = sha256_hash(key)
+        doc.last_reset_password_key_generated_on = now_datetime()
+        doc.save(ignore_permissions=True)
+
+        # Store the key in cache with expiration
+        cache_key = f"reset_key_{recipient}"
+        frappe.cache().set_value(
+            cache_key,
+            {"key": key, "expires_at": now_datetime() + timedelta(minutes=10)},
+        )
+
+        # Prepare email content
+        url = "/update-password?key=" + key
+        email_template = frappe.get_doc("Email Template", "gauth erpgulf")
+        message = email_template.response_html.replace("{otp}", key)
+        subject = "Your OTP Code"
+
+        if password_expired:
+            url += "&password_expired=true"
+
+        if send_email:
+            send_email_oci(recipient, subject, message)
+
+        return {
+            "reset_key": "XXXXXX" if mask_key else key,
+            "generated_time": str(now_datetime()),
+            "URL": "XXXXXXXXX",
+        }
+
     except ValueError as ve:
         return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
@@ -776,18 +776,24 @@ def g_delete_user(email, mobile_no):
 @frappe.whitelist(allow_guest=False)
 def validate_email(email_to_validate):
     """
-    Validate the format of the email using regex.
-    Returns:
-        bool: True if the email is valid, False otherwise.
+    Validate the format of the email and check if it is blocked.
     """
-    blocked = False
-    # check email in correct format or not
-    is_valid_email = (
-        lambda email_to_validate: re.match(
-            r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email_to_validate
+
+    def is_valid_email(email):
+        """
+        Check if the email format is valid using regex.
+        """
+        return (
+            re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email)
+            is not None
         )
-        is not None
-    )
+
+    def get_domain_name(email):
+        """
+        Extract the domain name from the email address.
+        """
+        return email.split("@")[-1] if "@" in email else None
+
     if not is_valid_email(email_to_validate):
         return Response(
             json.dumps({"blocked": True, "reason": "Email format not correct"}),
@@ -795,25 +801,20 @@ def validate_email(email_to_validate):
             mimetype=APPLICATION_JSON,
         )
 
-    get_domain_name = lambda email_to_validate: (
-        email_to_validate.split("@")[-1] if "@" in email_to_validate else None
-    )
     domain_name = get_domain_name(email_to_validate)
 
     url = f"https://www2.istempmail.com/api/check/CirMirL3dAHELe8pKdUeG55KV3qy6weU/{domain_name}"
-    # url = "https://www2.istempmail.com/api/check/CirMirL3dAHELe8pKdUeG55KV3qy6weU/gmail.com"
     payload = {}
     headers = {}
 
     try:
-        response = requests.get(url, headers=headers, data=payload,timeout=10)
+        response = requests.get(url, headers=headers, data=payload, timeout=10)
         api_response = response.json()
         blocked = api_response.get("blocked", False)
+    except requests.exceptions.RequestException:
+        blocked = False
 
-    except requests.exceptions.RequestException as e:
-        pass
-
-    if blocked is True:
+    if blocked:
         return Response(
             json.dumps(
                 {
@@ -836,18 +837,28 @@ def validate_email(email_to_validate):
         domains_list = json.loads(domain_js_content)
 
         if domain_name in domains_list:
-            return json_response(
-                {
-                    "blocked": True,
-                    "reason": "Public email not accepted. Please provide your company email",
-                }
+            return Response(
+                json.dumps(
+                    {
+                        "blocked": True,
+                        "reason": "Public email not accepted. Please provide your company email",
+                    }
+                ),
+                status=200,
+                mimetype=APPLICATION_JSON,
             )
         else:
-            return json_response({"blocked": False})
+            return Response(
+                json.dumps({"blocked": False}),
+                status=200,
+                mimetype=APPLICATION_JSON,
+            )
 
-    except Exception as e:
+    except Exception:
         return Response(
-            json.dumps({"blocked": False}), status=400, mimetype=APPLICATION_JSON
+            json.dumps({"blocked": False}),
+            status=400,
+            mimetype=APPLICATION_JSON,
         )
 
 
@@ -1149,10 +1160,16 @@ def resend_otp_for_reset_key(user):
             {"key": otp, "expires_at": now_datetime() + timedelta(minutes=10)},
         )
     try:
-        email_template = frappe.get_doc("Email Template", "Claudion OTP")
+        # Update the reset key in the User document
+        user_doc = frappe.get_doc("User", user)
+        user_doc.reset_password_key = sha256_hash(otp)  # Hash the new key
+        user_doc.last_reset_password_key_generated_on = now_datetime()
+        user_doc.save(ignore_permissions=True)
+        email_template = frappe.get_doc("Email Template", "gauth erpgulf")
         message = email_template.response_html.replace("{otp}", otp)
         subject = "Your OTP Code (Resent)"
         send_email_oci(user, subject, message)
+
     except ValueError as ve:
         frappe.log_error(str(ve), "Resend OTP Email Error")
         return generate_error_response(
@@ -1162,3 +1179,71 @@ def resend_otp_for_reset_key(user):
         )
     result_data = {"success": True, "message": "OTP resent successfully"}
     return generate_success_response(result_data, status=STATUS_200)
+
+
+@frappe.whitelist(allow_guest=True)
+def resend_reset_key(user):
+    """
+    Resend a reset key for a user. If a valid reset key exists and is not expired,
+    it will be reused. Otherwise, a new key will be generated and sent via email.
+    The key will expire after 10 minutes.
+    """
+    try:
+        # Fetch the user document
+        user_doc = frappe.get_doc("User", user)
+
+        # Ensure the user has a valid mobile number
+        if not user_doc.mobile_no:
+            return Response(
+                json.dumps({"message": "User does not have a valid mobile number."}),
+                status=400,
+                mimetype="application/json",
+            )
+        # Determine if the existing key is valid
+        if (
+            user_doc.reset_password_key
+            and user_doc.last_reset_password_key_generated_on
+            and (now_datetime() - user_doc.last_reset_password_key_generated_on).seconds
+            < 600
+        ):
+            # Existing key is valid
+            reset_key = user_doc.reset_password_key
+        else:
+            # Generate a new reset key
+            reset_key = g_generate_reset_password_key(
+                recipient=user,
+                mobile=user_doc.mobile_no,
+                send_email=False,
+                mask_key=False,
+            )["reset_key"]
+
+            # Update the user document with the new hashed key
+            user_doc.reset_password_key = sha256_hash(reset_key)
+            user_doc.last_reset_password_key_generated_on = now_datetime()
+            user_doc.save(ignore_permissions=True)
+
+        # Send the reset key via email
+        email_template = frappe.get_doc("Email Template", "gauth erpgulf")
+        message = email_template.response_html.replace("{otp}", reset_key)
+        subject = "Your Reset Key"
+        send_email_oci(user, subject, message)
+
+        return Response(
+            json.dumps({"message": "Reset key has been resent successfully."}),
+            status=200,
+            mimetype="application/json",
+        )
+
+    except frappe.DoesNotExistError:
+        return Response(
+            json.dumps({"message": f"User '{user}' does not exist."}),
+            status=404,
+            mimetype="application/json",
+        )
+    except Exception as e:
+        # frappe.log_error(str(e), "Resend Reset Key Error")
+        return Response(
+            json.dumps({"message": "An error occurred while resending the reset key."}),
+            status=500,
+            mimetype="application/json",
+        )

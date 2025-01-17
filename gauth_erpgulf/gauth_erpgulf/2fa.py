@@ -55,8 +55,8 @@ NAME_AS_EMAIL = "name as email"
 INVALID_SECURITY_PARAMETERS = "Security Parameters are not valid"
 APPLICATION_JSON = "application/json"
 TWO_FA_TOKEN_EXPIRED = "2FA token expired"
-STATUS_500=500
-STATUS_200=200
+STATUS_500 = 500
+STATUS_200 = 200
 MOBILE_NO_ALIAS = "mobile_no as mobile_no"
 def generate_error_response(message, error, status=STATUS_500):
     return Response(
@@ -235,7 +235,6 @@ def validate_otp_to_generate_user_token(user, user_otp):
     try:
         # Retrieve OTP from cache
         otp_data = frappe.cache().get_value(f"otp_{user}")
-        return otp_data
 
 
         frappe.log_error(message=str(otp_data), title="OTP Cache Debug")
