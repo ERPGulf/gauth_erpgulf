@@ -288,12 +288,12 @@ def generate_token_secure_for_users(username, password, app_key):
             )
         qid = frappe.get_list(
             "User",
-            fields = [
+            fields=[
                 FIELD_NAME_AS_ID,
                 FULL_NAME_ALIAS,
                 MOBILE_NO_ALIAS,
             ],
-            filters = {
+            filters={
                 "email": ["like", username]
             },
         )
@@ -327,7 +327,7 @@ def whoami():
         response_content = {
             "data":
                 {
-                    "user" : frappe.session.user,
+                    "user": frappe.session.user,
                 }
         }
         return json_response(
@@ -366,8 +366,8 @@ def generate_token_encrypt(encrypted_key):
             return Response(
                 json.dumps(
                         {
-                            "message" : str(ve),
-                            "user_count" : 0
+                            "message": str(ve),
+                            "user_count": 0
                         }
                 ),
                 status=401,
@@ -396,7 +396,9 @@ def generate_token_encrypt(encrypted_key):
             "client_secret": client_secret_value,
         }
         files = []
-        response=requests.request("POST", url, data=payload, files=files, timeout=10)
+        response = requests.request(
+            "POST",
+            url, data=payload, files=files, timeout=10)
         if response.status_code == STATUS_200:
             result_data = json.loads(response.text)
             return generate_success_response(result_data, status=STATUS_200)
@@ -559,7 +561,7 @@ def get_user_name(user_email=None, mobile_phone=None):
             status=STATUS,
             mimetype=APPLICATION_JSON,
         )
-    
+
 
 @frappe.whitelist(allow_guest=False)
 def check_user_name(user_email=None, mobile_phone=None):
@@ -591,9 +593,7 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
         password = generate_random_password(10)
 
     # Check if user already exists
-    if check_user_name(
-        user_email=email,
-        mobile_phone=mobile_no) > 0:
+    if check_user_name(user_email=email,mobile_phone=mobile_no) > 0:
         return Response(
             json.dumps({"message": "User already exists", "user_count": 1}),
             status=409,
@@ -635,7 +635,7 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
             cache_key,
             {
                 "key": reset_data["reset_key"],
-                "expires_at": now_datetime() + timedelta(minutes = 10),
+                "expires_at": now_datetime()+timedelta(minutes=10),
                 "email": email,
             },
         )
@@ -912,7 +912,10 @@ def validate_email(email_to_validate):
         """
         Check if the email format is valid using regex.
         """
-        return re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email) is not None
+        return re.match(
+    r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email
+) is not None
+
 
     def get_domain_name(email):
         """
@@ -922,14 +925,22 @@ def validate_email(email_to_validate):
 
     if not is_valid_email(email_to_validate):
         return Response(
-            json.dumps({"blocked": True, "reason": "Email format not correct"}),
+            json.dumps(
+                {
+                    "blocked": True, "reason": "Email format not correct"
+                }
+            ),
             status=200,
             mimetype=APPLICATION_JSON,
         )
 
     domain_name = get_domain_name(email_to_validate)
 
-    url = f"https://www2.istempmail.com/api/check/CirMirL3dAHELe8pKdUeG55KV3qy6weU/{domain_name}"
+    url = url = (
+    f"https://www2.istempmail.com/api/check/"
+    f"CirMirL3dAHELe8pKdUeG55KV3qy6weU/{domain_name}"
+)
+
     payload = {}
     headers = {}
 
@@ -939,12 +950,11 @@ def validate_email(email_to_validate):
         blocked = api_response.get("blocked", False)
     except requests.exceptions.RequestException:
         blocked = False
-
     if blocked:
         return Response(
             json.dumps({
-                "blocked" : True,
-                "reason" : "Temporary email not accepted. Please provide your company email",
+                "blocked": True,
+                "reason": "Temporary email not accepted. Please provide your company email",
             }),
             status=200,
             mimetype=APPLICATION_JSON,
@@ -964,10 +974,10 @@ def validate_email(email_to_validate):
             return Response(
                 json.dumps(
                     {
-                        "blocked" : True,
-                        "reason" : "Public email not accepted."
+                        "blocked": True,
+                        "reason": "Public email not accepted."
                         "Please provide your company email",
-                }
+                    }
                 ),
                 status=200,
                 mimetype=APPLICATION_JSON,
@@ -1019,7 +1029,10 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
             "User", username,
             "enabled", enable_user
             )
-        status_message = f"User successfully {'enabled' if enable_user else 'disabled'}"
+        status_message = (
+    f"User successfully {'enabled' if enable_user else 'disabled'}"
+)
+
 
         return json_response(
             {
