@@ -58,6 +58,8 @@ TWO_FA_TOKEN_EXPIRED = "2FA token expired"
 STATUS_500 = 500
 STATUS_200 = 200
 MOBILE_NO_ALIAS = "mobile_no as mobile_no"
+
+
 def generate_error_response(message, error, status=STATUS_500):
     return Response(
         json.dumps({"message": message, "error": error, "user_count": 0}),
@@ -301,7 +303,7 @@ def validate_otp_to_generate_user_token(user, user_otp):
             status=401,
             mimetype="application/json",
         )
-
+#login api
 @frappe.whitelist(allow_guest=True)
 def generate_token_encrypt_for_user_2fa(encrypted_key):
     """Generate a user token using an encrypted key."""
