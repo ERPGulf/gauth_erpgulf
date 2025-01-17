@@ -937,11 +937,13 @@ def validate_email(email_to_validate):
 
         if domain_name in domains_list:
             return Response(
-                json.dumps({
-                    "blocked": True,
-                    "reason": "Public email not accepted."
-                    "Please provide your company email",
-                }),
+                json.dumps(
+                    {
+                        "blocked": True,
+                        "reason": "Public email not accepted."
+                        "Please provide your company email",
+                }
+                ),
                 status=200,
                 mimetype=APPLICATION_JSON,
             )
@@ -969,9 +971,10 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
                 frappe.get_all(
                     "User",
                     {
-                    "name":username,
-                    "email":email,
-                    "mobile_no": mobile_no}
+                        "name":username,
+                        "email":email,
+                        "mobile_no": mobile_no
+                    }
                 )
             )
             < 1
@@ -979,8 +982,10 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
             return Response(
                 json.dumps(
                     {
-                    "message": USER_NOT_FOUND_MESSAGE,
-                    "user_count": 0}),
+                        "message": USER_NOT_FOUND_MESSAGE,
+                        "user_count": 0
+                    }
+                ),
                 status=STATUS,
                 mimetype=APPLICATION_JSON,
             )
@@ -1015,9 +1020,10 @@ def g_update_password_using_usertoken(password):
             return Response(
                 json.dumps(
                     {
-                    "message": USER_NOT_FOUND_MESSAGE,
-                    "user_count": 0
-                    }),
+                        "message": USER_NOT_FOUND_MESSAGE,
+                        "user_count": 0
+                    }
+                ),
                 status=STATUS,
                 mimetype=APPLICATION_JSON,
             )
@@ -1030,7 +1036,9 @@ def g_update_password_using_usertoken(password):
                 "mobile_no as phone",
                 # NAME_AS_EMAIL,
             ],
-            filters= {"customer_name": ["like", username]},
+            filters= {
+                    "customer_name": ["like", username]
+                },
         )
         result = {
             "message": "Password successfully updated",
@@ -1053,11 +1061,11 @@ def g_update_password_using_reset_key(new_password, reset_key, username):
         if len(frappe.get_all("User", {"name": username})) < 1:
             return Response(
                 json.dumps(
-                {
-                "message":
-                USER_NOT_FOUND_MESSAGE,
-               "user_count": 0
-                }),
+                    {
+                        "message": USER_NOT_FOUND_MESSAGE,
+                        "user_count": 0
+                    }
+                ),
                 status=STATUS,
                 mimetype=APPLICATION_JSON,
             )
@@ -1097,7 +1105,9 @@ def login_time():
 
     username = frappe.session.user
     doc = frappe.get_all(
-        "User Log Details", fields=["time"], filters={"username": ["like", username]}
+        "User Log Details",
+        fields=["time"],
+        filters={"username": ["like", username]}
     )
     return doc
 
@@ -1118,7 +1128,10 @@ def get_restriction_by_ip(source_ip_address):
     """Fetch restrictions by IP address."""
     return frappe.get_all(
         COUNTRIES_AND_IP_ADDRESS,
-        filters={"parent": BACKEND_SERVER_SETTINGS, "countries": source_ip_address},
+        filters={
+                "parent": BACKEND_SERVER_SETTINGS,
+                "countries": source_ip_address
+            },
         fields=FIELD_FOR_IP_AND_COUNTRY,
     )
 
@@ -1247,7 +1260,7 @@ def get_restriction_by_ip_1(source_ip_address):
         except ValueError:
             # Ignore invalid IP or CIDR formats in the database
             frappe.log_error(
-                f"Invalid IP or CIDR format: {country_entry}", "IP Restriction Error"
+                f"Invalid IP or CIDR format:{country_entry}", "IP Restriction Error"
             )
     return []
 
@@ -1307,24 +1320,25 @@ def resend_otp_for_reset_key(user):
     result_data = {"success": True, "message": "OTP resent successfully"}
     return generate_success_response(result_data, status=STATUS_200)
 
+
 @frappe.whitelist(allow_guest=True)
 def resend_reset_key(user):
     """
-    Resend a reset key for a user. If a valid reset key exists and is not expired,
-    it will be reused. Otherwise, a new key will be generated and sent via email.
+    Resend a reset key for a user.
+    If a valid reset key exists and is not expired,
+    it will be reused. Otherwise,
+    a new key will be generated and sent via email.
     The key will expire after 10 minutes.
     """
     try:
-        # Fetch the user document
         user_doc = frappe.get_doc("User", user)
 
-        # Ensure the user has a valid mobile number
         if not user_doc.mobile_no:
             return Response(
                 json.dumps(
-                {
-                "message": "User does not have a valid mobile number."
-                }
+                    {
+                        "message": "User does not have a valid mobile number."
+                    }
                 ),
                 status=400,
                 mimetype="application/json",
@@ -1333,7 +1347,9 @@ def resend_reset_key(user):
         if (
             user_doc.reset_password_key
             and user_doc.last_reset_password_key_generated_on
-            and (now_datetime() - user_doc.last_reset_password_key_generated_on).seconds < 600
+            and (
+                now_datetime() - user_doc.last_reset_password_key_generated_on
+                ).seconds < 600
         ):
             # Existing key is valid
             reset_key = user_doc.reset_password_key
@@ -1372,7 +1388,11 @@ def resend_reset_key(user):
     except Exception as e:
         # frappe.log_error(str(e), "Resend Reset Key Error")
         return Response(
-            json.dumps({"message": "An error occurred while resending the reset key."}),
+            json.dumps(
+                {
+                "message": "An error occurred while resending the reset key."
+                }
+                ),
             status=500,
             mimetype="application/json",
         )
