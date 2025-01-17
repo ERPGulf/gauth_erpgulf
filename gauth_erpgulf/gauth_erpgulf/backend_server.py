@@ -928,7 +928,7 @@ def validate_email(email_to_validate):
         return re.match(
                 r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email
             ) is not None
-    
+
     def get_domain_name(email):
         """
         Extract the domain name from the email address.
@@ -949,9 +949,9 @@ def validate_email(email_to_validate):
     domain_name = get_domain_name(email_to_validate)
 
     url = (
-        f"https://www2.istempmail.com/api/check/"
-        f"CirMirL3dAHELe8pKdUeG55KV3qy6weU/{domain_name}"
-)
+            f"https://www2.istempmail.com/api/check/"
+            f"CirMirL3dAHELe8pKdUeG55KV3qy6weU/{domain_name}"
+    )
 
     payload = {}
     headers = {}
@@ -1439,7 +1439,8 @@ def resend_reset_key(user):
         return Response(
             json.dumps(
                     {
-                        "message": "An error occurred while resending the reset key."
+                        "message": "An error occurred"
+                        "while resending the reset key."
                     }
                 ),
             status=500,
