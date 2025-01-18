@@ -626,7 +626,7 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
         ).insert()
 
         reset_data = g_generate_reset_password_key(
-            email, mobile=mobile_no, send_email=True, mask_key=False
+            email, send_email=True
         )
 
         # Store the reset key in cache
@@ -660,36 +660,25 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
 
 @frappe.whitelist(allow_guest=False)
 def g_generate_reset_password_key(
-    recipient, mobile="", send_email=True,
-    password_expired=False, mask_key=True
+    recipient, send_email=True,
+    password_expired=False,mask_key=True
 ):
     """To generate a reset password key"""
 
-    if not mobile:
-        return Response(
-            json.dumps(
-                {
-                    "message": "Mobile or Email not found",
-                    "user_count": 0
-                }
-            ),
-            status=404,
-            mimetype="application/json",
-        )
+    user_mobile=frappe.get_value("User",{"email":recipient},"mobile_no")
 
     try:
         if not frappe.get_all(
             "User",
             filters={
                 "name": recipient,
-                "mobile_no": mobile,
             },
         ):
 
             return Response(
                 json.dumps(
                     {
-                        "message": "Email or Mobile number not found",
+                        "message": "Email  not found",
                         "user_count": 0
                     }
                 ),
@@ -698,22 +687,14 @@ def g_generate_reset_password_key(
             )
 
         # Generate reset password key
+        ensure_user_enabled(recipient)
         key = str(secrets.randbelow(900000) + 100000)
         doc = frappe.get_doc("User", recipient)
         doc.reset_password_key = sha256_hash(key)
         doc.last_reset_password_key_generated_on = now_datetime()
         doc.save(ignore_permissions=True)
 
-        # Store the key in cache with expiration
-        cache_key = f"reset_key_{recipient}"
-        frappe.cache().set_value(
-            cache_key,
-            {
-                "key": key,
-                "expires_at": now_datetime() + timedelta(minutes=10)
-            },
-        )
-
+        
         # Prepare email content
         url = "/update-password?key=" + key
         email_template = frappe.get_doc(
@@ -740,6 +721,13 @@ def g_generate_reset_password_key(
             error=str(ve),
             status=STATUS_500)
 
+
+def ensure_user_enabled(email):
+    """Ensure the user is enabled in the database."""
+    user = frappe.get_doc("User", email)
+    if not user.enabled:
+        user.enabled = 1
+        user.save(ignore_permissions=True)
 
 @frappe.whitelist(allow_guest=False)
 def send_email_oci(recipient, subject, body_html):
@@ -1117,6 +1105,7 @@ def g_update_password_using_reset_key(new_password, reset_key, username):
                 status=STATUS,
                 mimetype=APPLICATION_JSON,
             )
+        
         update_password(new_password=new_password, key=reset_key)
 
         if frappe.local.response.http_status_code == 410:
@@ -1335,114 +1324,57 @@ def generate_success_response(data, status=STATUS_200):
     )
 
 
-@frappe.whitelist(allow_guest=True)
-def resend_otp_for_reset_key(user):
-    """Resend an OTP for a user based on their reset key."""
-    cache_key = f"reset_key_{user}"
-    otp_data = frappe.cache().get_value(f"otp_{user}")
-    if otp_data and now_datetime() < otp_data["expires_at"]:
-        otp = otp_data["otp"]
-    else:
-        otp = str(secrets.randbelow(900000) + 100000)
-        frappe.cache().set_value(
-            cache_key,
-            {"key": otp, "expires_at": now_datetime() + timedelta(minutes=10)},
-        )
+from frappe.auth import LoginManager
+def reauthenticate_user(username):
+    """Re-authenticate the session user."""
+    login_manager = LoginManager()
+    login_manager.login_as(username)
+    frappe.log_error(f"Re-authenticated user: {username}", "Debug Re-authentication")
+
+
+from frappe.sessions import clear_sessions
+def clear_user_sessions(username):
+    """Clear all active sessions for the given user."""
+    clear_sessions(user=username)
+
+
+@frappe.whitelist(allow_guest=False)
+def g_update_password_using_reset_key_testing(new_password, reset_key, username):
+    """Update the user's password using the reset key and handle session-related issues."""
     try:
-        # Update the reset key in the User document
-        user_doc = frappe.get_doc("User", user)
-        user_doc.reset_password_key = sha256_hash(otp)  # Hash the new key
-        user_doc.last_reset_password_key_generated_on = now_datetime()
-        user_doc.save(ignore_permissions=True)
-        email_template = frappe.get_doc("Email Template", "gauth erpgulf")
-        message = email_template.response_html.replace("{otp}", otp)
-        subject = "Your OTP Code (Resent)"
-        send_email_oci(user, subject, message)
+        clear_user_sessions(username)
+        update_password(new_password=new_password, key=reset_key)
+        user = frappe.get_doc("User", username)
+        if not user.enabled:
+            user.enabled = 1
+            user.save(ignore_permissions=True)
+            frappe.log_error(f"User re-enabled after password update: {username}", "Debug User Enable")
 
-    except ValueError as ve:
-        frappe.log_error(str(ve), "Resend OTP Email Error")
-        return generate_error_response(
-            "Email template not found or sending failed",
-            error=str(ve),
-            status=STATUS_500,
-        )
-    result_data = {"success": True, "message": "OTP resent successfully"}
-    return generate_success_response(result_data, status=STATUS_200)
-
-
-@frappe.whitelist(allow_guest=True)
-def resend_reset_key(user):
-    """
-    Resend a reset key for a user.
-    If a valid reset key exists and is not expired,
-    it will be reused. Otherwise,
-    a new key will be generated and sent via email.
-    The key will expire after 10 minutes.
-    """
-    try:
-        user_doc = frappe.get_doc("User", user)
-
-        if not user_doc.mobile_no:
+        reauthenticate_user(username)
+        if frappe.local.response.http_status_code == 410:
             return Response(
-                json.dumps(
-                    {
-                        "message": "User does not have a valid mobile number."
-                    }
-                ),
-                status=400,
-                mimetype="application/json",
+                json.dumps({"message": "Invalid or expired key"}),
+                status=frappe.local.response.http_status_code,
+                mimetype=APPLICATION_JSON,
             )
-        # Determine if the existing key is valid
-        if (
-            user_doc.reset_password_key
-            and user_doc.last_reset_password_key_generated_on
-            and (
-                now_datetime() - user_doc.last_reset_password_key_generated_on
-                ).seconds < 600
-        ):
-            # Existing key is valid
-            reset_key = user_doc.reset_password_key
-        else:
-            # Generate a new reset key
-            reset_key = g_generate_reset_password_key(
-                recipient=user,
-                mobile=user_doc.mobile_no,
-                send_email=False,
-                mask_key=False,
-            )["reset_key"]
+        if frappe.local.response.http_status_code == 400:
+            return Response(
+                json.dumps({"message": "Invalid or expired key"}),
+                status=frappe.local.response.http_status_code,
+                mimetype=APPLICATION_JSON,
+            )
+        frappe.local.response.http_status_code = STATUS_200
+        if frappe.local.response.http_status_code == STATUS_200:
+            return Response(
+                json.dumps({"message": "Password Successfully updated"}),
+                status=frappe.local.response.http_status_code,
+                mimetype=APPLICATION_JSON,
+            )
 
-            # Update the user document with the new hashed key
-            user_doc.reset_password_key = sha256_hash(reset_key)
-            user_doc.last_reset_password_key_generated_on = now_datetime()
-            user_doc.save(ignore_permissions=True)
-
-        # Send the reset key via email
-        email_template = frappe.get_doc("Email Template", "gauth erpgulf")
-        message = email_template.response_html.replace("{otp}", reset_key)
-        subject = "Your Reset Key"
-        send_email_oci(user, subject, message)
-
-        return Response(
-            json.dumps({"message": "Reset key has been resent successfully."}),
-            status=200,
-            mimetype="application/json",
-        )
-
-    except frappe.DoesNotExistError:
-        return Response(
-            json.dumps({"message": f"User '{user}' does not exist."}),
-            status=404,
-            mimetype="application/json",
-        )
     except Exception as e:
-        # frappe.log_error(str(e), "Resend Reset Key Error")
+        frappe.log_error(f"Error in password update: {str(e)}", "Debug Password Update")
         return Response(
-            json.dumps(
-                    {
-                        "message": "An error occurred"
-                        "while resending the reset key."
-                    }
-                ),
+            json.dumps({"message": f"An error occurred: {str(e)}"}),
             status=500,
             mimetype="application/json",
         )

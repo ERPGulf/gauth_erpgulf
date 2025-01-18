@@ -77,12 +77,10 @@ def test_generate_token_encrypt_for_user_2fa(encrypted_key):
         try:
             _, decrypted_key = decrypt_2fa_key(encrypted_key)
             api_key, api_secret, app_key = decrypted_key.split("::")
-        except ValueError:
+        except ValueError as ve:
             return generate_error_response(
                 message=TWO_FA_TOKEN_EXPIRED,
-                error=
-                "Decryption failed."
-                "Token expired.",
+                error="Decryption failed.Token expired.",
                 status=401,
             )
 
@@ -140,7 +138,9 @@ def test_generate_token_encrypt_for_user_2fa(encrypted_key):
 
     except ValueError as ve:
         return generate_error_response(
-            message="An unexpected error occurred.", error=str(ve), status=STATUS_500
+            message="An unexpected error occurred.",
+            error=str(ve),
+            status=STATUS_500
         )
     except Exception as e:
         return generate_error_response(
@@ -525,6 +525,7 @@ def get_oauth_client(app_key):
     if not client_id:
         raise frappe.ValidationError(_(INVALID_SECURITY_PARAMETERS))
     return client_id, client_secret
+
 
 @frappe.whitelist(allow_guest=True)
 def test(api_key):

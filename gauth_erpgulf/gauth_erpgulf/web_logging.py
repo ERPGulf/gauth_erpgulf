@@ -25,8 +25,6 @@ def delete_all_web_access_logs():
     Actual function to delete all records from the 'Web Access Log' doctype.
     This function is intended to be run in the background.
     """
-
-
     doctype_name = WEB_ACCESS_LOG
     records = frappe.get_all(doctype_name, pluck="name")
     if not records:
@@ -77,8 +75,6 @@ def parse_nginx_logs():
     Parse Nginx logs and insert records into the 'Web Access Log' doctype.
     Only records newer than the latest existing entry in the doctype are added.
     """
-
-
     frappe.log_error("Result fetched: parsing", "Nginx Log")
     log_file_path = "/var/log/nginx/access.log"
     # Regular expression to parse Nginx logs
