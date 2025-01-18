@@ -23,6 +23,10 @@ from frappe.utils import now_datetime
 import pyotp
 import requests
 from werkzeug.wrappers import Response
+from frappe.auth import LoginManager
+from frappe.sessions import clear_sessions
+
+
 
 # Constants
 OAUTH_CLIENT = "OAuth Client"
@@ -661,17 +665,17 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
 @frappe.whitelist(allow_guest=False)
 def g_generate_reset_password_key(
     recipient, send_email=True,
-    password_expired=False,mask_key=True
+    password_expired=False, mask_key=True
 ):
     """To generate a reset password key"""
-
-    user_mobile=frappe.get_value("User",{"email":recipient},"mobile_no")
+    user_mobile = frappe.get_value("User", {"email": recipient}, "mobile_no")
 
     try:
         if not frappe.get_all(
             "User",
             filters={
                 "name": recipient,
+                "email": recipient,
             },
         ):
 
@@ -685,7 +689,6 @@ def g_generate_reset_password_key(
                 status=404,
                 mimetype="application/json",
             )
-
         # Generate reset password key
         ensure_user_enabled(recipient)
         key = str(secrets.randbelow(900000) + 100000)
@@ -694,7 +697,6 @@ def g_generate_reset_password_key(
         doc.last_reset_password_key_generated_on = now_datetime()
         doc.save(ignore_permissions=True)
 
-        
         # Prepare email content
         url = "/update-password?key=" + key
         email_template = frappe.get_doc(
@@ -728,6 +730,7 @@ def ensure_user_enabled(email):
     if not user.enabled:
         user.enabled = 1
         user.save(ignore_permissions=True)
+
 
 @frappe.whitelist(allow_guest=False)
 def send_email_oci(recipient, subject, body_html):
@@ -1105,7 +1108,6 @@ def g_update_password_using_reset_key(new_password, reset_key, username):
                 status=STATUS,
                 mimetype=APPLICATION_JSON,
             )
-        
         update_password(new_password=new_password, key=reset_key)
 
         if frappe.local.response.http_status_code == 410:
@@ -1324,23 +1326,28 @@ def generate_success_response(data, status=STATUS_200):
     )
 
 
-from frappe.auth import LoginManager
 def reauthenticate_user(username):
     """Re-authenticate the session user."""
     login_manager = LoginManager()
     login_manager.login_as(username)
-    frappe.log_error(f"Re-authenticated user: {username}", "Debug Re-authentication")
+    frappe.log_error(
+            f"Re-authenticated user: {username}",
+            "Debug Re-authentication"
+        )
 
 
-from frappe.sessions import clear_sessions
 def clear_user_sessions(username):
     """Clear all active sessions for the given user."""
     clear_sessions(user=username)
 
 
 @frappe.whitelist(allow_guest=False)
-def g_update_password_using_reset_key_testing(new_password, reset_key, username):
-    """Update the user's password using the reset key and handle session-related issues."""
+def g_update_password_using_reset_key_testing(
+    new_password,
+    reset_key, username
+    ):
+    """Update the user's password using the"""
+    """reset key and handle session-related issues."""
     try:
         clear_user_sessions(username)
         update_password(new_password=new_password, key=reset_key)
@@ -1348,7 +1355,10 @@ def g_update_password_using_reset_key_testing(new_password, reset_key, username)
         if not user.enabled:
             user.enabled = 1
             user.save(ignore_permissions=True)
-            frappe.log_error(f"User re-enabled after password update: {username}", "Debug User Enable")
+            frappe.log_error(
+                f"User re-enabled after password update: {username}",
+                "Debug User Enable"
+            )
 
         reauthenticate_user(username)
         if frappe.local.response.http_status_code == 410:
@@ -1366,13 +1376,20 @@ def g_update_password_using_reset_key_testing(new_password, reset_key, username)
         frappe.local.response.http_status_code = STATUS_200
         if frappe.local.response.http_status_code == STATUS_200:
             return Response(
-                json.dumps({"message": "Password Successfully updated"}),
+                json.dumps(
+                    {
+                        "message": "Password Successfully updated"
+                    }
+                ),
                 status=frappe.local.response.http_status_code,
                 mimetype=APPLICATION_JSON,
             )
 
     except Exception as e:
-        frappe.log_error(f"Error in password update: {str(e)}", "Debug Password Update")
+        frappe.log_error(
+            f"Error in password update: {str(e)}",
+            "Debug Password Update"
+        )
         return Response(
             json.dumps({"message": f"An error occurred: {str(e)}"}),
             status=500,
