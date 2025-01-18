@@ -14,7 +14,7 @@ from frappe.utils import now_datetime, cint
 from firebase_admin import credentials, messaging
 from google.oauth2 import service_account
 from erpnext.accounts.utils import get_balance_on
-from gauth_erpgulf.gauth_erpgulf.backend_server import(
+from gauth_erpgulf.gauth_erpgulf.backend_server import (
     get_backend_server_settings,
     json_response,
     generate_error_response,
@@ -139,6 +139,8 @@ def get_account_balance():
     )
     result = {"balance": 0 - balance}
     return generate_success_response(result, status=STATUS_200)
+
+
 @frappe.whitelist(allow_guest=False)
 def time():
     """To get the Unix and server time"""
@@ -151,6 +153,7 @@ def time():
         "data": {"serverTime": server_time, "unix_time": unix_time}
     }
     return api_response
+
 
 @frappe.whitelist(allow_guest=False)
 def make_payment_entry(amount, user, bid, reference):
@@ -353,25 +356,41 @@ def firebase_subscribe_to_topic(topic, fcm_token):
             error=error_message,
             status=STATUS_500,
         )
+
+
 @frappe.whitelist(allow_guest=False)
 def get_sms_id(provider):
     """Get the SMS ID"""
-    default_company = frappe.db.get_single_value("Global Defaults", "default_company")
+    default_company = frappe.db.get_single_value(
+        "Global Defaults", "default_company"
+    )
 
     if provider == "twilio":
-        return frappe.db.get_value(COMPANY, default_company, "custom_twilio_id")
+        return frappe.db.get_value(
+            COMPANY, default_company, "custom_twilio_id"
+        )
 
     if provider == "expertexting":
-        return frappe.db.get_value(COMPANY, default_company, "custom_expertexting_id")
+        return frappe.db.get_value(
+            COMPANY, default_company, "custom_expertexting_id"
+        )
 
     if provider == "vodafone":
-        app = frappe.db.get_value(COMPANY, default_company, "custom_vodafone_app")
+        app = frappe.db.get_value(
+            COMPANY, default_company, "custom_vodafone_app"
+        )
         passwd = frappe.db.get_value(
             COMPANY, default_company, "custom_vodafone_password"
         )
-        mask = frappe.db.get_value(COMPANY, default_company, "custom_vodafone_mask")
-        param_string = "?application=" + app + "&password=" + passwd + "&mask=" + mask
+        mask = frappe.db.get_value(
+            COMPANY, default_company, "custom_vodafone_mask"
+        )
+        param_string = (
+            f"?application={app}&password={passwd}&mask={mask}"
+        )
         return param_string
+
+
 @frappe.whitelist(allow_guest=False)
 def send_sms_vodafone(phone_number, message_text):
     """to send sms for vodafone"""
@@ -398,6 +417,8 @@ def send_sms_vodafone(phone_number, message_text):
 
     except ValueError as ve:
         return "Error in qr sending SMS   " + str(ve)
+
+
 @frappe.whitelist(allow_guest=False)
 def send_sms_twilio(phone_number, otp):
     """Sends an SMS using Twilio API."""
@@ -445,7 +466,9 @@ def validate_user_permissions():
 @frappe.whitelist(allow_guest=False)
 def get_number_of_files(file_storage):
     """To get the number of total files"""
-    if hasattr(file_storage, "get_num_files") and callable(file_storage.get_num_files):
+    if hasattr(
+        file_storage, "get_num_files"
+    ) and callable(file_storage.get_num_files):
         return file_storage.get_num_files()
     else:
         return 0
@@ -542,6 +565,7 @@ def upload_file():
         file_names.append(key)
         urls.append(process_file_upload(file, ignore_permissions))
     return urls
+
 
 @frappe.whitelist(allow_guest=False)
 def optimize_image_content(content, content_type):
