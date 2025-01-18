@@ -26,8 +26,6 @@ from werkzeug.wrappers import Response
 from frappe.auth import LoginManager
 from frappe.sessions import clear_sessions
 
-
-
 # Constants
 OAUTH_CLIENT = "OAuth Client"
 OAUTH_TOKEN_URL = "/api/method/frappe.integrations.oauth2.get_token"
@@ -1346,8 +1344,7 @@ def g_update_password_using_reset_key_testing(
     new_password,
     reset_key, username
     ):
-    """Update the user's password using the"""
-    """reset key and handle session-related issues."""
+    """Update the user's password using the reset key and handle session-related issues."""
     try:
         clear_user_sessions(username)
         update_password(new_password=new_password, key=reset_key)

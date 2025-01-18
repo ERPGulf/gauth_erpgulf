@@ -27,7 +27,7 @@ ERROR = "An unexpected error occured"
 COMPANY = "Company"
 NAME_AS_EMAIL = "name as email"
 STATUS = 404
-APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded" 
+APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded"
 
 
 @frappe.whitelist(allow_guest=True)
@@ -60,7 +60,10 @@ def payment_gateway_log(reference, amount, user, bid):
         ).insert(ignore_permissions=True)
         return "Successfully logged Payment gateway initialization"
     except ValueError as ve:
-        frappe.log_error(title="Payment logging failed", message=frappe.get_traceback())
+        frappe.log_error(
+            title="Payment logging failed",
+            message=frappe.get_traceback()
+        )
         return "Error in payment gateway log  " + str(ve)
 
 
@@ -117,7 +120,9 @@ def send_email_sparkpost(subject=None, text=None, to=None, from_=None):
         else:
 
             return Response(
-                response.text, status=response.status_code, mimetype=APPLICATION_JSON
+                response.text,
+                status=response.status_code,
+                mimetype=APPLICATION_JSON
             )
 
     except ValueError as ve:
@@ -128,7 +133,10 @@ def send_email_sparkpost(subject=None, text=None, to=None, from_=None):
 def get_account_balance():
     """To get the Account Balance of a user"""
     response_content = frappe.session.user
-    balance = get_balance_on(party_type="Customer", party=response_content)
+    balance = get_balance_on(
+        party_type="Customer",
+        party=response_content
+    )
     result = {"balance": 0 - balance}
     return generate_success_response(result, status=STATUS_200)
 @frappe.whitelist(allow_guest=False)
@@ -136,9 +144,12 @@ def time():
     """To get the Unix and server time"""
 
     server_time = frappe.utils.now()
-    unix_time = frappe.utils.get_datetime(frappe.utils.now_datetime()).timestamp()
+    unix_time = frappe.utils.get_datetime(
+        frappe.utils.now_datetime()).timestamp()
 
-    api_response = {"data": {"serverTime": server_time, "unix_time": unix_time}}
+    api_response = {
+        "data": {"serverTime": server_time, "unix_time": unix_time}
+    }
     return api_response
 
 @frappe.whitelist(allow_guest=False)
@@ -546,7 +557,10 @@ def optimize_image_content(content, content_type):
 @frappe.whitelist(allow_guest=False)
 def attach_field_to_doc(doc):
     """Attach the file to a specific field in the document."""
-    attach_field = frappe.get_doc(frappe.form_dict.doctype, frappe.form_dict.docname)
+    attach_field = frappe.get_doc(
+        frappe.form_dict.doctype,
+        frappe.form_dict.docname
+    )
     setattr(attach_field, frappe.form_dict.fieldname, doc.file_url)
     attach_field.save(ignore_permissions=True)
 
@@ -582,6 +596,7 @@ def process_file_upload(file, ignore_permissions):
         attach_field_to_doc(doc)
 
     return doc.file_url
+
 
 # to get access token for request to firebase
 @frappe.whitelist(allow_guest=False)
