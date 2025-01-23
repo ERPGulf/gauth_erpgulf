@@ -1,0 +1,265 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-09 10:00:45.194965",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "authentication_tab",
+  "2fa_authentication",
+  "normal_authentication",
+  "2fa_secret_key",
+  "sender",
+  "sender_name",
+  "url",
+  "column_break_ttdo",
+  "enable_api_logs",
+  "host",
+  "user_smtp",
+  "port",
+  "password_smtp",
+  "sparkpost_url",
+  "countries_tab",
+  "section_break_ycfw",
+  "table",
+  "africa_section",
+  "table_africa",
+  "antartica_section",
+  "table_antartica",
+  "asia_section",
+  "table_asia",
+  "australia_section",
+  "table_australia",
+  "north_america_section",
+  "table_north_america",
+  "ocenia_section",
+  "table_ufwl",
+  "south_america_section",
+  "table_south_america",
+  "ip_addresses_tab",
+  "table_ip_address",
+  "web_access_log_tab",
+  "activate_scheduled_update",
+  "last_updated_date",
+  "update_now"
+ ],
+ "fields": [
+  {
+   "fieldname": "authentication_tab",
+   "fieldtype": "Tab Break",
+   "label": "Authentication"
+  },
+  {
+   "default": "0",
+   "fieldname": "2fa_authentication",
+   "fieldtype": "Check",
+   "label": "2FA Authentication"
+  },
+  {
+   "default": "0",
+   "fieldname": "normal_authentication",
+   "fieldtype": "Check",
+   "label": "Normal Authentication "
+  },
+  {
+   "fieldname": "2fa_secret_key",
+   "fieldtype": "Data",
+   "label": "2FA Secret Key"
+  },
+  {
+   "fieldname": "sender",
+   "fieldtype": "Data",
+   "label": "Sender"
+  },
+  {
+   "fieldname": "sender_name",
+   "fieldtype": "Data",
+   "label": "Sender Name"
+  },
+  {
+   "fieldname": "url",
+   "fieldtype": "Data",
+   "label": "url"
+  },
+  {
+   "fieldname": "column_break_ttdo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_api_logs",
+   "fieldtype": "Check",
+   "label": "Enable API Logging"
+  },
+  {
+   "fieldname": "host",
+   "fieldtype": "Data",
+   "label": "Host"
+  },
+  {
+   "fieldname": "user_smtp",
+   "fieldtype": "Data",
+   "label": "User SMTP"
+  },
+  {
+   "fieldname": "port",
+   "fieldtype": "Data",
+   "label": "Port"
+  },
+  {
+   "fieldname": "password_smtp",
+   "fieldtype": "Data",
+   "label": "Password SMTP "
+  },
+  {
+   "fieldname": "sparkpost_url",
+   "fieldtype": "Data",
+   "label": "Sparkpost Url"
+  },
+  {
+   "fieldname": "countries_tab",
+   "fieldtype": "Tab Break",
+   "label": "Countries"
+  },
+  {
+   "fieldname": "section_break_ycfw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "table",
+   "fieldtype": "Table",
+   "options": "Countries and IP address"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "africa_section",
+   "fieldtype": "Section Break",
+   "label": "Africa"
+  },
+  {
+   "fieldname": "table_africa",
+   "fieldtype": "Table",
+   "options": "Countries and IP address"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "antartica_section",
+   "fieldtype": "Section Break",
+   "label": "Antartica"
+  },
+  {
+   "fieldname": "table_antartica",
+   "fieldtype": "Table",
+   "options": "Countries and IP address"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "asia_section",
+   "fieldtype": "Section Break",
+   "label": "Asia"
+  },
+  {
+   "fieldname": "table_asia",
+   "fieldtype": "Table",
+   "options": "Countries and IP address"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "australia_section",
+   "fieldtype": "Section Break",
+   "label": "Europe"
+  },
+  {
+   "fieldname": "table_australia",
+   "fieldtype": "Table",
+   "options": "Countries and IP address"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "north_america_section",
+   "fieldtype": "Section Break",
+   "label": "North America"
+  },
+  {
+   "fieldname": "table_north_america",
+   "fieldtype": "Table",
+   "options": "Countries and IP address"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "ocenia_section",
+   "fieldtype": "Section Break",
+   "label": "Ocenia"
+  },
+  {
+   "fieldname": "table_ufwl",
+   "fieldtype": "Table",
+   "options": "Countries and IP address"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "south_america_section",
+   "fieldtype": "Section Break",
+   "label": "South America"
+  },
+  {
+   "fieldname": "table_south_america",
+   "fieldtype": "Table",
+   "options": "Countries and IP address"
+  },
+  {
+   "fieldname": "ip_addresses_tab",
+   "fieldtype": "Tab Break",
+   "label": "IP Addresses"
+  },
+  {
+   "fieldname": "table_ip_address",
+   "fieldtype": "Table",
+   "options": "Countries and IP address"
+  },
+  {
+   "fieldname": "web_access_log_tab",
+   "fieldtype": "Tab Break",
+   "label": "Web Access Log"
+  },
+  {
+   "default": "0",
+   "fieldname": "activate_scheduled_update",
+   "fieldtype": "Check",
+   "label": "Activate Scheduled Update"
+  },
+  {
+   "fieldname": "last_updated_date",
+   "fieldtype": "Data",
+   "label": " Last updated date "
+  },
+  {
+   "fieldname": "update_now",
+   "fieldtype": "Button",
+   "label": "Update Now"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-01-09 08:36:04.117809",
+ "modified_by": "Administrator",
+ "module": "gauth_erpgulf",
+ "name": "Backend Server Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -26,7 +26,7 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/gauth_erpgulf/css/gauth_erpgulf.css"
-# app_include_js = "/assets/gauth_erpgulf/js/gauth_erpgulf.js"
+# app_include_js = "/assets/gauth_erpgulf/js/web_log.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/gauth_erpgulf/css/gauth_erpgulf.css"
@@ -43,11 +43,12 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
-# doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
+# doctype_list_js = {"doctype" : "gauth_erpgulf/public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
-
+doctype_js = {
+    "Backend Server Settings": "public/js/web_log.js",
+}
 # Svg Icons
 # ------------------
 # include app icons in desk
@@ -148,7 +149,12 @@ app_license = "mit"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
+scheduler_events = {
+    "cron": {
+        "0 2 * * *": [
+            "gauth_erpgulf.gauth_erpgulf.web_logging.enqueue_parse_nginx_logs"
+        ]
+    },
 # 	"all": [
 # 		"gauth_erpgulf.tasks.all"
 # 	],
@@ -164,7 +170,7 @@ app_license = "mit"
 # 	"monthly": [
 # 		"gauth_erpgulf.tasks.monthly"
 # 	],
-# }
+}
 
 # Testing
 # -------
@@ -196,6 +202,10 @@ app_license = "mit"
 
 # Request Events
 # ----------------
+# before_request = (
+#     "gauth_erpgulf.gauth_erpgulf.backend_server."
+#     "check_country_restriction1"
+# )
 # before_request = ["gauth_erpgulf.utils.before_request"]
 # after_request = ["gauth_erpgulf.utils.after_request"]
 
@@ -242,3 +252,6 @@ app_license = "mit"
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+fixtures = [
+    {"dt": "DocType", "filters": {"module": "gauth_erpgulf"}},
+]

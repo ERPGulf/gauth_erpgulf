@@ -1,7 +1,9 @@
-## gauth_erpgulf
+## gauth_ergpulf
 
 Authentication and API for Frappe ERPNext framework from ERPGulf
-GAUTH
-#### License
 
+Gauth ERPGulf A#
+GAUTH
+
+#### License
 mit
