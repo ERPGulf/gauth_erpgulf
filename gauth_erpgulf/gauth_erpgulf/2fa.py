@@ -5,6 +5,7 @@ import secrets
 import string
 import re
 import base64
+import frappe.utils
 import pyotp
 from base64 import b32encode, b64encode
 from io import BytesIO
@@ -37,12 +38,15 @@ from frappe.utils import (
     now_datetime,
     sha256_hash,
 )
+from gauth_erpgulf.gauth_erpgulf.backend_server import xor_encrypt_decrypt
 from frappe.utils.background_jobs import enqueue
 from frappe.utils.image import optimize_image
 from frappe.utils.password import encrypt, decrypt, update_password
 from frappe.utils.response import Response
 from frappe.core.doctype.user.user import User
 from erpnext.accounts.utils import get_balance_on, get_fiscal_year
+from frappe.utils.password import check_password as _check_password
+
 
 PARENT_FOR_DEFAULTS = "__2fa"
 OAUTH_CLIENT = "OAuth Client"
@@ -58,6 +62,7 @@ TWO_FA_TOKEN_EXPIRED = "2FA token expired"
 STATUS_500 = 500
 STATUS_200 = 200
 MOBILE_NO_ALIAS = "mobile_no as mobile_no"
+CUSTOMER_NAME_AS_EMAIL="customer_name as email"
 
 
 def generate_error_response(message, error, status=STATUS_500):
@@ -138,14 +143,13 @@ def test_generate_token_encrypt_for_user_2fa(encrypted_key):
 
     except ValueError as ve:
         return generate_error_response(
-            message="An unexpected error occurred.",
-            error=str(ve),
-            status=STATUS_500
+            message="An unexpected error occurred.", error=str(ve), status=STATUS_500
         )
     except Exception as e:
         return generate_error_response(
             message="A general error occurred.", error=str(e), status=STATUS_500
         )
+
 
 def generate_success_response(data, status=STATUS_200):
     return Response(
@@ -153,6 +157,7 @@ def generate_success_response(data, status=STATUS_200):
         status=status,
         mimetype=APPLICATION_JSON,
     )
+
 
 def send_email_oci(recipient, subject, otp):
     """Send an email to the recipient with subject."""
@@ -179,6 +184,7 @@ def send_email_oci(recipient, subject, otp):
         return "Email successfully sent!"
     except Exception as e:
         return f"Error: {e}"
+
 
 def generate_totp_without_leading_zero(totp):
     """Generate TOTP without leading zeros."""
@@ -219,14 +225,9 @@ def clear_default(key):
 def get_otpsecret_for_(user):
     otp_secret = get_default(user + "_otpsecret")
     if otp_secret:
-        # Correcting the `decrypt` call to remove the unexpected 'key' argument
         return decrypt(otp_secret)
-
-    # Generate a new OTP secret if it doesn't exist
     otp_secret = b32encode(os.urandom(10)).decode("utf-8")
-    set_default(
-        user + "_otpsecret", encrypt(otp_secret)
-    )  # Storing the encrypted OTP secret
+    set_default(user + "_otpsecret", encrypt(otp_secret))
     frappe.db.commit()
     return otp_secret
 
@@ -235,16 +236,19 @@ def get_otpsecret_for_(user):
 @frappe.whitelist(allow_guest=True)
 def validate_otp_to_generate_user_token(user, user_otp):
     try:
-        # Retrieve OTP from cache
+        user = frappe.get_value("User", {"name": user}, "name")
+        if not user:
+            return Response(
+                json.dumps({"success": False, "message": "User not found"}),
+                status=400,
+                mimetype=APPLICATION_JSON,
+            )
         otp_data = frappe.cache().get_value(f"otp_{user}")
-
-
-        frappe.log_error(message=str(otp_data), title="OTP Cache Debug")
         customer_data = frappe.get_all(
             "Customer",
             fields=[
                 "customer_name as  name",
-                "customer_name as email",
+                CUSTOMER_NAME_AS_EMAIL,
                 "mobile_no as mobile",
             ],
             filters={"customer_name": ["like", user]},
@@ -253,17 +257,10 @@ def validate_otp_to_generate_user_token(user, user_otp):
             return Response(
                 json.dumps({"success": False, "message": "OTP expired or not found"}),
                 status=400,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
-
-        # Check expiration with a buffer time
-        if frappe.utils.now_datetime() > otp_data["expires_at"]:
-            frappe.cache().delete_value(f"otp_{user}")
-            return {"success": False, "message": "OTP expired"}
-
-        # Check if OTP matches
-        if otp_data["otp"] ==user_otp:
-            # frappe.cache().delete_value(f"otp_{user}")
+        hash_otp = sha256_hash(user_otp)
+        if otp_data["otp"] == hash_otp:
             refresh_token = otp_data["token"].get("refresh_token", None)
             response = Response(
                 json.dumps(
@@ -275,8 +272,9 @@ def validate_otp_to_generate_user_token(user, user_otp):
                     }
                 ),
                 status=200,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
+            frappe.cache().delete_value(f"otp_{user}")
             if refresh_token:
                 response.set_cookie(
                     "refresh_token",
@@ -289,21 +287,21 @@ def validate_otp_to_generate_user_token(user, user_otp):
 
             return response
         else:
-            # return {"success": False, "message": "Invalid OTP"}
             return Response(
                 json.dumps({"message": "Invalid OTP"}),
                 status=400,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
     except Exception as e:
         frappe.log_error(message=str(e), title="OTP Validation Error")
-        # return {"success": False, "message": "Error during OTP validation"}
         return Response(
             json.dumps({"message": "Error during OTP validation"}),
             status=401,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
-#login api
+
+
+# login api
 @frappe.whitelist(allow_guest=True)
 def generate_token_encrypt_for_user_2fa(encrypted_key):
     """Generate a user token using an encrypted key."""
@@ -316,19 +314,16 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
             return Response(
                 json.dumps({"message": "2FA token expired or invalid"}),
                 status=401,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
-
-        # Decode the application key
         try:
             app_key = base64.b64decode(app_key).decode("utf-8")
         except Exception:
             return Response(
                 json.dumps({"message": INVALID_SECURITY_PARAMETERS}),
                 status=401,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
-
         client_id_value, client_secret_value = get_oauth_client(app_key)
         if client_id_value is None:
             return Response(
@@ -354,7 +349,7 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
             "Customer",
             fields=[
                 "customer_name as name",
-                "customer_name as email",
+                CUSTOMER_NAME_AS_EMAIL,
                 "mobile_no as mobile",
             ],
             filters={"customer_name": ["like", api_key]},
@@ -373,26 +368,25 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
                     mimetype=APPLICATION_JSON,
                 )
 
-        existing_otp = frappe.cache().get_value(f"otp_{api_key}")
-        if existing_otp and frappe.utils.now_datetime() < existing_otp["expires_at"]:
-            return {
-                "success": False,
-                "message": "An OTP already exists. Please validate the current OTP.",
-            }
+        # existing_otp = frappe.cache().get_value(f"otp_{api_key}")
+        # if existing_otp and frappe.utils.now_datetime() < existing_otp["expires_at"]:
+        #     return {
+        #         "success": False,
+        #         "message": "An OTP already exists. Please validate the current OTP.",
+        #     }
 
         # Generate OTP without leading zeros
         otp = authenticate_for_2factor(api_key)
+        hash_otp = sha256_hash(otp)
         frappe.cache().set_value(
             f"otp_{api_key}",
             {
-                "otp": otp,
-                "expires_at": frappe.utils.now_datetime() + timedelta(seconds=600),
+                "otp": hash_otp,
                 "token": result_data,
-                "user": qid[0] if qid else {},
+                "user": qid[0] if qid else {}
             },
         )
 
-        # Send OTP via email
         try:
             email_template = frappe.get_doc("Email Template", "gauth erpgulf")
             message = email_template.response_html
@@ -412,58 +406,67 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
         return Response(
             json.dumps({"data": "OTP verification is required"}),
             status=200,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
     except Exception as e:
         frappe.log_error(message=str(e), title="2FA Token Generation Error")
 
 
-
 @frappe.whitelist(allow_guest=True)
 def resend_otp(user):
+    
     """
-    Resend the OTP to the user's email.
+    Resend the OTP to the user's email and replace only the OTP in the cache.
     """
     try:
-        # Check if an OTP exists in the cache
-        otp_data = frappe.cache().get_value(f"otp_{user}")
+        # Check if the user exists
+        user = frappe.get_value("User", {"name": user}, "name")
+        if not user:
+            return Response(
+                json.dumps({"success": False, "message": "User not found"}),
+                status=400,
+                mimetype=APPLICATION_JSON,
+            )
+
+        # Fetch existing cache data
+        existing_cache = frappe.cache().get_value(f"otp_{user}")
+        if not existing_cache:
+            return Response(
+                json.dumps({"success": False, "message": "Resend OTP session has expired.Please login again"}),
+                status=400,
+                mimetype=APPLICATION_JSON,
+            )
+
+        # Generate a new OTP
         otp_secret = get_otpsecret_for_(user)
         totp = TOTP(otp_secret, digits=6)
+        otp = generate_totp_without_leading_zero(totp)
+        hash_otp = sha256_hash(otp)  # Hash the new OTP
 
-        if otp_data and frappe.utils.now_datetime() < otp_data["expires_at"]:
-            # Use existing OTP if it's still valid
-            otp = otp_data["otp"]
-        else:
-            # Generate a new OTP if the existing one is expired or missing
-            otp = generate_totp_without_leading_zero(totp)
-            otp_data = {
-                "otp": otp,
-                "expires_at": frappe.utils.now_datetime() + timedelta(seconds=600),
-            }
-            frappe.cache().set_value(f"otp_{user}", otp_data)
-
+        # Update the existing cache data with the new OTP
+        existing_cache["otp"] = hash_otp  # Replace the OTP
+        # existing_cache["expires_at"] = frappe.utils.now_datetime() + timedelta(seconds=600)
+        frappe.cache().set_value(f"otp_{user}", existing_cache)
         # Get user email
         customer_data = frappe.get_all(
             "Customer",
-            fields=["customer_name as email"],
+            fields=[CUSTOMER_NAME_AS_EMAIL],
             filters={"customer_name": ["like", user]},
         )
         if not customer_data or "email" not in customer_data[0]:
             return Response(
                 json.dumps({"success": False, "message": "User email not found"}),
                 status=400,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
-
         user_email = customer_data[0]["email"]
-
         # Resend the OTP via email
         try:
             email_template = frappe.get_doc("Email Template", "gauth erpgulf")
             message = email_template.response_html
-            message = message.format(otp=otp)
-            updated_html_content = message.replace("John Deo",user)
+            message = message.format(otp=otp)  # Include the plaintext OTP in the email
+            updated_html_content = message.replace("John Deo", user)
             subject = "Your OTP Code (Resent)"
             send_email_oci(user_email, subject, updated_html_content)
         except Exception as e:
@@ -471,13 +474,13 @@ def resend_otp(user):
             return Response(
                 json.dumps({"message": "Email template not found or sending failed"}),
                 status=500,
-                mimetype="application/json",
+                mimetype=APPLICATION_JSON,
             )
 
         return Response(
             json.dumps({"success": True, "message": "OTP resent successfully"}),
             status=200,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
     except Exception as e:
@@ -485,18 +488,9 @@ def resend_otp(user):
         return Response(
             json.dumps({"message": "Failed to resend OTP", "error": str(e)}),
             status=500,
-            mimetype="application/json",
+            mimetype=APPLICATION_JSON,
         )
 
-
-
-
-@frappe.whitelist(allow_guest=False)
-def xor_encrypt_decrypt(text, key):
-    """Encrypt or decrypt text using XOR operation."""
-    return "".join(
-        chr(ord(c) ^ ord(k)) for c, k in zip(text, key * ((len(text) // len(key)) + 1))
-    )
 
 @frappe.whitelist(allow_guest=True)
 def generate_totp():
@@ -512,6 +506,67 @@ def decrypt_2fa_key(encrypted_key):
     current_totp = generate_totp()
     encrypted = base64.b64decode(encrypted_key).decode()
     return current_totp, xor_encrypt_decrypt(encrypted, current_totp)
+
+
+
+@frappe.whitelist(allow_guest=True)
+def generate_encrypted_token(text_for_encryption):
+    """To generate test encrypted key from a text"""
+    try:
+        # Attempt to split the input into api_key, api_secret, and app_key
+        api_key, api_secret, app_key = text_for_encryption.split("::")
+
+        # Validate the user credentials
+        try:
+            validate_user = _check_password(
+                api_key, api_secret
+            )  # This will raise AuthenticationError on invalid credentials
+        except frappe.AuthenticationError as e:
+            # Handle invalid username or password error separately
+            return Response(
+                json.dumps({"message": str(e)}),
+                status=401,
+                mimetype=APPLICATION_JSON,
+            )
+
+        # Validate the application key using generate_token_secure
+        try:
+            # response = generate_token_secure(api_key, api_secret, app_key)
+            app_key = base64.b64decode(app_key).decode("utf-8")
+            validate_app_key = get_oauth_client(app_key)
+            if not validate_app_key:
+                return Response(
+                    json.dumps({"message": "Invalid app key provided."}),
+                    status=403,
+                    mimetype=APPLICATION_JSON,
+                )
+            # if response.status_code != 200:
+            #     return Response(
+            #         json.dumps({"message": "Invalid app key provided."}),
+            #         status=403,
+            #         mimetype=APPLICATION_JSON,
+            #     )
+        except Exception as e:
+            return Response(
+                json.dumps({"message": f"Error validating app key: {str(e)}"}),
+                status=500,
+                mimetype=APPLICATION_JSON,
+            )
+
+        # If both user and app_key validation are successful, proceed to encrypt
+        if validate_user and validate_app_key:
+            current_totp = generate_totp()
+            result = xor_encrypt_decrypt(text_for_encryption, current_totp)
+            return base64.b64encode(result.encode()).decode()
+
+    except ValueError:
+        frappe.throw(
+            "Invalid input structure. Please ensure the input contains app_key, api_key, and api_secret separated by '::'.",
+            frappe.ValidationError,
+        )
+    except Exception as e:
+        # Catch any other unexpected errors
+        frappe.throw(f"An unexpected error occurred: {e}", frappe.ValidationError)
 
 
 @frappe.whitelist(allow_guest=True)
@@ -535,3 +590,127 @@ def test(api_key):
         filters={"username": ["like", api_key]},
     )
     return qid
+
+
+@frappe.whitelist(allow_guest=True)
+def generate_token_encrypt_for_user_2fa_test(encrypted_key):
+    """Generate a user token using an encrypted key."""
+    try:
+        # Decrypt the provided key
+        try:
+            _, decrypted_key = decrypt_2fa_key(encrypted_key)
+            api_key, api_secret, app_key = decrypted_key.split("::")
+        except ValueError:
+            return Response(
+                json.dumps({"message": "2FA token expired or invalid"}),
+                status=401,
+                mimetype=APPLICATION_JSON,
+            )
+        try:
+            app_key = base64.b64decode(app_key).decode("utf-8")
+        except Exception:
+            return Response(
+                json.dumps({"message": INVALID_SECURITY_PARAMETERS}),
+                status=401,
+                mimetype=APPLICATION_JSON,
+            )
+        client_id_value, client_secret_value = get_oauth_client(app_key)
+        if client_id_value is None:
+            return Response(
+                json.dumps({"message": INVALID_SECURITY_PARAMETERS, "user_count": 0}),
+                status=401,
+                mimetype=APPLICATION_JSON,
+            )
+
+        client_id = client_id_value
+        client_secret = client_secret_value
+        url = frappe.local.conf.host_name + OAUTH_TOKEN_URL
+        payload = {
+            "username": api_key,
+            "password": api_secret,
+            "grant_type": "password",
+            "client_id": client_id,
+            "client_secret": client_secret,
+        }
+        files = []
+        headers = {"Content-Type": APPLICATION_JSON}
+        response = requests.request("POST", url, data=payload, files=files)
+        qid = frappe.get_all(
+            "Customer",
+            fields=[
+                "customer_name as name",
+                CUSTOMER_NAME_AS_EMAIL,
+                "mobile_no as mobile",
+            ],
+            filters={"customer_name": ["like", api_key]},
+        )
+
+        result_data = []
+        if response.status_code == 200:
+            try:
+                result_data = response.json()
+            except json.JSONDecodeError as json_error:
+                return Response(
+                    json.dumps(
+                        {"message": "Invalid JSON response", "error": str(json_error)}
+                    ),
+                    status=500,
+                    mimetype=APPLICATION_JSON,
+                )
+
+        # existing_otp = frappe.cache().get_value(f"otp_{api_key}")
+        # if existing_otp and frappe.utils.now_datetime() < existing_otp["expires_at"]:
+        #     return {
+        #         "success": False,
+        #         "message": "An OTP already exists. Please validate the current OTP.",
+        #     }
+
+        # Generate OTP without leading zeros
+        otp = authenticate_for_2factor(api_key)
+        hash_otp = sha256_hash(otp)
+        expiry_time = frappe.utils.now_datetime() + timedelta(minutes=10)
+        frappe.cache().set_value(
+            f"otp_{api_key}",
+            {
+                "otp": hash_otp,
+                "token": result_data,
+                "user": qid[0] if qid else {},
+                "expires_at": expiry_time,
+            },
+        )
+        # frappe.enqueue('gauth_erpgulf.gauth_erpgulf.2fa.cleanup_expired_otp', cache_key=f"otp_{api_key}", enqueue_after=10 * 60)
+        try:
+            email_template = frappe.get_doc("Email Template", "gauth erpgulf")
+            message = email_template.response_html
+            message = message.format(otp=otp)
+            updated_html_content = message.replace("John Deo", api_key)
+            subject = "Your OTP Code"
+            send_email_oci(api_key, subject, updated_html_content)
+        except Exception as e:
+            frappe.log_error(str(e), "Email Template or Sending Error")
+            return Response(
+                json.dumps({"message": "Email template not found or sending failed"}),
+                status=500,
+                mimetype=APPLICATION_JSON,
+            )
+
+        # Return OTP required response
+        return Response(
+            json.dumps({"data": "OTP verification is required"}),
+            status=200,
+            mimetype=APPLICATION_JSON,
+        )
+
+    except Exception as e:
+        frappe.log_error(message=str(e), title="2FA Token Generation Error")
+
+
+def cleanup_expired_otp(cache_key):
+    otp_data=frappe.cache().get_value(cache_key)
+    if not otp_data:
+        return
+    expires_at=otp_data["expires_at"]
+    if expires_at and frappe.utils.now_datetime()>expires_at:
+        frappe.cache().delete_value(cache_key)
+        frappe.log_error(message=f"Deleted Expired OTP Cache for {cache_key}",title="Cleaned Expired OTP")
+

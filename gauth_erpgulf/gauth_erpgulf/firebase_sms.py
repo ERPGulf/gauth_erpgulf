@@ -480,7 +480,7 @@ def get_number_of_files(file_storage):
 def _get_customer_details(user_email=None, mobile_phone=None):
     """To get the customer Details"""
     if mobile_phone is not None:
-        customer_details = frappe.get_list(
+        customer_details = frappe.get_all(
             "Customer",
             filters={"mobile_no": mobile_phone},
             fields=[
@@ -491,7 +491,7 @@ def _get_customer_details(user_email=None, mobile_phone=None):
             ],
         )
     elif user_email is not None:
-        customer_details = frappe.get_list(
+        customer_details = frappe.get_all(
             "Customer",
             filters={"name": user_email},
             fields=[
