@@ -525,7 +525,7 @@ def send_sms_vodafone(phone_number, message_text):
         }
         return Response(json.dumps({"message" : ERROR_IN_QR_SMS + str(ve)}),status = response.status_code,mimetype = APPLICATION_JSON)
 
-    
+
 
 
 @frappe.whitelist(allow_guest=False)
@@ -782,7 +782,6 @@ def _get_access_token():
     """Retrieve a valid access token it can be used to authorize requests.FCM
     :return: Access token.
     """
-    # sco_pes = ["https://www.googleapis.com/auth/firebase.messaging"]
     # sco_pes= ["https://www.googleapis.com/auth/cloud-platform"]
     # credential = service_account.Credentials.from_service_account_file(
     #     frappe.local.site + "/private/files/gauth-erpgulf.json", scopes=sco_pes
@@ -801,3 +800,4 @@ def _get_access_token():
         "data" : credential.token,
         "http_status_code" : STATUS_200
     }))
+
