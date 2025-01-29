@@ -729,18 +729,8 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
 
         return Response(
             json.dumps({"message": error_message, "user_count": 0}),
-            status=500,
-            mimetype=APPLICATION_JSON,
-        )
-
-
-    except Exception as e:
-        response_code = 500
-        response_text = {"message": str(e), "user_count": 0}
-        return Response(
-            json.dumps(response_text),
-            status=response_code,
-            mimetype=APPLICATION_JSON,
+            status = STATUS_500,
+            mimetype = APPLICATION_JSON,
         )
 
 
@@ -834,8 +824,8 @@ def g_generate_reset_password_key(
     except Exception as e:
         return Response(
             json.dumps({"message": str(e), "user_count": 0}),
-            status=500,
-            mimetype=APPLICATION_JSON,
+            status = STATUS_500,
+            mimetype = APPLICATION_JSON,
         )
 
 
@@ -1116,7 +1106,7 @@ def validate_email(email_to_validate):
         )
 
     domain_js_path = os.path.join(
-        os.path.dirname(__file__), "..", "public", "domain.js"
+        os.path.dirname(__file__), "..", "public", "domain.json"
     )
 
     try:
@@ -1267,8 +1257,8 @@ def g_update_password_using_usertoken(password):
     except ValueError as ve:
         return generate_error_response(
             ERROR,
-            error=str(ve),
-            status=STATUS_500)
+            error = str(ve),
+            status = STATUS_500)
 
 
 @frappe.whitelist(allow_guest=False)
