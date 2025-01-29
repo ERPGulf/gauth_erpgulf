@@ -151,25 +151,28 @@ doctype_js = {
 
 scheduler_events = {
     "cron": {
+        "0 3 * * *": [
+            "gauth_erpgulf.gauth_erpgulf.web_logging.delete_all_web_access_logs_async"
+        ],
         "0 2 * * *": [
             "gauth_erpgulf.gauth_erpgulf.web_logging.enqueue_parse_nginx_logs"
         ]
     },
-# 	"all": [
-# 		"gauth_erpgulf.tasks.all"
-# 	],
-# 	"daily": [
-# 		"gauth_erpgulf.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"gauth_erpgulf.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"gauth_erpgulf.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"gauth_erpgulf.tasks.monthly"
-# 	],
+    # "all": [
+    #     "gauth_erpgulf.tasks.all"
+    # ],
+    # "daily": [
+    #     "gauth_erpgulf.tasks.daily"
+    # ],
+    # "hourly": [
+    #     "gauth_erpgulf.tasks.hourly"
+    # ],
+    # "weekly": [
+    #     "gauth_erpgulf.tasks.weekly"
+    # ],
+    # "monthly": [
+    #     "gauth_erpgulf.tasks.monthly"
+    # ],
 }
 
 # Testing
@@ -202,12 +205,18 @@ scheduler_events = {
 
 # Request Events
 # ----------------
-# before_request = (
+# before_request = [
 #     "gauth_erpgulf.gauth_erpgulf.backend_server."
-#     "check_country_restriction1"
-# )
-# before_request = ["gauth_erpgulf.utils.before_request"]
-# after_request = ["gauth_erpgulf.utils.after_request"]
+#     "check_country_restriction",
+#     "gauth_erpgulf.gauth_erpgulf.web_logging.mark_primary_request",
+# ]
+before_request = [
+    "gauth_erpgulf.gauth_erpgulf.web_logging.mark_primary_request",
+]
+after_request = [
+    "gauth_erpgulf.gauth_erpgulf.web_logging.enable_api_call",
+]
+
 
 # Job Events
 # ----------
