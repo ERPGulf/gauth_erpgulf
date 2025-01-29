@@ -810,7 +810,7 @@ def g_generate_reset_password_key(
 
         if password_expired:
             url = "/update-password?key=" + key + "&password_expired=true"
-        link = get_url(url)
+        get_url(url)
         if send_email:
             send_email_oci(recipient, subject, updated_html_content)
 

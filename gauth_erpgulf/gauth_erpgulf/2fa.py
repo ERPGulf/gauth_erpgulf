@@ -7,9 +7,9 @@ import frappe.utils
 import requests
 from werkzeug.wrappers import Response
 from pyotp import TOTP
-# Frappe and ERPNext imports
 import frappe
 import frappe.defaults
+from frappe.utils.password import encrypt, decrypt
 from frappe.utils import (
     sha256_hash,
 )
@@ -23,7 +23,6 @@ from gauth_erpgulf.gauth_erpgulf.backend_server import (
     generate_error_response,
     generate_success_response
 )
-from frappe.utils.password import encrypt, decrypt
 from frappe.utils.response import Response
 
 
@@ -31,20 +30,18 @@ PARENT_FOR_DEFAULTS = "__2fa"
 OAUTH_TOKEN_URL = "/api/method/frappe.integrations.oauth2.get_token"
 FIELD_NAME_AS_ID = "name as id"
 FULL_NAME_ALIAS = "full_name as full_name"
-BACKEND_SERVER_SETTINGS = "Backend Server Settings"
 USER_NOT_FOUND_MESSAGE = "User not found"
-NAME_AS_EMAIL = "name as email"
 INVALID_SECURITY_PARAMETERS = "Security Parameters are not valid"
 APPLICATION_JSON = "application/json"
 TWO_FA_TOKEN_EXPIRED = "2FA token expired"
 STATUS_500 = 500
 STATUS_200 = 200
 MOBILE_NO_ALIAS = "mobile_no as mobile_no"
-CUSTOMER_NAME_AS_EMAIL="customer_name as email"
+CUSTOMER_NAME_AS_EMAIL = "customer_name as email"
 
 
 # API for encrypted user token
-@frappe.whitelist(allow_guest=False)
+@frappe.whitelist(allow_guest = False)
 def test_generate_token_encrypt_for_user_2fa(encrypted_key):
     """to generate a usertoken using encrypted key"""
     frappe.local.is_api_call = True
@@ -71,9 +68,9 @@ def test_generate_token_encrypt_for_user_2fa(encrypted_key):
                 "http_status_code": 401,
             }
             return generate_error_response(
-                message=INVALID_SECURITY_PARAMETERS,
-                error="Invalid app_key format.",
-                status=401,
+                message = INVALID_SECURITY_PARAMETERS,
+                error = "Invalid app_key format.",
+                status = 401,
             )
 
         # Step 3: Get OAuth client credentials
@@ -84,9 +81,9 @@ def test_generate_token_encrypt_for_user_2fa(encrypted_key):
                 "http_status_code": 401,
             }
             return generate_error_response(
-                message=INVALID_SECURITY_PARAMETERS,
-                error="Invalid client ID or secret.",
-                status=401,
+                message = INVALID_SECURITY_PARAMETERS,
+                error = "Invalid client ID or secret.",
+                status = 401,
             )
 
         # Step 4: Prepare payload and send token request
@@ -115,36 +112,36 @@ def test_generate_token_encrypt_for_user_2fa(encrypted_key):
             }
             frappe.local.response = {
                 "message": result,
-                "http_status_code": 200,
+                "http_status_code": STATUS_200,
             }
             return generate_success_response(result, status=STATUS_200)
         else:
             # Handle non-200 status codes
             frappe.local.response = {
                 "message": "Failed to generate token.",
-                "http_status_code": 200,
+                "http_status_code": STATUS_200,
             }
             return generate_error_response(
-                message="Failed to generate token.",
-                error=response.text,
-                status = 200,
+                message = "Failed to generate token.",
+                error = response.text,
+                status = STATUS_200,
             )
 
     except ValueError as ve:
         frappe.local.response = {
                 "message": "An unexpected error occurred.",
-                "http_status_code": 500,
+                "http_status_code": STATUS_500,
             }
         return generate_error_response(
-            message="An unexpected error occurred.", error=str(ve), status=STATUS_500
+            message = "An unexpected error occurred.", error = str(ve), status = STATUS_500
         )
     except Exception as e:
         frappe.local.response = {
                 "message": "A general error occurred.",
-                "http_status_code": 500,
+                "http_status_code": STATUS_500,
             }
         return generate_error_response(
-            message="A general error occurred.", error=str(e), status=STATUS_500
+            message = "A general error occurred.", error = str(e), status = STATUS_500
         )
 
 
@@ -201,11 +198,11 @@ def validate_otp_to_generate_user_token(user, user_otp):
         user = frappe.get_value("User", {"name": user}, "name")
         if not user:
             frappe.local.response = {
-                "message": "User not found",
+                "message": USER_NOT_FOUND_MESSAGE,
                 "http_status_code": 400
             }
             return Response(
-                json.dumps({"success": False, "message": "User not found"}),
+                json.dumps({"success": False, "message": USER_NOT_FOUND_MESSAGE}),
                 status=400,
                 mimetype=APPLICATION_JSON,
             )
@@ -243,8 +240,8 @@ def validate_otp_to_generate_user_token(user, user_otp):
                 json.dumps(
                     result_data
                 ),
-                status=200,
-                mimetype=APPLICATION_JSON,
+                status = STATUS_200,
+                mimetype = APPLICATION_JSON,
             )
             frappe.cache().delete_value(f"otp_{user}")
             if refresh_token:
@@ -258,7 +255,7 @@ def validate_otp_to_generate_user_token(user, user_otp):
                 )
             frappe.local.response = {
                 "data": result_data,
-                "http_status_code": 200
+                "http_status_code": STATUS_200
             }
             return response
         else:
@@ -351,20 +348,20 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
         )
 
         result_data = []
-        if response.status_code == 200:
+        if response.status_code == STATUS_200:
             try:
                 result_data = response.json()
             except json.JSONDecodeError as json_error:
                 frappe.local.response = {
                 "data": json_error,
-                "http_status_code": 500,
+                "http_status_code": STATUS_500,
             }
                 return Response(
                     json.dumps(
                         {"message": "Invalid JSON response", "error": str(json_error)}
                     ),
-                    status=500,
-                    mimetype=APPLICATION_JSON,
+                    status = STATUS_500,
+                    mimetype = APPLICATION_JSON,
                 )
         otp = authenticate_for_2factor(api_key)
         hash_otp = sha256_hash(otp)
@@ -388,22 +385,22 @@ def generate_token_encrypt_for_user_2fa(encrypted_key):
             frappe.log_error(str(e), "Email Template or Sending Error")
             frappe.local.response = {
                 "data": "Email Sending Error.",
-                "http_status_code": 500,
+                "http_status_code": STATUS_500,
             }
             return Response(
                 json.dumps({"message": "Email template not found or sending failed"}),
-                status=500,
+                status = STATUS_500,
                 mimetype=APPLICATION_JSON,
             )
         frappe.local.response = {
-                "message": "OTP verification is required",
-                "http_status_code": 200,
+                "message" : "OTP verification is required",
+                "http_status_code" : STATUS_200,
             }
         # Return OTP required response
         return Response(
             json.dumps({"message": "OTP verification is required"}),
-            status=200,
-            mimetype=APPLICATION_JSON,
+            status = STATUS_200,
+            mimetype = APPLICATION_JSON,
         )
 
     except Exception as e:
@@ -421,11 +418,11 @@ def resend_otp(user):
         if not user:
             frappe.local.response = {
                 "success": False,
-                "message": "User not found",
+                "message": USER_NOT_FOUND_MESSAGE,
                 "http_status_code": 400
             }
             return Response(
-                json.dumps({"success": False, "message": "User not found"}),
+                json.dumps({"success": False, "message": USER_NOT_FOUND_MESSAGE}),
                 status=400,
                 mimetype=APPLICATION_JSON,
             )
@@ -493,16 +490,16 @@ def resend_otp(user):
             }
         return Response(
             json.dumps({"success": True, "message": "OTP resent successfully"}),
-            status=200,
-            mimetype=APPLICATION_JSON,
+            status = STATUS_200,
+            mimetype = APPLICATION_JSON,
         )
 
     except Exception as e:
         frappe.log_error(message=str(e), title="Resend OTP Error")
         return Response(
             json.dumps({"message": "Failed to resend OTP", "error": str(e)}),
-            status=500,
-            mimetype=APPLICATION_JSON,
+            status = STATUS_500,
+            mimetype = APPLICATION_JSON,
         )
 
 
@@ -545,12 +542,12 @@ def generate_encrypted_token(text_for_encryption):
         except Exception as e:
             frappe.local.response = {
                 "message": str(e),
-                "http_status_code": 500
+                "http_status_code": STATUS_500
             }
             return Response(
                 json.dumps({"message": f"Error validating app key: {str(e)}"}),
-                status=500,
-                mimetype=APPLICATION_JSON,
+                status = STATUS_500,
+                mimetype = APPLICATION_JSON,
             )
 
         # If both user and app_key validation are successful, proceed to encrypt
@@ -560,12 +557,12 @@ def generate_encrypted_token(text_for_encryption):
             encoded_result = base64.b64encode(result.encode()).decode()
             frappe.local.response = {
                 "message": encoded_result,
-                "http_status_code": 200  # Status code 200 for success
+                "http_status_code": STATUS_200  # Status code 200 for success
             }
             return Response(
                     json.dumps({"message": encoded_result}),
-                    status=200,
-                    mimetype="application/json"
+                    status = STATUS_200,
+                    mimetype = APPLICATION_JSON
                 )
 
     except ValueError:
