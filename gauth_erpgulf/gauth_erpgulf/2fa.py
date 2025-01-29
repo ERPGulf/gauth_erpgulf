@@ -2,13 +2,8 @@
 import os
 import json
 import base64
-import smtplib
-from email.message import EmailMessage
-from email.utils import formataddr
 from base64 import b32encode
-import ssl
 import frappe.utils
-import pyotp
 import requests
 from werkzeug.wrappers import Response
 from pyotp import TOTP
@@ -18,10 +13,18 @@ import frappe.defaults
 from frappe.utils import (
     sha256_hash,
 )
-from gauth_erpgulf.gauth_erpgulf.backend_server import xor_encrypt_decrypt, send_email_oci, decrypt_2fa_key, generate_totp, get_oauth_client, generate_error_response, generate_success_response
+from frappe.utils.password import check_password as _check_password
+from gauth_erpgulf.gauth_erpgulf.backend_server import (
+    xor_encrypt_decrypt,
+    send_email_oci,
+    decrypt_2fa_key,
+    generate_totp,
+    get_oauth_client,
+    generate_error_response,
+    generate_success_response
+)
 from frappe.utils.password import encrypt, decrypt
 from frappe.utils.response import Response
-from frappe.utils.password import check_password as _check_password
 
 
 PARENT_FOR_DEFAULTS = "__2fa"
