@@ -1399,7 +1399,6 @@ def handle_api_restrictions(restriction, ip_address):
             f"IP: {ip_address}",
             frappe.PermissionError,
         )
-    return
 
 
 @frappe.whitelist(allow_guest=False)

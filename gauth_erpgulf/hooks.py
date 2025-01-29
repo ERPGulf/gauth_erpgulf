@@ -216,8 +216,6 @@ before_request = [
 after_request = [
     "gauth_erpgulf.gauth_erpgulf.web_logging.enable_api_call",
 ]
-# before_request = ["gauth_erpgulf.utils.before_request"]
-# after_request = ["gauth_erpgulf.utils.after_request"]
 
 
 # Job Events

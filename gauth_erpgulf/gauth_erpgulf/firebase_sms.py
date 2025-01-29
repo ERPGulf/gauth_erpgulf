@@ -21,6 +21,8 @@ from gauth_erpgulf.gauth_erpgulf.backend_server import (
     generate_success_response,
 )
 
+CUSTOMER_NOT_FOUND = "Customer not found"
+ERROR_IN_QR_SMS = "Error in qr sending SMS   "
 APPLICATION_JSON = "application/json"
 STATUS_500 = 500
 STATUS_200 = 200
@@ -353,9 +355,6 @@ def send_firebase_notification(title, body, client_token="", topic=""):
         try:
             firebase_admin.get_app()
         except ValueError:
-            # cred = credentials.Certificate(
-            #     frappe.local.site + "/private/files/gauth-erpgulf.json"
-            # )
             cred = credentials.Certificate("firebase.json")
             firebase_admin.initialize_app(cred)
         message = ""
@@ -521,10 +520,10 @@ def send_sms_vodafone(phone_number, message_text):
 
     except ValueError as ve:
         frappe.local.response = {
-            "message" : "Error in qr sending SMS   " + str(ve),
+            "message" : ERROR_IN_QR_SMS + str(ve),
             "http_status_code" : STATUS_500
         }
-        return Response(json.dumps({"message" : "Error in qr sending SMS   " + str(ve)}),status = response.status_code,mimetype = APPLICATION_JSON)
+        return Response(json.dumps({"message" : ERROR_IN_QR_SMS + str(ve)}),status = response.status_code,mimetype = APPLICATION_JSON)
 
     
 
@@ -537,7 +536,10 @@ def send_sms_twilio(phone_number, otp):
         phone_number = "+91" + phone_number
         parts = get_sms_id("twilio").split(":")
 
-        url = f"https://api.twilio.com/2010-04-01/Accounts/" f"{parts[0]}/Messages.json"
+        url = (
+            f"https://api.twilio.com/2010-04-01/Accounts/"
+            f"{parts[0]}/Messages.json"
+        )
 
         payload = (
             f"To={phone_number}&From=phone&Body="
@@ -571,7 +573,7 @@ def send_sms_twilio(phone_number, otp):
 
     except ValueError as ve:
         return Response(json.dumps(
-            {"message" : "Error in qr sending SMS   " + str(ve)}),
+            {"message" : ERROR_IN_QR_SMS + str(ve)}),
             status = STATUS_500,
             mimetype = APPLICATION_JSON)
 
@@ -621,12 +623,12 @@ def _get_customer_details(user_email=None, mobile_phone=None):
         )
     else:
         frappe.local.response = {
-            "message": "Customer not found",
+            "message": CUSTOMER_NOT_FOUND,
             "user_count": 0,
             "http_status_code" : STATUS
         }
         return Response(
-            json.dumps({"message": "Customer not found", "user_count": 0}),
+            json.dumps({"message": CUSTOMER_NOT_FOUND, "user_count": 0}),
             status = STATUS,
             mimetype = APPLICATION_JSON,
         )
@@ -644,12 +646,12 @@ def _get_customer_details(user_email=None, mobile_phone=None):
         return generate_success_response(result, STATUS_200)
     else:
         frappe.local.response = {
-            "message": "Customer not found",
+            "message": CUSTOMER_NOT_FOUND,
             "user_count": 0,
             "http_status_code" : STATUS
         }
         return Response(
-            json.dumps({"message": "Customer not found", "user_count": 0}),
+            json.dumps({"message": CUSTOMER_NOT_FOUND, "user_count": 0}),
             status=STATUS,
             mimetype=APPLICATION_JSON,
         )
@@ -693,7 +695,7 @@ def send_sms_expertexting(phone_number, otp):
             return Response(json.dumps({"message" : False}),status = response.status_code,mimetype = APPLICATION_JSON)
     except ValueError as ve:
         frappe.local.response = {
-            "message" : "Error in qr sending SMS   " + str(ve),
+            "message" : ERROR_IN_QR_SMS + str(ve),
             "http_status_code" : STATUS_500
         }
         frappe.log_error(f"Error in sending SMS: {ve}")

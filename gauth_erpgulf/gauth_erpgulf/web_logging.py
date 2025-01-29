@@ -6,9 +6,9 @@ import frappe
 from werkzeug.wrappers import Response
 WEB_ACCESS_LOG = "Web Access Log"
 STATUS_200=200
-BACKEND_SERVER_SETTINGS="Backend Server Settings"
+BACKEND_SERVER_SETTINGS = "Backend Server Settings"
 APPLICATION_JSON = "application/json"
-
+NO_RECORDS_MSG = "No records found in Web Access Log."
 
 @frappe.whitelist(allow_guest=False)
 def enable_api_call(*args, **kwargs):
@@ -102,19 +102,19 @@ def delete_all_web_access_logs():
     records = frappe.get_all(doctype_name, pluck="name")
     if not records:
         frappe.log_error(
-                            "No records found in Web Access Log.",
+                            NO_RECORDS_MSG,
                             "Delete Web Access Log"
                         )
         frappe.local.response = {
-            "message" : "No records found in Web Access Log.",
+            "message" : NO_RECORDS_MSG,
             "http_status_code" : STATUS_200
         }
         return Response(
         json.dumps({
-            "message": "No records found in Web Access Log.",
+            "message": NO_RECORDS_MSG,
         }),
         status=200,
-        mimetype="application/json"
+        mimetype = APPLICATION_JSON
     )
 
     records_deleted = 0
@@ -142,7 +142,7 @@ def delete_all_web_access_logs():
             "message": "Successfully deleted records from Web Access Log.", # Optional: Include count as a separate key
         }),
         status=200,
-        mimetype="application/json"
+        mimetype = APPLICATION_JSON
     )
 
 
@@ -153,7 +153,7 @@ def enqueue_parse_nginx_logs():
     """
 
     result = frappe.get_value(
-        "Backend Server Settings", None, "activate_scheduled_update"
+        BACKEND_SERVER_SETTINGS, None, "activate_scheduled_update"
     )
     if int(result) != 0:
         frappe.log_error("Log Parsing Activated", "Log Parsing")
@@ -170,7 +170,7 @@ def enqueue_parse_nginx_logs():
             "message": "Nginx log parsing has been started as a background job.", # Optional: Include count as a separate key
         }),
         status=200,
-        mimetype="application/json"
+        mimetype = APPLICATION_JSON
     )
 
 def parse_nginx_logs():
@@ -249,7 +249,7 @@ def parse_nginx_logs():
 
     frappe.db.commit()  # Commit all changes to the database
     frappe.db.set_value(
-        "Backend Server Settings",
+        BACKEND_SERVER_SETTINGS,
         None,  # This assumes there is only one Backend Server Settings record
         "last_updated_date",
         frappe.utils.now_datetime(),  # Set the current timestamp
@@ -267,5 +267,5 @@ def parse_nginx_logs():
         "message": f"Successfully added {records_added} new log records.",
     }),
     status=200,
-    mimetype="application/json"
+    mimetype = APPLICATION_JSON
 )
