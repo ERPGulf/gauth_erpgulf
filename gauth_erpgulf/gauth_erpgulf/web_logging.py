@@ -269,3 +269,4 @@ def parse_nginx_logs():
     status=200,
     mimetype = APPLICATION_JSON
 )
+

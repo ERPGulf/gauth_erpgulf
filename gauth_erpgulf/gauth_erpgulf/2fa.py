@@ -573,3 +573,5 @@ def generate_encrypted_token(text_for_encryption):
     except Exception as e:
         # Catch any other unexpected errors
         frappe.throw(f"An unexpected error occurred: {e}", frappe.ValidationError)
+
+
