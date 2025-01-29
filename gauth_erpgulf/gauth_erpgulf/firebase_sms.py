@@ -1,6 +1,7 @@
 """
 This module contains backend server logic for gauth_erpgulf.
 """
+
 import json
 import urllib.parse
 import firebase_admin
@@ -14,12 +15,14 @@ from frappe.utils import now_datetime, cint
 from firebase_admin import credentials, messaging
 from google.oauth2 import service_account
 from erpnext.accounts.utils import get_balance_on
+from frappe.handler import handle as original_handle
 from gauth_erpgulf.gauth_erpgulf.backend_server import (
     get_backend_server_settings,
     json_response,
     generate_error_response,
     generate_success_response,
-    )
+)
+
 APPLICATION_JSON = "application/json"
 STATUS_500 = 500
 STATUS_200 = 200
@@ -36,10 +39,12 @@ def test_redirect_url():
     redirect_url = "https://doodles.google/search/"
 
     response_data = {"data": "Redirecting here", "redirect_url": redirect_url}
+    frappe.local.response = {
+        "data" : response_data,
+        "http_status_code" : 303
+    }
     return Response(
-        json.dumps(response_data),
-        status=303,
-        mimetype="text/html; charset=utf-8"
+        json.dumps(response_data), status=303, mimetype="text/html; charset=utf-8"
     )
 
 
@@ -58,13 +63,27 @@ def payment_gateway_log(reference, amount, user, bid):
                 "bid": bid,
             }
         ).insert(ignore_permissions=True)
-        return "Successfully logged Payment gateway initialization"
+        message = "Successfully logged Payment gateway initialization"
+        frappe.local.response = {
+            "message" : message,
+            "http_status_code" : 303
+    }
+        return Response(
+            json.dumps({"message": message}),
+            status = 200,
+            mimetype = "application/json"
+    )
     except ValueError as ve:
-        frappe.log_error(
-            title="Payment logging failed",
-            message=frappe.get_traceback()
-        )
-        return "Error in payment gateway log  " + str(ve)
+        message = "Error in payment gateway log  " + str(ve)
+        frappe.local.response = {
+            "message" : message,
+            "http_status_code" : 500
+    }
+        frappe.log_error(title="Payment logging failed", message=frappe.get_traceback())
+        return Response(
+            json.dumps({"message" : message}),
+            status = 500,
+            mimetype = "application/json")
 
 
 @frappe.whitelist(allow_guest=False)
@@ -73,24 +92,40 @@ def send_email_sparkpost(subject=None, text=None, to=None, from_=None):
     settings = get_backend_server_settings("sparkpost_url")
     url = settings["sparkpost_url"]
     if not to:
+        frappe.local.response = {
+            "message" : "At least one valid recipient is needed",
+            "http_status_code" : STATUS
+    }
         return Response(
             json.dumps({"message": "At least one valid recipient is needed"}),
             status=STATUS,
             mimetype=APPLICATION_JSON,
         )
     if not text:
+        frappe.local.response = {
+            "message" : "text or html needs to exist in content",
+            "http_status_code" : STATUS
+    }
         return Response(
             json.dumps({"message": "text or html needs to exist in content"}),
             status=STATUS,
             mimetype=APPLICATION_JSON,
         )
     if not subject:
+        frappe.local.response = {
+            "message" : "subject is a required field",
+            "http_status_code" : STATUS
+    }
         return Response(
             json.dumps({"message": "subject is a required field"}),
             status=STATUS,
             mimetype=APPLICATION_JSON,
         )
     if not from_:
+        frappe.local.response = {
+            "message" : "from is a required field",
+            "http_status_code" : STATUS
+    }
         return Response(
             json.dumps({"message": "from is a required field"}),
             status=STATUS,
@@ -115,17 +150,26 @@ def send_email_sparkpost(subject=None, text=None, to=None, from_=None):
         )
 
         if response.status_code == STATUS_200:
+            frappe.local.response = {
+            "message" : response.text,
+            "http_status_code" : STATUS_200
+    }
             return generate_success_response(response.text, status=STATUS_200)
 
         else:
-
+            frappe.local.response = {
+            "message" : response.text,
+            "http_status_code" : response.status_code
+    }
             return Response(
-                response.text,
-                status=response.status_code,
-                mimetype=APPLICATION_JSON
+                response.text, status = response.status_code, mimetype=APPLICATION_JSON
             )
 
     except ValueError as ve:
+        frappe.local.response = {
+            "message" : str(ve),
+            "http_status_code" : STATUS_500
+    }
         return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
@@ -133,11 +177,12 @@ def send_email_sparkpost(subject=None, text=None, to=None, from_=None):
 def get_account_balance():
     """To get the Account Balance of a user"""
     response_content = frappe.session.user
-    balance = get_balance_on(
-        party_type="Customer",
-        party=response_content
-    )
+    balance = get_balance_on(party_type="Customer", party=response_content)
     result = {"balance": 0 - balance}
+    frappe.local.response = {
+            "message" : result,
+            "http_status_code" : STATUS_200
+    }
     return generate_success_response(result, status=STATUS_200)
 
 
@@ -146,19 +191,23 @@ def time():
     """To get the Unix and server time"""
 
     server_time = frappe.utils.now()
-    unix_time = frappe.utils.get_datetime(
-        frappe.utils.now_datetime()).timestamp()
+    unix_time = frappe.utils.get_datetime(frappe.utils.now_datetime()).timestamp()
 
-    api_response = {
-        "data": {"serverTime": server_time, "unix_time": unix_time}
+    api_response = {"data": {"serverTime": server_time, "unix_time": unix_time}}
+    frappe.local.response = {
+            "message" : api_response,
+            "http_status_code" : STATUS_200
     }
-    return api_response
+    return Response(
+        json.dumps({"message" : api_response}),
+        status = STATUS_200,
+        mimetype = APPLICATION_JSON
+    )
 
 
 @frappe.whitelist(allow_guest=False)
 def make_payment_entry(amount, user, bid, reference):
     """To make a payment entry"""
-
     if amount == 0:
         return "Amount not correct"
 
@@ -177,7 +226,7 @@ def make_payment_entry(amount, user, bid, reference):
     )
     journal_entry.remark = reference
     debit_entry = {
-        "account": "1310 - Debtors - D",
+        "account": "1110 - Cash - G",
         "credit": amount,
         "credit_in_account_currency": amount,
         "account_currency": "QAR",
@@ -192,7 +241,7 @@ def make_payment_entry(amount, user, bid, reference):
     }
 
     credit_entry = {
-        "account": "QIB Account - D",
+        "account": "1110 - Cash - G",
         "debit": amount,
         "debit_in_account_currency": amount,
         "account_currency": "QAR",
@@ -205,11 +254,14 @@ def make_payment_entry(amount, user, bid, reference):
 
     journal_entry.append("accounts", debit_entry)
     journal_entry.append("accounts", credit_entry)
-
     try:
         journal_entry.save(ignore_permissions=True)
         journal_entry.submit()
         result = {"data": "JV Successfully created ", "message": ""}
+        frappe.local.response = {
+            "message" : result,
+            "http_status_code" : STATUS_200
+    }
         return generate_success_response(result, status=STATUS_200)
 
     except ValueError as ve:
@@ -218,7 +270,11 @@ def make_payment_entry(amount, user, bid, reference):
             title="Payment Entry failed to JV", message=frappe.get_traceback()
         )
         frappe.flags.deferred_accounting_error = True
-        return str(ve)
+        frappe.local.response = {
+            "message" : str(ve),
+            "http_status_code" : STATUS_500
+    }
+        return generate_error_response("Something went wrong", str(ve) ,STATUS_500)
 
 
 @frappe.whitelist(allow_guest=False)
@@ -231,6 +287,7 @@ def send_firebase_data(
     """Send a message to Firebase"""
     settings = get_backend_server_settings("url")
     url = settings["url"]
+
 
     if notification_type == "auction_ended":
         payload = json.dumps(
@@ -264,7 +321,16 @@ def send_firebase_data(
         "Content-Type": APPLICATION_JSON,
     }
 
-    requests.request("POST", url, headers=headers, data=payload, timeout=10)
+    response=requests.request("POST", url, headers=headers, data=payload, timeout=10)
+    result = response.json()
+    frappe.local.response = {
+            "data" : result,
+            "http_status_code" : STATUS_200
+        }
+    return Response (json.dumps
+                     ({result}),
+                     status = STATUS_200,
+                     mimetype = APPLICATION_JSON)
     return json_response({"data": "Message sent"})
 
 
@@ -273,6 +339,10 @@ def send_firebase_notification(title, body, client_token="", topic=""):
     """To send Message to Firebase"""
 
     if client_token == "" and topic == "":
+        frappe.local.response = {
+            "message" : "Provide client token or topic for Fb message",
+            "http_status_code" : 417
+        }
         return Response(
             json.dumps(
                 {
@@ -287,6 +357,9 @@ def send_firebase_notification(title, body, client_token="", topic=""):
         try:
             firebase_admin.get_app()
         except ValueError:
+            # cred = credentials.Certificate(
+            #     frappe.local.site + "/private/files/gauth-erpgulf.json"
+            # )
             cred = credentials.Certificate("firebase.json")
             firebase_admin.initialize_app(cred)
         message = ""
@@ -306,22 +379,45 @@ def send_firebase_notification(title, body, client_token="", topic=""):
                 ),
                 topic=topic,
             )
-        return {
+            result = {
             "message": "Successfully sent message",
             "response": messaging.send(message),
         }
+            frappe.local.response = {
+            "data" : result,
+            "http_status_code" : STATUS_200
+        }
+        return Response(json.dumps
+                (result),
+                status = STATUS_200 ,
+                mimetype = APPLICATION_JSON
+        )
     except ValueError as ve:
         error_message = str(ve)
         frappe.response["message"] = "Failed to send firebase message"
         frappe.response["error"] = error_message
         frappe.response["http_status_code"] = STATUS_500
-        return frappe.response
+        result = frappe.response
+        frappe.local.response = {
+            "data" : result,
+            "http_status_code" : STATUS_500
+        }
+        return Response(json.dumps
+                (result),
+                status = STATUS_500 ,
+                mimetype = APPLICATION_JSON
+        )
 
 
 @frappe.whitelist(allow_guest=False)
 def firebase_subscribe_to_topic(topic, fcm_token):
     """Subscribes an FCM token to a Firebase topic."""
     if not fcm_token or not topic:
+        frappe.local.response = {
+            "data" : "Provide FCM Token and topic to send message.",
+            "message_sent": 0,
+            "http_status_code" : 417
+        }
         return Response(
             json.dumps(
                 {
@@ -341,16 +437,32 @@ def firebase_subscribe_to_topic(topic, fcm_token):
         response = messaging.subscribe_to_topic([fcm_token], topic)
 
         if response.failure_count > 0:
+            frappe.local.response = {
+            "data" : "Failed to subscribe Firebase topic",
+            "http_status_code" : STATUS
+        }
             return Response(
                 json.dumps({"message": "Failed to subscribe Firebase topic"}),
                 status=400,
                 mimetype=APPLICATION_JSON,
             )
         else:
-            return json_response({"message": "Successfully subscribed"})
+            frappe.local.response = {
+            "message" : "Successfully subscribed",
+            "http_status_code" : STATUS_500
+        }
+            return Response(json.dumps(
+                {"message": "Successfully subscribed"}),
+                status = STATUS_500,
+                mimetype = APPLICATION_JSON)
 
     except ValueError as ve:
         error_message = str(ve)
+        frappe.local.response = {
+            "message" : "Error subscribing to Firebase topic.",
+            "error" : error_message,
+            "http_status_code" : STATUS_500
+        }
         return generate_error_response(
             "Error subscribing to Firebase topic.",
             error=error_message,
@@ -361,35 +473,23 @@ def firebase_subscribe_to_topic(topic, fcm_token):
 @frappe.whitelist(allow_guest=False)
 def get_sms_id(provider):
     """Get the SMS ID"""
-    default_company = frappe.db.get_single_value(
-        "Global Defaults", "default_company"
-    )
+    default_company = frappe.db.get_single_value("Global Defaults", "default_company")
 
     if provider == "twilio":
-        return frappe.db.get_value(
-            COMPANY, default_company, "custom_twilio_id"
-        )
-
+        result = frappe.db.get_value(COMPANY, default_company, "custom_twilio_id")
+        return result
     if provider == "expertexting":
-        return frappe.db.get_value(
-            COMPANY, default_company, "custom_expertexting_id"
-        )
+        result = frappe.db.get_value(COMPANY, default_company, "custom_expertexting_id")
+        return result
 
     if provider == "vodafone":
-        app = frappe.db.get_value(
-            COMPANY, default_company, "custom_vodafone_app"
-        )
+        app = frappe.db.get_value(COMPANY, default_company, "custom_vodafone_app")
         passwd = frappe.db.get_value(
             COMPANY, default_company, "custom_vodafone_password"
         )
-        mask = frappe.db.get_value(
-            COMPANY, default_company, "custom_vodafone_mask"
-        )
-        param_string = (
-            f"?application={app}&password={passwd}&mask={mask}"
-        )
+        mask = frappe.db.get_value(COMPANY, default_company, "custom_vodafone_mask")
+        param_string = f"?application={app}&password={passwd}&mask={mask}"
         return param_string
-
 
 @frappe.whitelist(allow_guest=False)
 def send_sms_vodafone(phone_number, message_text):
@@ -411,12 +511,26 @@ def send_sms_vodafone(phone_number, message_text):
 
         response = requests.get(url + payload, headers=headers, timeout=10)
         if response.status_code in (STATUS_200, 201):
-            return True
+            frappe.local.response = {
+                "message" : True,
+                "http_status_code" : response.status_code
+        }
+            return Response(json.dumps({"message" : True}),status = response.status_code,mimetype = APPLICATION_JSON)
         else:
-            return False
+           frappe.local.response = {
+                "message" : False,
+                "http_status_code" : response.status_code
+        }
+           return Response(json.dumps({"message" : False}),status = response.status_code,mimetype = APPLICATION_JSON)
 
     except ValueError as ve:
-        return "Error in qr sending SMS   " + str(ve)
+        frappe.local.response = {
+            "message" : "Error in qr sending SMS   " + str(ve),
+            "http_status_code" : STATUS_500
+        }
+        return Response(json.dumps({"message" : "Error in qr sending SMS   " + str(ve)}),status = response.status_code,mimetype = APPLICATION_JSON)
+
+    
 
 
 @frappe.whitelist(allow_guest=False)
@@ -427,9 +541,7 @@ def send_sms_twilio(phone_number, otp):
         phone_number = "+91" + phone_number
         parts = get_sms_id("twilio").split(":")
 
-        url = (
-                f"https://api.twilio.com/2010-04-01/Accounts/{parts[0]}/Messages.json"
-        )
+        url = f"https://api.twilio.com/2010-04-01/Accounts/" f"{parts[0]}/Messages.json"
 
         payload = (
             f"To={phone_number}&From=phone&Body="
@@ -445,13 +557,24 @@ def send_sms_twilio(phone_number, otp):
             "POST", url, headers=headers, data=payload, timeout=10
         )
         if response.status_code in (STATUS_200, 201):
-            return True
+            frappe.local.response = {
+                "message" : result,
+                "http_status_code" : STATUS_200
+            }
+            return Response(json.dumps({"message" : True}),status = STATUS_200,mimetype = APPLICATION_JSON)
         else:
-            return response.text
+            result = response.text
+            frappe.local.response = {
+                "message" : result,
+                "http_status_code" :STATUS_500
+            }
+            return Response(json.dumps({"message" : result}),status = STATUS_500,mimetype = APPLICATION_JSON)
 
     except ValueError as ve:
-        return "Error in qr sending SMS   " + str(ve)
-
+        return Response(json.dumps(
+            {"message" : "Error in qr sending SMS   " + str(ve)}),
+            status = STATUS_500,
+            mimetype = APPLICATION_JSON)
 
 @frappe.whitelist(allow_guest=False)
 def validate_user_permissions():
@@ -468,9 +591,7 @@ def validate_user_permissions():
 @frappe.whitelist(allow_guest=False)
 def get_number_of_files(file_storage):
     """To get the number of total files"""
-    if hasattr(
-        file_storage, "get_num_files"
-    ) and callable(file_storage.get_num_files):
+    if hasattr(file_storage, "get_num_files") and callable(file_storage.get_num_files):
         return file_storage.get_num_files()
     else:
         return 0
@@ -485,7 +606,6 @@ def _get_customer_details(user_email=None, mobile_phone=None):
             filters={"mobile_no": mobile_phone},
             fields=[
                 NAME_AS_EMAIL,
-                "enabled",
                 "customer_name as full_name",
                 "mobile_no as mobile_number",
             ],
@@ -496,25 +616,39 @@ def _get_customer_details(user_email=None, mobile_phone=None):
             filters={"name": user_email},
             fields=[
                 NAME_AS_EMAIL,
-                "enabled",
                 "customer_name as full_name",
                 "mobile_no as mobile_number",
             ],
         )
     else:
+        frappe.local.response = {
+            "message": "Customer not found",
+            "user_count": 0,
+            "http_status_code" : STATUS
+        }
         return Response(
             json.dumps({"message": "Customer not found", "user_count": 0}),
-            status=STATUS,
-            mimetype=APPLICATION_JSON,
+            status = STATUS,
+            mimetype = APPLICATION_JSON,
         )
 
     if len(customer_details) >= 1:
-        return (
-            customer_details[0]["email"],
-            customer_details[0]["full_name"],
-            customer_details[0]["mobile_number"],
-        )
+        result = [
+                customer_details[0].get("email"),
+                customer_details[0].get("full_name"),
+                customer_details[0].get("mobile_number"),
+            ]
+        frappe.local.response = {
+            "message" : result,
+            "http_status_code" :STATUS_200
+        }
+        return generate_success_response(result, STATUS_200)
     else:
+        frappe.local.response = {
+            "message": "Customer not found",
+            "user_count": 0,
+            "http_status_code" : STATUS
+        }
         return Response(
             json.dumps({"message": "Customer not found", "user_count": 0}),
             status=STATUS,
@@ -547,12 +681,24 @@ def send_sms_expertexting(phone_number, otp):
         )
 
         if response.status_code in (STATUS_200, 201):
-            return True
+            frappe.local.response = {
+                "message" : True,
+                "http_status_code" : response.status_code
+        }
+            return Response(json.dumps({"message" : True}),status = response.status_code,mimetype = APPLICATION_JSON)
         else:
-            return False
+            frappe.local.response = {
+                "message" : False,
+                "http_status_code" : response.status_code
+        }
+            return Response(json.dumps({"message" : False}),status = response.status_code,mimetype = APPLICATION_JSON)
     except ValueError as ve:
+        frappe.local.response = {
+            "message" : "Error in qr sending SMS   " + str(ve),
+            "http_status_code" : STATUS_500
+        }
         frappe.log_error(f"Error in sending SMS: {ve}")
-        return False
+        return Response(json.dumps({"message" : False}),status = response.status_code,mimetype = APPLICATION_JSON)
 
 
 @frappe.whitelist(allow_guest=False)
@@ -566,7 +712,15 @@ def upload_file():
     for key, file in files.items():
         file_names.append(key)
         urls.append(process_file_upload(file, ignore_permissions))
-    return urls
+        frappe.local.response = {
+            "data" : urls,
+            "http_status_code" : STATUS_200
+        }
+    return Response(
+        json.dumps({"data" : urls}),
+        status = STATUS_200,
+        mimetype = APPLICATION_JSON
+    )
 
 
 @frappe.whitelist(allow_guest=False)
@@ -583,10 +737,7 @@ def optimize_image_content(content, content_type):
 @frappe.whitelist(allow_guest=False)
 def attach_field_to_doc(doc):
     """Attach the file to a specific field in the document."""
-    attach_field = frappe.get_doc(
-        frappe.form_dict.doctype,
-        frappe.form_dict.docname
-    )
+    attach_field = frappe.get_doc(frappe.form_dict.doctype, frappe.form_dict.docname)
     setattr(attach_field, frappe.form_dict.fieldname, doc.file_url)
     attach_field.save(ignore_permissions=True)
 
@@ -630,10 +781,167 @@ def _get_access_token():
     """Retrieve a valid access token it can be used to authorize requests.FCM
     :return: Access token.
     """
+    # sco_pes = ["https://www.googleapis.com/auth/firebase.messaging"]
+    # sco_pes= ["https://www.googleapis.com/auth/cloud-platform"]
+    # credential = service_account.Credentials.from_service_account_file(
+    #     frappe.local.site + "/private/files/gauth-erpgulf.json", scopes=sco_pes
+    # )
     sco_pes = ["https://www.googleapis.com/auth/firebase.messaging"]
     credential = service_account.Credentials.from_service_account_file(
         "dallah-fcm.json", scopes=sco_pes
     )
     request = google.auth.transport.requests.Request()
     credential.refresh(request)
-    return credential.token
+    frappe.local.response = {
+            "message" : credential.token,
+            "http_status_code" : STATUS_200
+    }
+    return Response(json.dumps({
+        "data" : credential.token,
+        "http_status_code" : STATUS_200
+    }))
+
+
+
+@frappe.whitelist(allow_guest=False)
+def send_firebase_data1(
+    auction_id,
+    notification_type,
+    user_id=None,
+    winner_amount=None,
+):
+
+    """Send a message to Firebase"""
+    settings = get_backend_server_settings("url")
+    url = settings["url"]
+
+    # Build the payload based on the notification type
+    if notification_type == "auction_ended":
+        payload = json.dumps(
+            {
+                "message": {
+                    "topic": auction_id,
+                    "data": {
+                        "notification_type": "auction_ended",
+                        "auctionId": auction_id,
+                    },
+                }
+            }
+        )
+    else:
+        payload = json.dumps(
+            {
+                "message": {
+                    "topic": auction_id,
+                    "data": {
+                        "notification_type": "winner_announcement",
+                        "auctionId": auction_id,
+                        "winner_name": user_id,
+                        "winner_id": user_id,
+                        "highest_bid_amount": f"{winner_amount:.2f}",
+                    },
+                }
+            }
+        )
+
+    # Prepare headers
+    headers = {
+        "Authorization": "Bearer " + _get_access_token(),
+        "Content-Type": "application/json",  # Use the correct constant or string
+    }
+
+    try:
+        # Send the POST request
+        response = requests.request("POST", url, headers=headers, data=payload, timeout=10)
+
+        # Return the response object or specific data
+        return {
+            "status_code": response.status_code,
+            "message": response.json() if response.headers.get("Content-Type") == "application/json" else response.text,
+        }
+
+    except requests.RequestException as e:
+        # Handle exceptions and return a meaningful error
+        return {
+            "error": True,
+            "message": str(e),
+        }
+
+
+import firebase_admin
+from firebase_admin import credentials, firestore
+from google.oauth2 import service_account
+
+# Path to your Firebase service account JSON file
+SERVICE_ACCOUNT_FILE = frappe.local.site + "/private/files/gauth-erpgulf.json"
+
+# Load service account credentials
+cred = credentials.Certificate(SERVICE_ACCOUNT_FILE)
+
+# Extract project ID from JSON manually
+import json
+with open(SERVICE_ACCOUNT_FILE, "r") as f:
+    project_id = json.load(f).get("project_id")
+
+# Initialize Firebase Admin SDK with project_id explicitly
+firebase_admin.initialize_app(cred, {"projectId": project_id})
+
+# Access Firestore
+db = firestore.client()
+
+@frappe.whitelist(allow_guest=True)
+def get_fcm_token(user_id):
+    """Retrieve FCM Token from Firestore"""
+    doc_ref = db.collection("users").document(user_id)
+    doc = doc_ref.get()
+
+    if doc.exists:
+        data = doc.to_dict()
+        return data.get("fcm_token", "No token found")
+    else:
+        return "User not found"
+
+
+@frappe.whitelist(allow_guest=True)
+def send_firebase_notification1(title,body,client_token="",topic=""):
+    #Sending firebase notification to Android and IPhone from Frappe ERPNext
+
+
+    import firebase_admin
+    from firebase_admin import credentials,exceptions,messaging
+
+    if client_token == "" and topic == "":
+            return  Response(json.dumps({"message": "Please provide either client token or topic to send message to Firebase" , "message_sent": 0}), status=417, mimetype='application/json')
+    try:
+
+        try:
+            firebase_admin.get_app()
+        except ValueError:
+
+            cred = credentials.Certificate("firebase.json")
+            firebase_admin.initialize_app(cred)
+
+        if client_token != "":
+            message = messaging.Message(
+            notification=messaging.Notification(
+                title=title,
+                body=body,
+            ),
+            token=client_token,
+            )
+
+        if topic != "":
+            message = messaging.Message(
+                notification=messaging.Notification(
+                    title=title,
+                    body=body,
+                ),
+                topic=topic,
+            )
+        return {'message': 'Successfully sent message', 'response': messaging.send(message)}
+    except Exception as e:
+        error_message = str(e)
+        frappe.response['message'] = 'Failed to send firebase message'
+        frappe.response['error'] = error_message
+        frappe.response['http_status_code'] = 500
+        return frappe.response

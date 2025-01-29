@@ -1,8 +1,73 @@
-import frappe
+"""This Module contains functions to log API calls and parse Nginx logs."""
 import re
+import json
 from datetime import datetime, timezone
+import frappe
+from werkzeug.wrappers import Response
 WEB_ACCESS_LOG = "Web Access Log"
+STATUS_200=200
+BACKEND_SERVER_SETTINGS="Backend Server Settings"
+APPLICATION_JSON = "application/json"
 
+
+@frappe.whitelist(allow_guest=False)
+def enable_api_call(*args, **kwargs):
+    """This API logs the api calls in the system if enabled."""
+    settings = frappe.get_single(BACKEND_SERVER_SETTINGS)
+    if settings.enable_api_logs == 0:
+        return
+    if not getattr(frappe.local, "is_api_call", False):
+        return
+    if frappe.local.response:
+        response_code = frappe.local.response.get("status", 401)
+        try:
+            doc = frappe.get_doc(
+                {
+                    "doctype": "API Logs",
+                    "api_header": frappe.local.request.path,
+                    "input_parameters": (
+                        frappe.as_json(frappe.local.form_dict)
+                        if frappe.local.form_dict
+                        else "No Parameters"
+                    ),
+                    "response_text": (
+                        json.dumps(frappe.local.response)
+                        if hasattr(frappe.local, "response")
+                        else json.dumps({"error": "Pre-execution failure or response not available"})
+                    ),
+                    "response_code": (
+                        response_code
+                        if hasattr(frappe.local, "response") and "status" in frappe.local.response
+                        else frappe.response.get("http_status_code", 401)
+                    ),
+
+                    "timestamp": frappe.utils.now(),
+                }
+            )
+            doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+        except ValueError as ve:
+            frappe.log_error(message=str(ve), title="API Log Error")
+
+
+@frappe.whitelist(allow_guest=False)
+def mark_primary_request():
+    """
+    Identify and mark primary API requests.
+    """
+    path = frappe.local.request.path
+    frappe.local.is_api_call = False
+    if "/api/method/" in path:
+        excluded_prefixes = [
+            "/api/method/frappe.desk.",
+            "/api/method/frappe.integrations.oauth2.",
+            "/api/method/frappe.realtime.",
+            "/api/method/frappe.utils.change_log.",
+            "/api/method/frappe.core.",
+            "/api/method/frappe.client."
+        ]
+        if not any(path.startswith(prefix) for prefix in excluded_prefixes):
+            frappe.local.is_api_call = True
 
 @frappe.whitelist(allow_guest=True)
 def delete_all_web_access_logs_async():
@@ -17,7 +82,15 @@ def delete_all_web_access_logs_async():
         "gauth_erpgulf.gauth_erpgulf.web_logging.delete_all_web_access_logs",
         timeout=14400,
     )
-    return "Deletion of Web Access Log records has been started."
+    frappe.local.response = {
+        "message" : "Deletion of Web Access Log records has been started.",
+        "http_status_code" : STATUS_200
+    }
+    return Response(
+        json.dumps({"message": "Deletion of Web Access Log records has been started.",}),
+        status = 200,
+        mimetype = APPLICATION_JSON
+    )
 
 
 def delete_all_web_access_logs():
@@ -32,7 +105,17 @@ def delete_all_web_access_logs():
                             "No records found in Web Access Log.",
                             "Delete Web Access Log"
                         )
-        return
+        frappe.local.response = {
+            "message" : "No records found in Web Access Log.",
+            "http_status_code" : STATUS_200
+        }
+        return Response(
+        json.dumps({
+            "message": "No records found in Web Access Log.",
+        }),
+        status=200,
+        mimetype="application/json"
+    )
 
     records_deleted = 0
 
@@ -49,6 +132,17 @@ def delete_all_web_access_logs():
     frappe.log_error(
         f"Successfully deleted {records_deleted} records from Web Access Log.",
         "Delete Web Access Log",
+    )
+    frappe.local.response = {
+        "message" : "Successfully deleted records from Web Access Log.",
+        "http_status_code" : STATUS_200
+    }
+    return Response(
+        json.dumps({
+            "message": "Successfully deleted records from Web Access Log.", # Optional: Include count as a separate key
+        }),
+        status=200,
+        mimetype="application/json"
     )
 
 
@@ -67,8 +161,17 @@ def enqueue_parse_nginx_logs():
             "gauth_erpgulf.gauth_erpgulf.web_logging.parse_nginx_logs",
             timeout=14400
         )
-    return "Nginx log parsing has been started as a background job."
-
+    frappe.local.response = {
+        "message" : "Nginx log parsing has been started as a background job.",
+        "http_status_code" : STATUS_200
+    }
+    return Response(
+        json.dumps({
+            "message": "Nginx log parsing has been started as a background job.", # Optional: Include count as a separate key
+        }),
+        status=200,
+        mimetype="application/json"
+    )
 
 def parse_nginx_logs():
     """
@@ -155,4 +258,14 @@ def parse_nginx_logs():
         f"Successfully added {records_added} new log records.",
         "Nginx Log Parsing"
     )
-    return f"Successfully added {records_added} new log records."
+    frappe.local.response = {
+        "message" : "Successfully added new log records.",
+        "http_status_code" : STATUS_200
+    }
+    return Response(
+    json.dumps({
+        "message": f"Successfully added {records_added} new log records.",
+    }),
+    status=200,
+    mimetype="application/json"
+)

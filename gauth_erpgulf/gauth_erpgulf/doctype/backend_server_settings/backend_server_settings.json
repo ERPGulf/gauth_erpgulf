@@ -6,19 +6,9 @@
  "engine": "InnoDB",
  "field_order": [
   "authentication_tab",
-  "2fa_authentication",
   "normal_authentication",
+  "2fa_authentication",
   "2fa_secret_key",
-  "sender",
-  "sender_name",
-  "url",
-  "column_break_ttdo",
-  "enable_api_logs",
-  "host",
-  "user_smtp",
-  "port",
-  "password_smtp",
-  "sparkpost_url",
   "countries_tab",
   "section_break_ycfw",
   "table",
@@ -41,7 +31,23 @@
   "web_access_log_tab",
   "activate_scheduled_update",
   "last_updated_date",
-  "update_now"
+  "update_now",
+  "email_tab",
+  "oci_column",
+  "sender",
+  "sender_name",
+  "user_smtp",
+  "password_smtp",
+  "host",
+  "port",
+  "email_address",
+  "test_send_email",
+  "sparkpost_column",
+  "sparkpost_url",
+  "fcm_tab",
+  "url",
+  "debugging_tab",
+  "enable_api_logs"
  ],
  "fields": [
   {
@@ -80,16 +86,6 @@
    "fieldname": "url",
    "fieldtype": "Data",
    "label": "url"
-  },
-  {
-   "fieldname": "column_break_ttdo",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "0",
-   "fieldname": "enable_api_logs",
-   "fieldtype": "Check",
-   "label": "Enable API Logging"
   },
   {
    "fieldname": "host",
@@ -237,12 +233,53 @@
    "fieldname": "update_now",
    "fieldtype": "Button",
    "label": "Update Now"
+  },
+  {
+   "fieldname": "email_tab",
+   "fieldtype": "Tab Break",
+   "label": "Email"
+  },
+  {
+   "fieldname": "oci_column",
+   "fieldtype": "Column Break",
+   "label": "OCI"
+  },
+  {
+   "fieldname": "sparkpost_column",
+   "fieldtype": "Column Break",
+   "label": "Sparkpost"
+  },
+  {
+   "fieldname": "email_address",
+   "fieldtype": "Data",
+   "label": "Email Address"
+  },
+  {
+   "fieldname": "test_send_email",
+   "fieldtype": "Button",
+   "label": "Test Send Email"
+  },
+  {
+   "fieldname": "fcm_tab",
+   "fieldtype": "Tab Break",
+   "label": "FCM"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_api_logs",
+   "fieldtype": "Check",
+   "label": "Enable API Logs"
+  },
+  {
+   "fieldname": "debugging_tab",
+   "fieldtype": "Tab Break",
+   "label": "Debugging"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-01-09 08:36:04.117809",
+ "modified": "2025-01-23 15:12:26.803036",
  "modified_by": "Administrator",
  "module": "gauth_erpgulf",
  "name": "Backend Server Settings",

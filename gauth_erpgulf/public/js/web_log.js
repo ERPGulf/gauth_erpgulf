@@ -39,5 +39,64 @@ frappe.ui.form.on("Backend Server Settings", {
                 frappe.msgprint('Process cancelled.');
             }
         );
-    }
+    },
+    test_send_email: function (frm) {
+        frappe.confirm("Do you want to send the test Email?", function () {
+            frappe.call({
+                method: "frappe.client.get",
+                args: {
+                    doctype: "Email Template",
+                    name: "gauth erpgulf" // Replace with your template name
+                },
+                callback: function (template_response) {
+                    if (template_response.message) {
+                        console.log("Template loaded")
+                        const template = template_response.message;
+                        let body_html = template.response_html;
+    
+                        // Replace placeholder in the template
+                        body_html = body_html.replace("John Deo", "User");
+    
+                        frappe.call({
+                            method: 'gauth_erpgulf.gauth_erpgulf.backend_server.send_email_oci',
+                            args: {
+                                "recipient": frm.doc.email_address, // Corrected reference to recipient
+                                "subject": template.subject,
+                                "body_html": body_html
+                            },
+                            freeze: true,
+                            freeze_message: __('<span style="display: block; text-align: center;">'
+                                + '<img src="https://global.discourse-cdn.com/sitepoint/original/3X/e/3/e352b26bbfa8b233050087d6cb32667da3ff809c.gif" alt="Processing" style="width: 100px; height: 100px;"></br>'
+                                + 'Please Wait...</br>Connecting to the remote server to retrieve data</span>'),
+                            callback: function (email_response) {
+                                if (email_response.message) {
+                                    frappe.msgprint("The Email has been sent successfully.");
+                                } else {
+                                    frappe.msgprint("There was an error sending the email. Please check the logs.");
+                                    frappe.call({
+                                        method: "frappe.utils.error_log.log_error",
+                                        args: {
+                                            title: "Email Sending Error",
+                                            message: "There was an error while sending the email to " + frm.doc.recipient
+                                        }
+                                    });
+                                }
+                            },
+                            error: function (err) {
+                                frappe.msgprint("An error occurred while sending the email.");
+                            }
+                        });
+                    } else {
+                        frappe.msgprint("Email Template could not be found.");
+                    }
+                },
+                error: function (err) {
+                    frappe.msgprint("Failed to fetch email template. Check error logs for details.");
+                }
+            });
+        },
+            function () {
+                frappe.msgprint("Email sending cancelled.");
+            });
+    }    
 });
