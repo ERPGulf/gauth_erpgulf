@@ -19,6 +19,7 @@ import frappe
 from frappe.core.doctype.user.user import update_password
 from frappe.utils.data import sha256_hash
 from frappe.utils.password import update_password as _update_password
+from frappe.utils.password import check_password as _check_password
 import pyotp
 import requests
 from werkzeug.wrappers import Response
@@ -26,6 +27,7 @@ from frappe.utils import (
     now_datetime,
     get_url,
 )
+
 # Constants
 OAUTH_CLIENT = "OAuth Client"
 OAUTH_TOKEN_URL = "/api/method/frappe.integrations.oauth2.get_token"
@@ -49,10 +51,11 @@ FIELD_FOR_IP_AND_COUNTRY = [
     "desk_user_allow",
 ]
 COMPANY = "Company"
+STATUS_401 = 401
 STATUS = 404
 STATUS_200 = 200
 STATUS_500 = 500
-STATUS_400 = 500
+STATUS_400 = 400
 ERROR = "An unexpected error occured"
 
 
@@ -62,10 +65,9 @@ def get_backend_server_settings(*keys):
     Fetch multiple settings from the BACKEND_SERVER_SETTINGS.
     """
     return {
-        key: frappe.db.get_single_value(
-            BACKEND_SERVER_SETTINGS,
-            key) for key in keys
+        key: frappe.db.get_single_value(BACKEND_SERVER_SETTINGS, key) for key in keys
     }
+
 
 @frappe.whitelist(allow_guest=False)
 def is_api_request():
@@ -83,22 +85,18 @@ def is_api_request():
 @frappe.whitelist(allow_guest=False)
 def api_only():
     """Restrict access to API endpoints"""
-    frappe.throw(
-        frappe.request.path,
-        frappe.PermissionError
-        )
+    frappe.throw(frappe.request.path, frappe.PermissionError)
 
 
 @frappe.whitelist(allow_guest=False)
 def test_api():
     """Test endpoint for API-only access"""
-    frappe.local.is_api_call=True
+    frappe.local.is_api_call = True
     return "test api success"
 
 
 @frappe.whitelist(allow_guest=False)
 def xor_encrypt_decrypt(text, key):
-
     """Encrypt or decrypt text using XOR operation."""
     repeated_key = key * ((len(text) // len(key)) + 1)
 
@@ -108,10 +106,7 @@ def xor_encrypt_decrypt(text, key):
 @frappe.whitelist(allow_guest=False)
 def json_response(data, status=STATUS_200):
     """Return a standardized JSON response."""
-    return Response(
-        json.dumps(data),
-        status=status,
-        mimetype=APPLICATION_JSON)
+    return Response(json.dumps(data), status=status, mimetype=APPLICATION_JSON)
 
 
 @frappe.whitelist(allow_guest=False)
@@ -134,11 +129,9 @@ def get_oauth_client(app_key):
     if not client_id:
         frappe.local.response = {
             "message": INVALID_SECURITY_PARAMETERS,
-            "http_status_code": 401,
+            "http_status_code": STATUS_401,
         }
-        raise frappe.ValidationError(
-            _(INVALID_SECURITY_PARAMETERS)
-            )
+        raise frappe.ValidationError(_(INVALID_SECURITY_PARAMETERS))
     return client_id, client_secret
 
 
@@ -148,58 +141,28 @@ def generate_token_secure(api_key, api_secret, app_key):
     """
     Generates a secure token using the provided API credentials.
     """
-    frappe.local.is_api_call = True
     try:
+        auth = get_backend_server_settings("normal_authentication")
+        if auth["normal_authentication"]==0:
+            return "Normal authentication is disabled"
         try:
             app_key = base64.b64decode(app_key).decode("utf-8")
         except (ValueError, base64.binascii.Error) as decode_error:
             frappe.local.response = {
                 "message": INVALID_SECURITY_PARAMETERS,
                 "error": str(decode_error),
-                "user_count": 0,
-                "http_status_code": 401,
+                "http_status_code": STATUS_401,
             }
-            return Response(
-                json.dumps(
-                    {
-                        "message": INVALID_SECURITY_PARAMETERS,
-                        "error": str(decode_error),
-                        "user_count": 0,
-                    }
-                ),
-                status=401,
-                mimetype=APPLICATION_JSON,
+            return generate_error_response(
+                INVALID_SECURITY_PARAMETERS, str(decode_error), STATUS_401
             )
-        try:
-            client_id_value, client_secret_value = get_oauth_client(app_key)
-
-        except ValueError as ve:
-            frappe.local.response = {
-                "message": "OAuth Client Error",
-                "error": str(ve),
-                "http_status_code": 500,
-            }
-            return Response(
-                json.dumps(frappe.local.response),
-                status=500,
-                mimetype=APPLICATION_JSON,
-            )
+        client_id_value, client_secret_value = get_oauth_client(app_key)
         if client_id_value is None:
             frappe.local.response = {
                 "message": INVALID_SECURITY_PARAMETERS,
-                "user_count": 0,
-                "http_status_code": 401,
+                "http_status_code": STATUS_401,
             }
-            return Response(
-                json.dumps(
-                    {
-                        "message": INVALID_SECURITY_PARAMETERS,
-                        "user_count": 0
-                    }
-                ),
-                status=401,
-                mimetype=APPLICATION_JSON,
-            )
+            return generate_error_response(INVALID_SECURITY_PARAMETERS, None, STATUS_401)
 
         client_id = client_id_value
         client_secret = client_secret_value
@@ -212,40 +175,14 @@ def generate_token_secure(api_key, api_secret, app_key):
             "client_secret": client_secret,
         }
         files = []
-        try:
-            response = requests.request(
-                "POST",
-                url,
-                data=payload,
-                files=files,
-                timeout=10
-            )
-        except requests.RequestException as request_error:
-            return generate_error_response(
-                "Error connecting to the authentication server",
-                str(request_error),
-                status=STATUS_500,
-            )
-
+        response = requests.request("POST", url, data=payload, files=files, timeout=10)
         if response.status_code == STATUS_200:
-            try:
-                result_data = response.json()
-                result_data["refresh_token"] = "XXXXXXX"
-            except json.JSONDecodeError as json_error:
-                frappe.local.response = {
-                    "message": "Invalid JSON response",
-                    "error": str(json_error),
-                    "http_status_code": 500,
-                }
-                return generate_error_response(
-                    "Invalid JSON response",
-                    error=str(json_error),
-                    status=STATUS_500
-                )
+            result_data = response.json()
+            result_data["refresh_token"] = "XXXXXXX"
             frappe.local.response = {
-                    "data": result_data,
-                    "http_status_code": STATUS_200,
-                }
+                "data": result_data,
+                "http_status_code": STATUS_200,
+            }
             return generate_success_response(result_data, status=STATUS_200)
 
         else:
@@ -253,20 +190,17 @@ def generate_token_secure(api_key, api_secret, app_key):
                 "message": response.json(),
                 "http_status_code": response.status_code,
             }
-            return json.loads(response.text)
-
+            response_value = json.loads(response.text)
+            return generate_error_response(response_value, None, response.status_code)
     except ValueError as ve:
         frappe.local.response = {
             "message": str(ve),
             "http_status_code": 500,
         }
-        return generate_error_response(
-            ERROR,
-            error=str(ve),
-            status=STATUS_500
-            )
+        return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
+#api for user token
 @frappe.whitelist(allow_guest=False)
 def generate_token_secure_for_users(username, password, app_key):
     """
@@ -280,28 +214,13 @@ def generate_token_secure_for_users(username, password, app_key):
         try:
             app_key = base64.b64decode(app_key).decode("utf-8")
         except ValueError as ve:
-            return Response(
-                json.dumps(
-                    {
-                        "message": INVALID_SECURITY_PARAMETERS,
-                        "error": str(ve),
-                        "user_count": 0,
-                    }
-                ),
-                status=401,
-                mimetype=APPLICATION_JSON,
+            return generate_error_response(
+                INVALID_SECURITY_PARAMETERS, error=str(ve), status = STATUS_401
             )
         client_id_value, client_secret_value = get_oauth_client(app_key)
         if client_id_value is None:
-            return Response(
-                json.dumps(
-                        {
-                            "message": INVALID_SECURITY_PARAMETERS,
-                            "user_count": 0
-                        }
-                    ),
-                status=401,
-                mimetype=APPLICATION_JSON,
+            return generate_error_response(
+                INVALID_SECURITY_PARAMETERS, None, status = STATUS_401
             )
         client_id = client_id_value  # Replace with your OAuth client ID
         client_secret = client_secret_value  # Replace with your OAuth client secret
@@ -314,13 +233,7 @@ def generate_token_secure_for_users(username, password, app_key):
             "client_secret": client_secret,
         }
         files = []
-        response = requests.request(
-            "POST",
-            url,
-            data=payload,
-            files=files,
-            timeout=10
-            )
+        response = requests.request("POST", url, data=payload, files=files, timeout=10)
         qid = frappe.get_all(
             "User",
             fields=[
@@ -328,9 +241,7 @@ def generate_token_secure_for_users(username, password, app_key):
                 FULL_NAME_ALIAS,
                 MOBILE_NO_ALIAS,
             ],
-            filters={
-                "email": ["like", username]
-            },
+            filters={"email": ["like", username]},
         )
         if response.status_code == STATUS_200:
             result_data = response.json()
@@ -340,22 +251,15 @@ def generate_token_secure_for_users(username, password, app_key):
                 "user": qid[0] if qid else {},
             }
             frappe.local.response = {
-                    "data": result_data,
-                    "http_status_code": STATUS_200,
-                }
-            return generate_success_response(
-                result,
-                status=STATUS_200
-            )
+                "data": result_data,
+                "http_status_code": STATUS_200,
+            }
+            return generate_success_response(result, status=STATUS_200)
         else:
-            frappe.local.response.http_status_code = 401
+            frappe.local.response.http_status_code = STATUS_401
             return json.loads(response.text)
     except ValueError as ve:
-        return generate_error_response(
-            ERROR,
-            error=str(ve),
-            status=STATUS_500
-        )
+        return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
 # Api for  checking user name  using token
@@ -364,20 +268,13 @@ def whoami():
     """This function returns the current session user"""
     try:
         response_content = {
-            "data":
-                {
-                    "user": frappe.session.user,
-                }
-        }
+                "user": frappe.session.user,
+            }
         frappe.local.response = {
-                    "data": response_content,
-                    "http_status_code": STATUS_200,
+            "data": response_content,
+            "http_status_code": STATUS_200,
         }
-
-        return json_response(
-            response_content,
-            status=STATUS_200
-        )
+        return generate_success_response(response_content, STATUS_200)
     except ValueError as ve:
         frappe.throw(ve)
 
@@ -390,47 +287,29 @@ def decrypt_2fa_key(encrypted_key):
     encrypted = base64.b64decode(encrypted_key).decode()
     return current_totp, xor_encrypt_decrypt(encrypted, current_totp)
 
-#Api for encrypted token using normal Auth
-@frappe.whitelist(allow_guest=False)
+
+# Api for encrypted token 
+@frappe.whitelist(allow_guest=True)
 def generate_token_encrypt(encrypted_key):
     """This function creates the master token using the encrypted key"""
     try:
+        auth = get_backend_server_settings("2fa_authentication")
+        if auth["2fa_authentication"]==0:
+            return "2FA authentication is disabled"
         try:
             _, decrypted_key = decrypt_2fa_key(encrypted_key)
             api_key, api_secret, app_key = decrypted_key.split("::")
         except ValueError:
-            return Response(
-                json.dumps({"message": TWO_FA_TOKEN_EXPIRED, "user_count": 0}),
-                status=401,
-                mimetype=APPLICATION_JSON,
-            )
+            return generate_error_response(TWO_FA_TOKEN_EXPIRED, None, STATUS_401)
         try:
             app_key = base64.b64decode(app_key).decode("utf-8")
         except ValueError as ve:
-            return Response(
-                json.dumps(
-                        {
-                            "message": str(ve),
-                            "user_count": 0
-                        }
-                ),
-                status=401,
-                mimetype=APPLICATION_JSON,
-            )
+            return generate_error_response(str(ve), None, STATUS_401)
         client_id, client_secret = get_oauth_client(app_key)
         client_id_value = client_id
         client_secret_value = client_secret
         if client_id_value is None:
-            return Response(
-                json.dumps(
-                    {
-                        "message": INVALID_SECURITY_PARAMETERS,
-                        "user_count": 0
-                    }
-                ),
-                status=401,
-                mimetype=APPLICATION_JSON,
-            )
+            return generate_error_response(INVALID_SECURITY_PARAMETERS, None, STATUS_401)
         url = frappe.local.conf.host_name + OAUTH_TOKEN_URL
         payload = {
             "username": api_key,
@@ -440,24 +319,19 @@ def generate_token_encrypt(encrypted_key):
             "client_secret": client_secret_value,
         }
         files = []
-        response = requests.request(
-            "POST",
-            url, data=payload, files=files, timeout=10)
+        response = requests.request("POST", url, data=payload, files=files, timeout=10)
         if response.status_code == STATUS_200:
             result_data = json.loads(response.text)
             frappe.local.response = {
-                    "data": result_data,
-                    "http_status_code": STATUS_200,
-        }
+                "data": result_data,
+                "http_status_code": STATUS_200,
+            }
             return generate_success_response(result_data, status=STATUS_200)
         else:
-            return json.loads(response.text)
+            result = json.loads(response.text)
+            return generate_error_response(result, None, status=STATUS_400)
     except ValueError as ve:
-        return generate_error_response(
-            ERROR,
-            error=str(ve),
-            status=STATUS_500
-            )
+        return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
 @frappe.whitelist(allow_guest=False)
@@ -494,28 +368,115 @@ def test_generate_2fa():
     return current_totp
 
 
-# Api for encrypt details used for token
-@frappe.whitelist(allow_guest=False)
+# Generate Encrypted Key for Master Encrypted Token 
+@frappe.whitelist(allow_guest=True)
 def test_generate_token_encrypt(text_for_encryption):
-    setting=frappe.get_single("Backend Server Settings")
-    auth=setting.get("2fa_authentication")
-    if auth==0:
-        return "2fa authentication is disabled"
-    """to generate a mastertoken using encrypted key"""
-    current_totp = generate_totp()
-    result = xor_encrypt_decrypt(text_for_encryption, current_totp)
-    return base64.b64encode(result.encode()).decode()
+    """to generate a encrypted key from atext"""
+    auth = get_backend_server_settings("2fa_authentication")
+    if auth["2fa_authentication"]==0:
+        return "2FA authentication is disabled"
+    try:
+        api_key, api_secret, app_key = text_for_encryption.split("::")
+        try:
+            validate_user = _check_password(
+                api_key, api_secret
+            )  # This will raise AuthenticationError on invalid credentials
+        except frappe.AuthenticationError as e:
+            # Handle invalid username or password error separately
+            frappe.local.response = {"message": str(e), "http_status_code": STATUS_401}
+            return generate_error_response(str(e), None, STATUS_401)
+        try:
+            # response = generate_token_secure(api_key, api_secret, app_key)
+            app_key = base64.b64decode(app_key).decode("utf-8")
+            validate_app_key = get_oauth_client(app_key)
+            if not validate_app_key:
+                frappe.local.response = {"message": str(e), "http_status_code": 403}
+                return generate_error_response("Invalid app key provided.", None, 403)
+
+        except Exception as e:
+            frappe.local.response = {"message": str(e), "http_status_code": STATUS_500}
+            return generate_error_response(
+                f"Error validating app key: {str(e)}", None, STATUS_500
+            )
+
+        # If both user and app_key validation are successful, proceed to encrypt
+        if validate_user and validate_app_key:
+            current_totp = generate_totp()
+            result = xor_encrypt_decrypt(text_for_encryption, current_totp)
+            encoded_result = base64.b64encode(result.encode()).decode()
+            frappe.local.response = {
+                "message": encoded_result,
+                "http_status_code": STATUS_200,  # Status code 200 for success
+            }
+            return generate_success_response(encoded_result, STATUS_200)
+
+    except ValueError:
+        frappe.throw(
+            "Invalid input structure. Please ensure the input contains app_key, api_key, and api_secret separated by '::'.",
+            frappe.ValidationError,
+        )
+    except Exception as e:
+        # Catch any other unexpected errors
+        frappe.throw(f"An unexpected error occurred: {e}", frappe.ValidationError)
 
 
-# Api for encrypt user details
+# Generate Encrypted Key for User Encrypted Token
 @frappe.whitelist(allow_guest=False)
 def test_generate_token_encrypt_for_user(text_for_encryption):
-    """to generate test encrypted key from a text"""
-    current_totp = generate_totp()
-    result = xor_encrypt_decrypt(text_for_encryption, current_totp)
-    return base64.b64encode(result.encode()).decode()
+    """To generate test encrypted key from a text"""
+    try:
+        api_key, api_secret, app_key = text_for_encryption.split("::")
+        try:
+            validate_user = _check_password(
+                api_key, api_secret
+            )  # This will raise AuthenticationError on invalid credentials
+        except frappe.AuthenticationError as e:
+            # Handle invalid username or password error separately
+            frappe.local.response = {
+                "message": str(e),
+                "http_status_code": STATUS_401
+            }
+            return generate_error_response(str(e), None, STATUS_401)
+        try:
+            # response = generate_token_secure(api_key, api_secret, app_key)
+            app_key = base64.b64decode(app_key).decode("utf-8")
+            validate_app_key = get_oauth_client(app_key)
+            if not validate_app_key:
+                frappe.local.response = {
+                "message": str(e),
+                "http_status_code": 403
+            }
+                return generate_error_response("Invalid app key provided.",None,403)
 
-# API for normal Auth for User
+        except Exception as e:
+            frappe.local.response = {
+                "message": str(e),
+                "http_status_code": STATUS_500
+            }
+            return generate_error_response(f"Error validating app key: {str(e)}",None,STATUS_500)
+
+        # If both user and app_key validation are successful, proceed to encrypt
+        if validate_user and validate_app_key:
+            current_totp = generate_totp()
+            result = xor_encrypt_decrypt(text_for_encryption, current_totp)
+            encoded_result = base64.b64encode(result.encode()).decode()
+            frappe.local.response = {
+                "message": encoded_result,
+                "http_status_code": STATUS_200  # Status code 200 for success
+            }
+            return generate_success_response(encoded_result,STATUS_200)
+
+    except ValueError:
+        frappe.throw(
+            "Invalid input structure. Please ensure the input contains app_key, api_key, and api_secret separated by '::'.",
+            frappe.ValidationError,
+        )
+    except Exception as e:
+        # Catch any other unexpected errors
+        frappe.throw(f"An unexpected error occurred: {e}", frappe.ValidationError)
+
+
+# Generate User Encrypted Token
 @frappe.whitelist(allow_guest=False)
 def generate_token_encrypt_for_user(encrypted_key):
     """to generate a usertoken using encrypted key"""
@@ -527,9 +488,7 @@ def generate_token_encrypt_for_user(encrypted_key):
             app_key = base64.b64decode(app_key).decode("utf-8")
         except (ValueError, base64.binascii.Error):
             return generate_error_response(
-                INVALID_SECURITY_PARAMETERS,
-                error="Invalid app_key format",
-                status=401
+                INVALID_SECURITY_PARAMETERS, error="Invalid app_key format", status = STATUS_401
             )
         # Retrieve OAuth client credentials
         client_id_value, client_secret_value = get_oauth_client(app_key)
@@ -537,7 +496,7 @@ def generate_token_encrypt_for_user(encrypted_key):
             return generate_error_response(
                 INVALID_SECURITY_PARAMETERS,
                 error="Invalid client ID or secret",
-                status=401,
+                status = STATUS_401,
             )
         # Prepare payload for token request
         client_id = client_id_value
@@ -564,9 +523,9 @@ def generate_token_encrypt_for_user(encrypted_key):
                 "user": qid[0] if qid else {},
             }
             frappe.local.response = {
-                    "data": result,
-                    "http_status_code": STATUS_200,
-        }
+                "data": result,
+                "http_status_code": STATUS_200,
+            }
             return generate_success_response(result, status=STATUS_200)
         else:
             return generate_error_response(
@@ -577,51 +536,46 @@ def generate_token_encrypt_for_user(encrypted_key):
 
     except ValueError as ve:
         return generate_error_response(
-            "An unexpected error occurred",
-            error=str(ve),
-            status=STATUS_500
+            "An unexpected error occurred", error=str(ve), status=STATUS_500
         )
 
 
+# Get Username
 @frappe.whitelist(allow_guest=False)
 def get_user_name(user_email=None, mobile_phone=None):
     """to get username from useremail and mobile phone"""
-    if mobile_phone is not None:
+
+    if user_email is None and mobile_phone is None:
+        username = frappe.session.user
         user_details = frappe.get_all(
-            "User",
-            filters={"mobile_no": mobile_phone},
-            fields=["name", "enabled"]
+            "User", filters={"email": username}, fields=["name", "enabled"]
+        )
+    elif mobile_phone is not None:
+        user_details = frappe.get_all(
+            "User", filters={"mobile_no": mobile_phone}, fields=["name", "enabled"]
         )
     elif user_email is not None:
         user_details = frappe.get_all(
             "User", filters={"email": user_email}, fields=["name", "enabled"]
         )
     else:
-        return Response(
-            json.dumps({"data": USER_NOT_FOUND_MESSAGE, "user_count": 0}),
-            status=STATUS,
-            mimetype=APPLICATION_JSON,
-        )
+        return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
 
     if len(user_details) >= 1:
         frappe.local.response = {
-                    "data": user_details[0],
-                    "http_status_code": STATUS_200,
+            "data": user_details[0],
+            "http_status_code": STATUS_200,
         }
         return generate_success_response(user_details[0], status=STATUS_200)
 
     else:
-        return Response(
-            json.dumps({"data": USER_NOT_FOUND_MESSAGE, "user_count": 0}),
-            status=STATUS,
-            mimetype=APPLICATION_JSON,
-        )
+        return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
 
 
+# Check if User exists or not
 @frappe.whitelist(allow_guest=False)
 def check_user_name(user_email=None, mobile_phone=None):
     """to check the username from useremail and mobile phone"""
-    frappe.local.is_api_call = True
     user_details_email = []
     user_details_mobile = []
 
@@ -629,47 +583,37 @@ def check_user_name(user_email=None, mobile_phone=None):
         user_details_email = frappe.get_all(
             "User", filters={"email": user_email}, fields=["name", "enabled"]
         )
+        #
     if mobile_phone is not None:
         user_details_mobile = frappe.get_all(
-            "User",
-            filters={"mobile_no": mobile_phone},
-            fields=["name", "enabled"]
+            "User", filters={"mobile_no": mobile_phone}, fields=["name", "enabled"]
         )
 
     if len(user_details_email) >= 1 or len(user_details_mobile) >= 1:
         frappe.local.response = {
-                    "data": 1,
-                    "http_status_code": STATUS_200,
+            "data": 1,
+            "http_status_code": STATUS_200,
         }
         return 1
     else:
         return 0
 
 
+# Create User
 @frappe.whitelist(allow_guest=False)
 def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
     """to create a user"""
     if not full_name or not mobile_no or not email:
-        return Response(
-            json.dumps({"message": "Missing required fields", "user_count": 0}),
-            status=400,
-            mimetype=APPLICATION_JSON,
-        )
+        return generate_error_response("Missing required fields",None,STATUS_400)
     if not password:
         password = generate_random_password(10)
-
     # Check if user already exists
     if check_user_name(user_email=email, mobile_phone=mobile_no) > 0:
         frappe.local.response = {
-                "data": "User already exists",
-                "user_count": 1,
-                "http_status_code": 409,
+            "data": "User already exists",
+            "http_status_code": 409,
         }
-        return Response(
-            json.dumps({"message": "User already exists", "user_count": 1}),
-            status=409,
-            mimetype=APPLICATION_JSON,
-        )
+        return generate_error_response("User already exists", None, 409)
 
     try:
         frappe.get_doc(
@@ -680,7 +624,7 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
                 "mobile_no": mobile_no,
                 "new_password": password,
                 "email": email,
-                "username":email,
+                "username": email,
                 "roles": [{"role": role}],
             }
         ).insert()
@@ -698,89 +642,60 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
         ).insert()
 
         g_generate_reset_password_key(
-            email, send_email=True, password_expired=False, mobile=mobile_no, return_otp=True
+            email,
+            send_email=True,
+            password_expired=False,
+            mobile=mobile_no,
+            return_otp=True,
         )
         frappe.local.response = {
-                "data": "otp verification required",
-                "http_status_code": STATUS_200,
+            "data": "otp verification required",
+            "http_status_code": STATUS_200,
         }
-        return Response(
-            json.dumps({"data":"otp verification required"}),
-            status=200,
-            mimetype=APPLICATION_JSON
-        )
-
-
+        return generate_success_response("otp verification required", STATUS_200)
     except ValueError as ve:
-        return Response(
-            json.dumps({"message": str(ve), "user_count": 0}),
-            status=400,
-            mimetype=APPLICATION_JSON,
-        )
+        return generate_error_response(str(ve), None, STATUS_400)
 
     except Exception as e:
         error_message = str(e)
 
         if "common password" in error_message:
             formatted_message = {"message": {"password": error_message}}
-            return Response(
-                json.dumps(formatted_message), status=400, mimetype=APPLICATION_JSON
-            )
-
-        return Response(
-            json.dumps({"message": error_message, "user_count": 0}),
-            status = STATUS_500,
-            mimetype = APPLICATION_JSON,
-        )
+            return generate_error_response(json.dumps(formatted_message),None,STATUS_400)
+        return generate_error_response(error_message, None, STATUS_500)
 
 
+# Generate Reset Password Key
 @frappe.whitelist(allow_guest=False)
 def g_generate_reset_password_key(
-    recipient,
-    mobile="",
-    send_email=True,
-    password_expired=False,
-    return_otp=False
+    recipient, mobile="", send_email=True, password_expired=False, return_otp=False
 ):
 
     if mobile == "":
         frappe.local.response = {
-                "data": "Mobile or Email  not found",
-                "http_status_code": STATUS,
+            "data": "Mobile  not found",
+            "http_status_code": STATUS,
         }
-        return Response(
-            json.dumps({"message": "Mobile or Email  not found", "user_count": 0}),
-            status=404,
-            mimetype=APPLICATION_JSON,
-        )
+        return generate_error_response("Mobile number not found", None, STATUS)
+    if recipient == "":
+        frappe.local.response = {
+            "data": "Email  not found",
+            "http_status_code": STATUS,
+        }
+        return generate_error_response("Email not found", None, STATUS)
     try:
-        if (
-            len(
-                frappe.get_all(
-                    "User",
-                    filters={
-                        "name": recipient,
-                        "mobile_no": mobile
-                    }
-                )
-            )
-            < 1
-        ):
+        if not frappe.db.exists("User", recipient):
             frappe.local.response = {
-                "data": "Email or Mobile number not found",
-                "user_count": 0,
+                "data": "Email not found",
                 "http_status_code": STATUS,
-        }
-            return Response(
-                json.dumps(
-                    {
-                        "message": "Email or Mobile number not found",
-                        "user_count": 0
-                    }
-                ),
-                status=404,
-                mimetype=APPLICATION_JSON,
-            )
+            }
+            return generate_error_response("Email not found", None, STATUS)
+        if not frappe.db.exists("User", {"mobile_no": mobile}):
+            frappe.local.response = {
+                "data": "Mobile not found",
+                "http_status_code": STATUS,
+            }
+            return generate_error_response("Mobile not found", None, STATUS)
         key = "".join(secrets.choice(string.digits) for _ in range(6))
         doc2 = frappe.get_doc("User", recipient)
         doc2.reset_password_key = sha256_hash(key)
@@ -807,28 +722,25 @@ def g_generate_reset_password_key(
         if return_otp:
             return key
         frappe.local.response = {
-                "reset_key": "XXXXXX",
-                "generated_time": str(now_datetime()),
-                "URL": "XXXXXXXX",
-                "http_status_code": STATUS_200,
+            "reset_key": "XXXXXX",
+            "generated_time": str(now_datetime()),
+            "URL": "XXXXXXXX",
+            "http_status_code": STATUS_200,
         }
-        return Response(
-            json.dumps({
-                "reset_key": "XXXXXX",
-                "generated_time": str(now_datetime()),
-                "URL": "XXXXXXXX",
-            }),
-            status=200,
-            mimetype=APPLICATION_JSON,
-        )
+        result_data = json.dumps(
+                {
+                    "reset_key": "XXXXXX",
+                    "generated_time": str(now_datetime()),
+                    "URL": "XXXXXXXX",
+                }
+            )
+        return generate_success_response(result_data,STATUS_200)
+
     except Exception as e:
-        return Response(
-            json.dumps({"message": str(e), "user_count": 0}),
-            status = STATUS_500,
-            mimetype = APPLICATION_JSON,
-        )
+        return generate_error_response(str(e),None,STATUS_500)
 
 
+# Send Email OCI
 @frappe.whitelist(allow_guest=False)
 def send_email_oci(recipient, subject, body_html):
     """send an email to recipient with subject"""
@@ -856,34 +768,29 @@ def send_email_oci(recipient, subject, body_html):
         server.login(user_smtp, password_smtp)
         server.sendmail(sender, recipient, msg.as_string())
         server.close()
-        frappe.local.response={
-            "data":"Email Suucessfully Sent !",
-            "http_status_code":STATUS_200
+        frappe.local.response = {
+            "data": "Email Suucessfully Sent !",
+            "http_status_code": STATUS_200,
         }
-        return Response(
-            json.dumps({
-                "message": "Email Successfully Sent!",
-            }),
-            status=200,
-            mimetype=APPLICATION_JSON,
-        )
+        return generate_success_response("Email Successfully Sent!",STATUS_200)
     except ValueError as ve:
         return f"Error: {ve}"
 
 
+# To check if user is available
 @frappe.whitelist(allow_guest=False)
 def is_user_available(user_email=None, mobile_phone=None):
     """to check if user is available or not"""
     response = ""
     status_code = 0
     try:
-
+        if not user_email and not mobile_phone:
+            response = {"message": "Both Email and Mobile fields cannot be Empty!"}
+            frappe.local.response = {"data": response, "http_status_code": STATUS_400}
+            return generate_error_response(response, status=STATUS_400)
         if mobile_phone is not None:
             mobile_count = len(
-                frappe.get_all(
-                    "User",
-                    filters={"mobile_no": mobile_phone}
-                    )
+                frappe.get_all("User", filters={"mobile_no": mobile_phone})
             )
         else:
             mobile_count = 0
@@ -894,51 +801,52 @@ def is_user_available(user_email=None, mobile_phone=None):
         if mobile_count >= 1 and email_count < 1:
             response = {"message": "Mobile exists", "user_count": mobile_count}
             status_code = STATUS_200
-        if email_count >= 1 and mobile_count < 1:
+        elif email_count >= 1 and mobile_count < 1:
             response = {"message": "Email exists", "user_count": email_count}
             status_code = STATUS_200
-        if mobile_count >= 1 and email_count >= 1:
+        elif mobile_count >= 1 and email_count >= 1:
             response = {
                 "message": "Mobile and Email exists",
                 "user_count": mobile_count,
             }
             status_code = STATUS_200
-        if mobile_count < 1 and email_count < 1:
-            response = {
-                    "message": "Mobile and Email does not exist",
-                    "user_count": 0
-                }
+        elif not mobile_phone and email_count < 1:
+            response = {"message": "Email does not exist", "user_count": 0}
             status_code = STATUS
-        frappe.local.response={
-            "data":response,
-            "http_status_code":status_code
-        }
-        return Response(
-            json.dumps(response), status=status_code, mimetype=APPLICATION_JSON
-        )
+        elif not user_email and mobile_count < 1:
+            response = {"message": "Mobile does not exist", "user_count": 0}
+            status_code = STATUS
+        else:
+            response = {"message": "Mobile and Email does not exist", "user_count": 0}
+            status_code = STATUS
+        frappe.local.response = {"data": response, "http_status_code": status_code}
+        return generate_success_response(response,status_code)
 
     except ValueError as e:
-        return generate_error_response(
-            ERROR,
-            error=str(e),
-            status=STATUS_500
-        )
+        frappe.local.response = {"data": response, "http_status_code": status_code}
+        return generate_error_response(ERROR, error=str(e), status=STATUS_500)
 
-
+# Update User Password
 @frappe.whitelist(allow_guest=False)
 def g_update_password(username, password):
     """to update the user password"""
     try:
         if len(frappe.get_all("User", {"email": username})) < 1:
-            frappe.local.response={
-            "data" : USER_NOT_FOUND_MESSAGE,
-            "http_status_code" : STATUS
-        }
-            return Response(
-                json.dumps({"message": USER_NOT_FOUND_MESSAGE}),
-                status=STATUS,
-                mimetype=APPLICATION_JSON,
+            frappe.local.response = {
+                "data": USER_NOT_FOUND_MESSAGE,
+                "http_status_code": STATUS,
+            }
+            return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
+        if not is_strong_password(password):
+            weak_pass_message = (
+                "Password must be at least 8 characters long,contain uppercase,"
+                "lowercase, digits, and special characters."
             )
+            frappe.local.response = {
+                "data": weak_pass_message,
+                "http_status_code": STATUS,
+            }
+            return generate_error_response(weak_pass_message,None,STATUS)
         _update_password(username, password)
         qid = frappe.get_all(
             "User",
@@ -955,18 +863,31 @@ def g_update_password(username, password):
             "user_details": qid[0] if qid else {},
         }
         # frappe.db.commit()
-        frappe.local.response={
-            "data":result,
-            "http_status_code":200
-        }
+        frappe.local.response = {"data": result, "http_status_code": 200}
         return json_response(result)
     except ValueError as ve:
-        return generate_error_response(
-            ERROR,
-            error=str(ve),
-            status=STATUS_500)
+        return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
+# To check password Strength
+def is_strong_password(password):
+    """Check if the password meets strength requirements"""
+    if len(password) < 8:
+        return False
+    if not re.search(r"[A-Z]", password):  # At least one uppercase letter
+        return False
+    if not re.search(r"[a-z]", password):  # At least one lowercase letter
+        return False
+    if not re.search(r"\d", password):  # At least one digit
+        return False
+    if not re.search(
+        r'[!@#$%^&*(),.?":{}|<>]', password
+    ):  # At least one special character
+        return False
+    return True
+
+
+# To Delete User
 @frappe.whitelist(allow_guest=False)
 def g_delete_user(email, mobile_no):
     """to delete the user"""
@@ -974,12 +895,7 @@ def g_delete_user(email, mobile_no):
         if (
             len(
                 frappe.get_all(
-                    "User",
-                    {
-                        "name": email,
-                        "email": email,
-                        "mobile_no": mobile_no
-                    }
+                    "User", {"name": email, "email": email, "mobile_no": mobile_no}
                 )
             )
             < 1
@@ -988,25 +904,11 @@ def g_delete_user(email, mobile_no):
                 "data": USER_NOT_FOUND_MESSAGE,
                 "user_count": 0,
                 "http_status_code": STATUS,
-        }
-            return Response(
-                json.dumps(
-                    {
-                        "message": USER_NOT_FOUND_MESSAGE, "user_count": 0
-                    }
-                ),
-                status=STATUS,
-                mimetype=APPLICATION_JSON,
-            )
-
+            }
+            return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
         _ = (
             frappe.db.delete(
-                "User",
-                {
-                    "name": email,
-                    "email": email,
-                    "mobile_no": mobile_no
-                }
+                "User", {"name": email, "email": email, "mobile_no": mobile_no}
             ),
         )
         _ = frappe.db.delete(
@@ -1018,35 +920,30 @@ def g_delete_user(email, mobile_no):
             },
         )
         frappe.local.response = {
-                "data": "User successfully deleted",
-                "user_count": 1,
-                "http_status_code": STATUS_200,
+            "data": "User successfully deleted",
+            "user_count": 1,
+            "http_status_code": STATUS_200,
         }
-        return json_response(
-                {
-                    "message": "User successfully deleted",
-                    "user_count": 1
-                }
-            )
+        return json_response({"message": "User successfully deleted", "user_count": 1})
     except ValueError as ve:
-        return generate_error_response(
-            ERROR,
-            error=str(ve),
-            status=STATUS_500)
+        return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
+# To Validate Email
 @frappe.whitelist(allow_guest=False)
 def validate_email(email_to_validate):
     """
     Validate the format of the email and check if it is blocked.
     """
+
     def is_valid_email(email):
         """
         Check if the email format is valid using regex.
         """
-        return re.match(
-                r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email
-            ) is not None
+        return (
+            re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email)
+            is not None
+        )
 
     def get_domain_name(email):
         """
@@ -1055,28 +952,18 @@ def validate_email(email_to_validate):
         return email.split("@")[-1] if "@" in email else None
 
     if not is_valid_email(email_to_validate):
-        response = {
-            "blocked": True,
-            "reason": "Email format not correct"
-        }
+        response = {"blocked": True, "reason": "Email format not correct"}
         frappe.local.response = {
-                "data": response,
-                "user_count": 1,
-                "http_status_code": STATUS_200,
+            "data": response,
+            "user_count": 1,
+            "http_status_code": STATUS_400,
         }
-        return Response(
-            json.dumps(
-                response
-            ),
-            status=200,
-            mimetype=APPLICATION_JSON,
-        )
-
+        return generate_error_response(response,None,STATUS_400)
     domain_name = get_domain_name(email_to_validate)
 
     url = (
-            f"https://www2.istempmail.com/api/check/"
-            f"CirMirL3dAHELe8pKdUeG55KV3qy6weU/{domain_name}"
+        f"https://www2.istempmail.com/api/check/"
+        f"CirMirL3dAHELe8pKdUeG55KV3qy6weU/{domain_name}"
     )
 
     payload = {}
@@ -1090,21 +977,16 @@ def validate_email(email_to_validate):
         blocked = False
     if blocked:
         response = {
-                "blocked": True,
-                "reason": "Temporary email not accepted."
-                "Please provide your company email",
-            }
-        frappe.local.response = {
-                "data": response,
-                "user_count": 1,
-                "http_status_code": STATUS_200,
+            "blocked": True,
+            "reason": "Temporary email not accepted."
+            "Please provide your company email",
         }
-        return Response(
-            json.dumps(response),
-            status=200,
-            mimetype=APPLICATION_JSON,
-        )
-
+        frappe.local.response = {
+            "data": response,
+            "user_count": 1,
+            "http_status_code": 403,
+        }
+        return generate_success_response(response,403)
     domain_js_path = os.path.join(
         os.path.dirname(__file__), "..", "public", "domain.json"
     )
@@ -1117,35 +999,24 @@ def validate_email(email_to_validate):
 
         if domain_name in domains_list:
             response = {
-                        "blocked": True,
-                        "reason": "Public email not accepted."
-                        "Please provide your company email",
-                    }
+                "blocked": True,
+                "reason": "Public email not accepted."
+                "Please provide your company email",
+            }
             frappe.local.response = {
                 "data": response,
                 "user_count": 1,
-                "http_status_code": STATUS_200,
-        }
-            return Response(
-                json.dumps(
-                    response
-                ),
-                status=200,
-                mimetype=APPLICATION_JSON,
-            )
+                "http_status_code": 403,
+            }
+            return generate_success_response(response,403)
         else:
             response = {"blocked": False}
             frappe.local.response = {
                 "data": response,
                 "user_count": 1,
                 "http_status_code": STATUS_200,
-        }
-            return Response(
-                json.dumps(response),
-                status=200,
-                mimetype=APPLICATION_JSON,
-            )
-
+            }
+            return generate_success_response(response,STATUS_200)
     except Exception:
         response = {"blocked": False}
         frappe.local.response = {
@@ -1153,58 +1024,45 @@ def validate_email(email_to_validate):
             "user_count": 1,
             "http_status_code": STATUS,
         }
-        return Response(
-            json.dumps(response),
-            status=400,
-            mimetype=APPLICATION_JSON,
-        )
+        return generate_error_response(json.dumps(response),None,STATUS_400)
 
 
+# To Enable User
 @frappe.whitelist(allow_guest=False)
-def g_user_enable(username, email, mobile_no, enable_user: bool = True):
+def g_user_enable(username=None, email=None, mobile_no=None, enable_user: bool = True):
     """to Enable the  User"""
     try:
-        if (
-            len(
-                frappe.get_all(
-                    "User",
-                    {
-                        "name": username,
-                        "email": email,
-                        "mobile_no": mobile_no
+        if not username and not email and not mobile_no:
+            username = frappe.session.user
+            if not frappe.db.exists("User",username):
+                frappe.local.response = {
+                        "data": USER_NOT_FOUND_MESSAGE,
+                        "user_count": 0,
+                        "http_status_code": STATUS,
                     }
+                return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
+        else:
+            if (
+                len(
+                    frappe.get_all(
+                        "User", {"name": username, "email": email, "mobile_no": mobile_no}
+                    )
                 )
-            )
-            < 1
-        ):
-            frappe.local.response = {
-                "data" : USER_NOT_FOUND_MESSAGE,
-                "user_count": 0,
-                "http_status_code": STATUS,
-            }
-            return Response(
-                json.dumps(
-                    {
-                        "message": USER_NOT_FOUND_MESSAGE,
-                        "user_count": 0
-                    }
-                ),
-                status=STATUS,
-                mimetype=APPLICATION_JSON,
-            )
-
-        frappe.db.set_value(
-                "User", username,
-                "enabled", enable_user
-            )
-        status_message = (
-            f"User successfully {'enabled' if enable_user else 'disabled'}"
-        )
+                < 1
+            ):
+                frappe.local.response = {
+                    "data": USER_NOT_FOUND_MESSAGE,
+                    "user_count": 0,
+                    "http_status_code": STATUS,
+                }
+                return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
+        frappe.db.set_value("User", username, "enabled", enable_user)
+        status_message = f"User successfully {'enabled' if enable_user else 'disabled'}"
         frappe.local.response = {
-                "data" : status_message,
-                "user_count": 0,
-                "http_status_code": STATUS_200,
-            }
+            "data": status_message,
+            "user_count": 0,
+            "http_status_code": STATUS_200,
+        }
         return json_response(
             {
                 "message": status_message,
@@ -1212,41 +1070,37 @@ def g_user_enable(username, email, mobile_no, enable_user: bool = True):
             }
         )
     except ValueError as ve:
-        return generate_error_response(
-                ERROR,
-                error=str(ve),
-                status=STATUS_500
-            )
+        return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
+# To Update password using User Token
 @frappe.whitelist(allow_guest=False)
 def g_update_password_using_usertoken(password):
     """to update user password using user token"""
     try:
         username = frappe.session.user
         if len(frappe.get_all("User", {"name": username})) < 1:
-            return Response(
-                json.dumps(
-                    {
-                        "message": USER_NOT_FOUND_MESSAGE,
-                        "user_count": 0
-                    }
-                ),
-                status=STATUS,
-                mimetype=APPLICATION_JSON,
+            return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
+        if not is_strong_password(password):
+            weak_pass_message = (
+                "Password must be at least 8 characters long,contain uppercase,"
+                "lowercase, digits, and special characters."
             )
+            frappe.local.response = {
+                "data": weak_pass_message,
+                "http_status_code": STATUS,
+            }
+            return generate_error_response(weak_pass_message,None,STATUS)
         _update_password(username, password, logout_all_sessions=True)
         qid = frappe.get_all(
             "Customer",
             fields=[
-                # "name as id",
+                "name as id",
                 "customer_name as  full_name",
                 "mobile_no as phone",
                 # NAME_AS_EMAIL,
             ],
-            filters={
-                    "customer_name": ["like", username]
-                },
+            filters={"customer_name": ["like", username]},
         )
         result = {
             "message": "Password successfully updated",
@@ -1255,12 +1109,10 @@ def g_update_password_using_usertoken(password):
         return generate_success_response(result, status=STATUS_200)
 
     except ValueError as ve:
-        return generate_error_response(
-            ERROR,
-            error = str(ve),
-            status = STATUS_500)
+        return generate_error_response(ERROR, error=str(ve), status=STATUS_500)
 
 
+# To Update password using Reset Key
 @frappe.whitelist(allow_guest=False)
 def g_update_password_using_reset_key(new_password, reset_key, username):
     """to update user password using reset key"""
@@ -1268,30 +1120,27 @@ def g_update_password_using_reset_key(new_password, reset_key, username):
 
         if len(frappe.get_all("User", {"name": username})) < 1:
             frappe.local.response = {
-                "data" : USER_NOT_FOUND_MESSAGE,
-                "user_count" : 0,
-                "http_status_code" : STATUS
+                "data": USER_NOT_FOUND_MESSAGE,
+                "user_count": 0,
+                "http_status_code": STATUS,
             }
-            return Response(
-                json.dumps(
-                    {
-                        "message": USER_NOT_FOUND_MESSAGE,
-                        "user_count": 0
-                    }
-                ),
-                status=STATUS,
-                mimetype=APPLICATION_JSON,
-            )
+            return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
         if not new_password:
             frappe.local.response = {
-                "data" : "Missing New Password Credential",
-                "http_status_code" : STATUS_400
+                "data": "Missing New Password Credential",
+                "http_status_code": STATUS_400,
             }
-            return Response(
-                json.dumps({"message": "Missing New Password Credential"}),
-                status=400,
-                mimetype=APPLICATION_JSON,
+            return generate_error_response("Missing New Password Credential",None,STATUS_400)
+        if not is_strong_password(new_password):
+            weak_pass_message = (
+                "Password must be at least 8 characters long,contain uppercase,"
+                "lowercase, digits, and special characters."
             )
+            frappe.local.response = {
+                "data": weak_pass_message,
+                "http_status_code": STATUS,
+            }
+            return generate_error_response(weak_pass_message,None,STATUS)
         update_password(new_password=new_password, key=reset_key)
 
         if frappe.local.response.http_status_code == 410:
@@ -1299,66 +1148,49 @@ def g_update_password_using_reset_key(new_password, reset_key, username):
                 "data": "Invalid or expired reset key",
                 "http_status_code": 410,
             }
-            return Response(
-                json.dumps({"message": INVALID_OR_EXPIRED_KEYS}),
-                status = 410,
-                mimetype = APPLICATION_JSON,
-            )
+            return generate_error_response(INVALID_OR_EXPIRED_KEYS,None,410)
         if frappe.local.response.http_status_code == 400:
             frappe.local.response = {
                 "data": INVALID_OR_EXPIRED_KEYS,
                 "http_status_code": 400,
-        }
-            return Response(
-                json.dumps({"message": INVALID_OR_EXPIRED_KEYS}),
-                status = 400,
-                mimetype=APPLICATION_JSON,
-            )
+            }
+            return generate_error_response(INVALID_OR_EXPIRED_KEYS,None,400)
         frappe.local.response.http_status_code = STATUS_200
         if frappe.local.response.http_status_code == STATUS_200:
             frappe.local.response = {
                 "data": "Password Successfully updated",
                 "http_status_code": 200,
-        }
-            return Response(
-                json.dumps({"message": "Password Successfully updated"}),
-                status = 200,
-                mimetype=APPLICATION_JSON,
-            )
-
+            }
+            return generate_success_response("Password Successfully updated",STATUS_200)
     except ValueError as ve:
-        return Response(
-            json.dumps({"message": str(ve), "user_count": 0}),
-            status=400,
-            mimetype=APPLICATION_JSON,
-        )
+        return generate_error_response(str(ve),None,STATUS_400)
 
 
+# To check User Logging Details
 @frappe.whitelist(allow_guest=False)
 def login_time():
     """To get the Login Details of user"""
-    frappe.local.is_api_call = True
     username = frappe.session.user
     doc = frappe.get_all(
-        "User Log Details",
-        fields=["time"],
-        filters={"username": ["like", username]}
+        "User Log Details", fields=["time"], filters={"username": ["like", username]}
     )
-    for entry in doc:
-        if isinstance(entry.get("time"), datetime):
-            entry["time"] = entry["time"].strftime("%Y-%m-%d %H:%M:%S")
+    if doc:
+        for entry in doc:
+            if isinstance(entry.get("time"), datetime):
+                entry["time"] = entry["time"].strftime("%Y-%m-%d %H:%M:%S")
+        frappe.local.response = {
+            "message": doc,
+            "http_status_code": 200,
+        }
+        return generate_success_response(doc, STATUS_200)
     frappe.local.response = {
-        "message": doc,
-        "http_status_code": 200,
-    }
-    return Response(
-        json.dumps({"message" : doc}),
-        status = 200,  # Use 200 for successful HTTP status
-        mimetype = "application/json"  # Ensure proper content type
-    )
+            "message": USER_NOT_FOUND_MESSAGE,
+            "http_status_code": STATUS,
+        }
+    return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
 
 
-# to validate ip
+# to validate country
 @frappe.whitelist(allow_guest=False)
 def validate_country(ip_address):
     """To validate IP address Country"""
@@ -1369,6 +1201,7 @@ def validate_country(ip_address):
     return response.country.name
 
 
+# to get country from IP
 @frappe.whitelist(allow_guest=False)
 def get_country_from_ip(ip_address):
     """Retrieve the country name from an IP address."""
@@ -1377,6 +1210,7 @@ def get_country_from_ip(ip_address):
     return response.country.name
 
 
+# to restriction by country
 @frappe.whitelist(allow_guest=False)
 def get_restriction_by_country(country):
     """Fetch restrictions by country."""
@@ -1390,6 +1224,7 @@ def get_restriction_by_country(country):
     )
 
 
+# to handle API restrictions
 @frappe.whitelist(allow_guest=False)
 def handle_api_restrictions(restriction, ip_address):
     """Handle API access restrictions."""
@@ -1401,6 +1236,7 @@ def handle_api_restrictions(restriction, ip_address):
         )
 
 
+# to deny access
 @frappe.whitelist(allow_guest=False)
 def deny_access(user_type):
     """Deny access and send an appropriate response."""
@@ -1411,6 +1247,7 @@ def deny_access(user_type):
     frappe.local.response["http_status_code"] = 403
 
 
+# to handle non api restrictions
 @frappe.whitelist(allow_guest=False)
 def handle_non_api_restrictions(restriction):
     """Handle restrictions for non-API access."""
@@ -1433,6 +1270,7 @@ def handle_non_api_restrictions(restriction):
         return "website user"
 
 
+# to check the restriction by country
 @frappe.whitelist(allow_guest=True)
 def check_country_restriction(*args, **kwargs):
     """to check the restriction based on country"""
@@ -1441,7 +1279,7 @@ def check_country_restriction(*args, **kwargs):
     try:
         source_ip_address = frappe.local.request.headers.get("X-Forwarded-For")
         restriction = get_restriction_by_ip(source_ip_address)
-        #restrict from here .
+        # restrict from here .
         if not restriction:
             user_country = get_country_from_ip(source_ip_address)
             restriction = get_restriction_by_country(user_country)
@@ -1455,6 +1293,8 @@ def check_country_restriction(*args, **kwargs):
     except ValueError:
         pass
 
+
+#  generate a random password
 @frappe.whitelist(allow_guest=False)
 def generate_random_password(length=10):
     """To generate a Random Password"""
@@ -1463,30 +1303,14 @@ def generate_random_password(length=10):
     return "".join(secrets.choice(characters) for _ in range(length))
 
 
-@frappe.whitelist(allow_guest=False)
-def get_restriction_by_ip_1(source_ip_address):
-    """Fetch restrictions by IP address."""
-    return frappe.get_all(
-        COUNTRIES_AND_IP_ADDRESS,
-        filters={
-                "parent": BACKEND_SERVER_SETTINGS,
-                "countries": source_ip_address
-            },
-        fields=FIELD_FOR_IP_AND_COUNTRY,
-    )
-
+# to get restriction by IP
 @frappe.whitelist(allow_guest=False)
 def get_restriction_by_ip(source_ip_address):
     """Fetch restrictions by IP address or CIDR block."""
     restrictions = frappe.get_all(
         COUNTRIES_AND_IP_ADDRESS,
         filters={"parent": BACKEND_SERVER_SETTINGS},
-        fields=[
-            "countries",  # This field now contains both IPs and CIDR blocks
-            "api_allow",
-            "desk_web_user_allow",
-            "desk_user_allow",
-        ],
+        fields = FIELD_FOR_IP_AND_COUNTRY,
     )
     for restriction in restrictions:
         country_entry = restriction.get("countries")
@@ -1504,27 +1328,25 @@ def get_restriction_by_ip(source_ip_address):
         except ValueError:
             # Ignore invalid IP or CIDR formats in the database
             frappe.log_error(
-                f"Invalid IP or CIDR format:{country_entry}",
-                "IP Restriction Error"
+                f"Invalid IP or CIDR format:{country_entry}", "IP Restriction Error"
             )
     return []
 
 
-def generate_error_response(message, error, status=STATUS_500):
+# to generate error response
+def generate_error_response(message, error=None, status=STATUS_500):
     """Generate a standardized error response in JSON format."""
+    response_data = {"message": message}
+    if error:
+        response_data["error"] = error
     return Response(
-        json.dumps(
-            {
-                "message": message,
-                "error": error,
-                "user_count": 0
-            }
-        ),
+        json.dumps(response_data),
         status=status,
         mimetype=APPLICATION_JSON,
     )
 
 
+# to generate success response
 def generate_success_response(data, status=STATUS_200):
     """Generate a standardized success response in JSON format."""
     return Response(
@@ -1534,38 +1356,18 @@ def generate_success_response(data, status=STATUS_200):
     )
 
 
+# to resend OTP for reset key
 @frappe.whitelist(allow_guest=False)
 def resend_otp_for_reset_key(user):
-    frappe.local.is_api_call = True
     """
     Resend the OTP for resetting the password.
     """
     try:
         if not user:
-            return Response(
-                json.dumps(
-                    {
-                        "success": False,
-                        "message": "User Field cannot be empty."
-                    }
-                ),
-                status=400,
-                mimetype=APPLICATION_JSON,
-            )
-
-        user_data = frappe.db.get_value("User",{"name":user}, ["name"])
+            return generate_error_response("User Field cannot be empty.", None, 400)
+        user_data = frappe.db.get_value("User", {"name": user}, ["name"])
         if not user_data:
-            return Response(
-                json.dumps(
-                    {
-                        "success": False,
-                        "message": f"No user found: {user}"
-                    }
-                ),
-                status=400,
-                mimetype=APPLICATION_JSON,
-            )
-
+            return generate_error_response(f"No user found: {user}", None, 400)
         user_mobile = frappe.get_all(
             "User",
             fields=["mobile_no"],
@@ -1573,60 +1375,23 @@ def resend_otp_for_reset_key(user):
         )
 
         if not user_mobile:
-            return Response(
-                json.dumps(
-                    {
-                        "success": False,
-                        "message": f"No mobile number found for user: {user}"
-                    }
-                ),
-                status=400,
-                mimetype=APPLICATION_JSON,
+            return generate_error_response(
+                f"No mobile number found for user: {user}", None, 400
             )
 
         mobile = user_mobile[0]["mobile_no"]
         if not mobile:
-            return Response(
-                json.dumps(
-                    {
-                        "success": False,
-                        "message": f"No mobile number"
-                        f"associated with user: {user}"
-                    }
-                ),
-                status=400,
-                mimetype=APPLICATION_JSON,
+            generate_error_response(
+                f"No mobile number" f"associated with user: {user}", None, 400
             )
-
         # Generate OTP and send it
         g_generate_reset_password_key(
-            user, send_email=True,
+            user,
+            send_email=True,
             password_expired=False,
-            mobile=mobile, return_otp=False
+            mobile=mobile,
+            return_otp=False,
         )
-
-        return Response(
-            json.dumps(
-                {
-                    "success": True,
-                    "message": "OTP resent successfully"
-                }
-            ),
-            status=200,
-            mimetype=APPLICATION_JSON,
-        )
-
+        return generate_success_response("OTP resent successfully", STATUS_200)
     except Exception as e:
-        return Response(
-            json.dumps(
-                {
-                    "success": False,
-                    "message": "Failed to resend OTP",
-                    "error": str(e)
-                }
-            ),
-            status=500,
-            mimetype=APPLICATION_JSON,
-        )
-
-
+        generate_error_response("Failed to resend OTP", str(e), 500)
