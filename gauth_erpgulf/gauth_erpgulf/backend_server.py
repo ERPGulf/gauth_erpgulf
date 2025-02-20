@@ -52,7 +52,7 @@ FIELD_FOR_IP_AND_COUNTRY = [
 ]
 COMPANY = "Company"
 STATUS_401 = 401
-STATUS = 404
+STATUS_404 = 404
 STATUS_200 = 200
 STATUS_500 = 500
 STATUS_400 = 400
@@ -559,7 +559,7 @@ def get_user_name(user_email=None, mobile_phone=None):
             "User", filters={"email": user_email}, fields=["name", "enabled"]
         )
     else:
-        return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
+        return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS_404)
 
     if len(user_details) >= 1:
         frappe.local.response = {
@@ -569,7 +569,7 @@ def get_user_name(user_email=None, mobile_phone=None):
         return generate_success_response(user_details[0], status=STATUS_200)
 
     else:
-        return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
+        return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS_404)
 
 
 # Check if User exists or not
@@ -578,16 +578,21 @@ def check_user_name(user_email=None, mobile_phone=None):
     """to check the username from useremail and mobile phone"""
     user_details_email = []
     user_details_mobile = []
-
-    if user_email is not None:
+    if not user_email and not mobile_phone:
+        username=frappe.session.user
+        user_details_email = frappe.get_all(
+            "User", filters={"email": username}, fields=["name", "enabled"]
+        )
+    elif user_email is not None:
         user_details_email = frappe.get_all(
             "User", filters={"email": user_email}, fields=["name", "enabled"]
         )
         #
-    if mobile_phone is not None:
-        user_details_mobile = frappe.get_all(
-            "User", filters={"mobile_no": mobile_phone}, fields=["name", "enabled"]
-        )
+    else:
+        if mobile_phone is not None:
+            user_details_mobile = frappe.get_all(
+                "User", filters={"mobile_no": mobile_phone}, fields=["name", "enabled"]
+            )
 
     if len(user_details_email) >= 1 or len(user_details_mobile) >= 1:
         frappe.local.response = {
@@ -596,6 +601,10 @@ def check_user_name(user_email=None, mobile_phone=None):
         }
         return 1
     else:
+        frappe.local.response = {
+            "data": 0,
+            "http_status_code": STATUS_404,
+        }
         return 0
 
 
@@ -614,7 +623,16 @@ def g_create_user(full_name, mobile_no, email, password=None, role="Customer"):
             "http_status_code": 409,
         }
         return generate_error_response("User already exists", None, 409)
-
+    if not is_strong_password(password):
+        weak_pass_message = (
+            "Password must be at least 8 characters long,contain uppercase,"
+            "lowercase, digits, and special characters."
+        )
+        frappe.local.response = {
+            "data": weak_pass_message,
+            "http_status_code": STATUS_404,
+        }
+        return generate_error_response(weak_pass_message,None,STATUS_404)
     try:
         frappe.get_doc(
             {
@@ -674,28 +692,28 @@ def g_generate_reset_password_key(
     if mobile == "":
         frappe.local.response = {
             "data": "Mobile  not found",
-            "http_status_code": STATUS,
+            "http_status_code": STATUS_404,
         }
-        return generate_error_response("Mobile number not found", None, STATUS)
+        return generate_error_response("Mobile number not found", None, STATUS_404)
     if recipient == "":
         frappe.local.response = {
             "data": "Email  not found",
-            "http_status_code": STATUS,
+            "http_status_code": STATUS_404,
         }
-        return generate_error_response("Email not found", None, STATUS)
+        return generate_error_response("Email not found", None, STATUS_404)
     try:
         if not frappe.db.exists("User", recipient):
             frappe.local.response = {
                 "data": "Email not found",
-                "http_status_code": STATUS,
+                "http_status_code": STATUS_404,
             }
-            return generate_error_response("Email not found", None, STATUS)
+            return generate_error_response("Email not found", None, STATUS_404)
         if not frappe.db.exists("User", {"mobile_no": mobile}):
             frappe.local.response = {
                 "data": "Mobile not found",
-                "http_status_code": STATUS,
+                "http_status_code": STATUS_404,
             }
-            return generate_error_response("Mobile not found", None, STATUS)
+            return generate_error_response("Mobile not found", None, STATUS_404)
         key = "".join(secrets.choice(string.digits) for _ in range(6))
         doc2 = frappe.get_doc("User", recipient)
         doc2.reset_password_key = sha256_hash(key)
@@ -812,13 +830,13 @@ def is_user_available(user_email=None, mobile_phone=None):
             status_code = STATUS_200
         elif not mobile_phone and email_count < 1:
             response = {"message": "Email does not exist", "user_count": 0}
-            status_code = STATUS
+            status_code = STATUS_404
         elif not user_email and mobile_count < 1:
             response = {"message": "Mobile does not exist", "user_count": 0}
-            status_code = STATUS
+            status_code = STATUS_404
         else:
             response = {"message": "Mobile and Email does not exist", "user_count": 0}
-            status_code = STATUS
+            status_code = STATUS_404
         frappe.local.response = {"data": response, "http_status_code": status_code}
         return generate_success_response(response,status_code)
 
@@ -834,9 +852,9 @@ def g_update_password(username, password):
         if len(frappe.get_all("User", {"email": username})) < 1:
             frappe.local.response = {
                 "data": USER_NOT_FOUND_MESSAGE,
-                "http_status_code": STATUS,
+                "http_status_code": STATUS_404,
             }
-            return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
+            return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS_404)
         if not is_strong_password(password):
             weak_pass_message = (
                 "Password must be at least 8 characters long,contain uppercase,"
@@ -844,9 +862,9 @@ def g_update_password(username, password):
             )
             frappe.local.response = {
                 "data": weak_pass_message,
-                "http_status_code": STATUS,
+                "http_status_code": STATUS_404,
             }
-            return generate_error_response(weak_pass_message,None,STATUS)
+            return generate_error_response(weak_pass_message,None,STATUS_404)
         _update_password(username, password)
         qid = frappe.get_all(
             "User",
@@ -903,9 +921,9 @@ def g_delete_user(email, mobile_no):
             frappe.local.response = {
                 "data": USER_NOT_FOUND_MESSAGE,
                 "user_count": 0,
-                "http_status_code": STATUS,
+                "http_status_code": STATUS_404,
             }
-            return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
+            return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS_404)
         _ = (
             frappe.db.delete(
                 "User", {"name": email, "email": email, "mobile_no": mobile_no}
@@ -1022,7 +1040,7 @@ def validate_email(email_to_validate):
         frappe.local.response = {
             "data": response,
             "user_count": 1,
-            "http_status_code": STATUS,
+            "http_status_code": STATUS_404,
         }
         return generate_error_response(json.dumps(response),None,STATUS_400)
 
@@ -1038,9 +1056,9 @@ def g_user_enable(username=None, email=None, mobile_no=None, enable_user: bool =
                 frappe.local.response = {
                         "data": USER_NOT_FOUND_MESSAGE,
                         "user_count": 0,
-                        "http_status_code": STATUS,
+                        "http_status_code": STATUS_404,
                     }
-                return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
+                return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS_404)
         else:
             if (
                 len(
@@ -1053,9 +1071,9 @@ def g_user_enable(username=None, email=None, mobile_no=None, enable_user: bool =
                 frappe.local.response = {
                     "data": USER_NOT_FOUND_MESSAGE,
                     "user_count": 0,
-                    "http_status_code": STATUS,
+                    "http_status_code": STATUS_404,
                 }
-                return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
+                return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS_404)
         frappe.db.set_value("User", username, "enabled", enable_user)
         status_message = f"User successfully {'enabled' if enable_user else 'disabled'}"
         frappe.local.response = {
@@ -1080,7 +1098,7 @@ def g_update_password_using_usertoken(password):
     try:
         username = frappe.session.user
         if len(frappe.get_all("User", {"name": username})) < 1:
-            return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
+            return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS_404)
         if not is_strong_password(password):
             weak_pass_message = (
                 "Password must be at least 8 characters long,contain uppercase,"
@@ -1088,9 +1106,9 @@ def g_update_password_using_usertoken(password):
             )
             frappe.local.response = {
                 "data": weak_pass_message,
-                "http_status_code": STATUS,
+                "http_status_code": STATUS_404,
             }
-            return generate_error_response(weak_pass_message,None,STATUS)
+            return generate_error_response(weak_pass_message,None,STATUS_404)
         _update_password(username, password, logout_all_sessions=True)
         qid = frappe.get_all(
             "Customer",
@@ -1122,9 +1140,9 @@ def g_update_password_using_reset_key(new_password, reset_key, username):
             frappe.local.response = {
                 "data": USER_NOT_FOUND_MESSAGE,
                 "user_count": 0,
-                "http_status_code": STATUS,
+                "http_status_code": STATUS_404,
             }
-            return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
+            return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS_404)
         if not new_password:
             frappe.local.response = {
                 "data": "Missing New Password Credential",
@@ -1138,9 +1156,9 @@ def g_update_password_using_reset_key(new_password, reset_key, username):
             )
             frappe.local.response = {
                 "data": weak_pass_message,
-                "http_status_code": STATUS,
+                "http_status_code": STATUS_404,
             }
-            return generate_error_response(weak_pass_message,None,STATUS)
+            return generate_error_response(weak_pass_message,None,STATUS_404)
         update_password(new_password=new_password, key=reset_key)
 
         if frappe.local.response.http_status_code == 410:
@@ -1185,9 +1203,9 @@ def login_time():
         return generate_success_response(doc, STATUS_200)
     frappe.local.response = {
             "message": USER_NOT_FOUND_MESSAGE,
-            "http_status_code": STATUS,
+            "http_status_code": STATUS_404,
         }
-    return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS)
+    return generate_error_response(USER_NOT_FOUND_MESSAGE,None,STATUS_404)
 
 
 # to validate country

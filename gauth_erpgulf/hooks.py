@@ -151,12 +151,12 @@ doctype_js = {
 
 scheduler_events = {
     "cron": {
+            "0 2 * * *": [
+            "gauth_erpgulf.gauth_erpgulf.web_logging.enqueue_parse_nginx_logs"
+        ],
         # "0 2 * * *": [
         #     "gauth_erpgulf.gauth_erpgulf.web_logging.delete_all_web_access_logs_async"
         # ],
-        "0 2 * * *": [
-            "gauth_erpgulf.gauth_erpgulf.web_logging.enqueue_parse_nginx_logs"
-        ]
     },
     # "all": [
     #     "gauth_erpgulf.tasks.all"
