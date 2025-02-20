@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-09 10:23:26.634455",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "column_break_qszf",
+  "countries",
+  "code",
+  "api_allow",
+  "desk_user_allow",
+  "desk_web_user_allow"
+ ],
+ "fields": [
+  {
+   "fieldname": "column_break_qszf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "countries",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Countries"
+  },
+  {
+   "fieldname": "code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Code"
+  },
+  {
+   "default": "0",
+   "fieldname": "api_allow",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "API - Allow "
+  },
+  {
+   "default": "0",
+   "fieldname": "desk_user_allow",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Desk User - Allow"
+  },
+  {
+   "default": "0",
+   "fieldname": "desk_web_user_allow",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Desk Web User - Allow"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-02-20 16:32:50.388245",
+ "modified_by": "Administrator",
+ "module": "gauth_erpgulf",
+ "name": "Countries and IP address",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
