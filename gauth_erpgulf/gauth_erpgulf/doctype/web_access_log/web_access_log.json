@@ -1,0 +1,89 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-08 07:25:07.948475",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "remote_address",
+  "date",
+  "time",
+  "api_type",
+  "request",
+  "status",
+  "bytes_sent",
+  "referer",
+  "user_agent"
+ ],
+ "fields": [
+  {
+   "fieldname": "remote_address",
+   "fieldtype": "Data",
+   "label": "Remote address"
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "fieldname": "time",
+   "fieldtype": "Time",
+   "label": "Time"
+  },
+  {
+   "fieldname": "api_type",
+   "fieldtype": "Small Text",
+   "label": "API Type"
+  },
+  {
+   "fieldname": "request",
+   "fieldtype": "Small Text",
+   "label": "Request"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Data",
+   "label": "Status"
+  },
+  {
+   "fieldname": "bytes_sent",
+   "fieldtype": "Small Text",
+   "label": "Bytes sent"
+  },
+  {
+   "fieldname": "referer",
+   "fieldtype": "Small Text",
+   "label": "Referer"
+  },
+  {
+   "fieldname": "user_agent",
+   "fieldtype": "Small Text",
+   "label": "User Agent"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-02-20 16:57:14.554742",
+ "modified_by": "Administrator",
+ "module": "gauth_erpgulf",
+ "name": "Web Access Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

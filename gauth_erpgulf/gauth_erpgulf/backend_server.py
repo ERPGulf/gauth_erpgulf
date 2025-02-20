@@ -288,7 +288,7 @@ def decrypt_2fa_key(encrypted_key):
     return current_totp, xor_encrypt_decrypt(encrypted, current_totp)
 
 
-# Api for encrypted token 
+# Api for encrypted token
 @frappe.whitelist(allow_guest=True)
 def generate_token_encrypt(encrypted_key):
     """This function creates the master token using the encrypted key"""
@@ -368,7 +368,7 @@ def test_generate_2fa():
     return current_totp
 
 
-# Generate Encrypted Key for Master Encrypted Token 
+# Generate Encrypted Key for Master Encrypted Token
 @frappe.whitelist(allow_guest=True)
 def test_generate_token_encrypt(text_for_encryption):
     """to generate a encrypted key from atext"""
