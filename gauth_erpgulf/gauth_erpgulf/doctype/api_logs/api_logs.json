@@ -1,0 +1,71 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-01 09:04:01.616930",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "api_header",
+  "input_parameters",
+  "response_code",
+  "response_text",
+  "timestamp",
+  "session_user"
+ ],
+ "fields": [
+  {
+   "fieldname": "api_header",
+   "fieldtype": "Data",
+   "label": "API Header"
+  },
+  {
+   "fieldname": "input_parameters",
+   "fieldtype": "Small Text",
+   "label": "Input Parameters"
+  },
+  {
+   "fieldname": "response_code",
+   "fieldtype": "Data",
+   "label": "Response Code"
+  },
+  {
+   "fieldname": "response_text",
+   "fieldtype": "Small Text",
+   "label": "Response Text"
+  },
+  {
+   "fieldname": "timestamp",
+   "fieldtype": "Datetime",
+   "label": "Timestamp"
+  },
+  {
+   "fieldname": "session_user",
+   "fieldtype": "Data",
+   "label": "Session User "
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-02-20 16:56:58.542684",
+ "modified_by": "Administrator",
+ "module": "gauth_erpgulf",
+ "name": "API Logs",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -29,7 +29,7 @@ STATUS_200 = 200
 ERROR = "An unexpected error occured"
 COMPANY = "Company"
 NAME_AS_EMAIL = "name as email"
-STATUS_404 = 404
+STATUS = 404
 APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded"
 
 
@@ -87,33 +87,33 @@ def send_email_sparkpost(subject=None, text=None, to=None, From=None):
     if not to:
         frappe.local.response = {
             "message" : "At least one valid recipient is needed",
-            "http_status_code" : STATUS_404
+            "http_status_code" : STATUS
     }
-        return generate_error_response("At least one valid recipient is needed",None,STATUS_404)
+        return generate_error_response("At least one valid recipient is needed",None,STATUS)
     if not text:
         frappe.local.response = {
             "message" : "text or html needs to exist in content",
-            "http_status_code" : STATUS_404
+            "http_status_code" : STATUS
     }
-        return generate_error_response("text or html needs to exist in content",None,STATUS_404)
+        return generate_error_response("text or html needs to exist in content",None,STATUS)
     if not subject:
         frappe.local.response = {
             "message" : "subject is a required field",
-            "http_status_code" : STATUS_404
+            "http_status_code" : STATUS
     }
-        return generate_error_response("subject is a required field",None,STATUS_404)
-    if not From:
+        return generate_error_response("subject is a required field",None,STATUS)
+    if not from_:
         frappe.local.response = {
             "message" : "from is a required field",
-            "http_status_code" : STATUS_404
+            "http_status_code" : STATUS
     }
-        return generate_error_response("from is a required field",None,STATUS_404)
+        return generate_error_response("from is a required field",None,STATUS)
     company = frappe.get_doc(COMPANY, "Gauth")
     api_key = company.custom_sparkpost_id
     try:
         payload = json.dumps(
             {
-                "content": {"from": From, "subject": subject, "text": text},
+                "content": {"from": from_, "subject": subject, "text": text},
                 "recipients": [{"address": to}],
             }
         )
@@ -550,9 +550,9 @@ def get_customer_details(user_email=None, mobile_phone=None):
         frappe.local.response = {
             "message": CUSTOMER_NOT_FOUND,
             "user_count": 0,
-            "http_status_code" : STATUS_404
+            "http_status_code" : STATUS
         }
-        return generate_error_response(CUSTOMER_NOT_FOUND,None,STATUS_404)
+        return generate_error_response(CUSTOMER_NOT_FOUND,None,STATUS)
 
     if len(customer_details) >= 1:
         result = [
@@ -569,9 +569,9 @@ def get_customer_details(user_email=None, mobile_phone=None):
         frappe.local.response = {
             "message": CUSTOMER_NOT_FOUND,
             "user_count": 0,
-            "http_status_code" : STATUS_404
+            "http_status_code" : STATUS
         }
-        return generate_error_response(CUSTOMER_NOT_FOUND,None,STATUS_404)
+        return generate_error_response(CUSTOMER_NOT_FOUND,None,STATUS)
 
 
 @frappe.whitelist(allow_guest=True)
