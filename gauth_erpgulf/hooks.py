@@ -205,11 +205,11 @@ scheduler_events = {
 
 # Request Events
 # ----------------
-# before_request = [
-#     "gauth_erpgulf.gauth_erpgulf.backend_server."
-#     "check_country_restriction",
-#     "gauth_erpgulf.gauth_erpgulf.web_logging.mark_primary_request",
-# ]
+before_request = [
+    "gauth_erpgulf.gauth_erpgulf.backend_server."
+    "check_country_restriction",
+    "gauth_erpgulf.gauth_erpgulf.web_logging.mark_primary_request",
+]
 # before_request = [
 #     "gauth_erpgulf.gauth_erpgulf.web_logging.mark_primary_request",
 # ]
