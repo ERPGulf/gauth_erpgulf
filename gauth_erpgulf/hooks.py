@@ -265,27 +265,14 @@ after_request = [
 #     {"dt": "DocType", "filters": {"module": "gauth_erpgulf"}},
 # ]
 fixtures = [
-
     {
-        "dt": "DocType",
-        "filters": [
-            ["name", "in", ["Backend Server Settings", "Countries"]]
-        ]
-    },
 
-    {
-        "dt": "Backend Server Settings",
-        "filters": [
-            ["name", "!=", "Backend Server Settings"]
-        ]
-    },
-
-    {
         "dt": "Countries and IP address",
         "filters": [
             ["parent", "=", "Backend Server Settings"]
         ]
     }
 ]
+
 
 
