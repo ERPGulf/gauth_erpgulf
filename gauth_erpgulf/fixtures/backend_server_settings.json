@@ -1,0 +1,2580 @@
+[
+ {
+  "2fa_authentication": 1,
+  "2fa_secret_key": "KNKVMRSUNNLFGUSWJJDFGVLQJRFWSZ3RJNBU22SRINHECT2UNM6Q====",
+  "activate_scheduled_update": 1,
+  "docstatus": 0,
+  "doctype": "Backend Server Settings",
+  "email_address": "hyrin@htsqatar.com",
+  "enable_api_logs": 1,
+  "host": "smtp.email.me-jeddah-1.oci.oraclecloud.com",
+  "last_updated_date": "2025-01-30T02:02:51.401385",
+  "modified": "2025-02-03 11:38:08.774359",
+  "name": "Backend Server Settings",
+  "normal_authentication": 1,
+  "password_smtp": "rfA$gGFe_#gGSB8T9}E9",
+  "port": "587",
+  "sender": "support@claudion.me",
+  "sender_name": "Claudion Support",
+  "sparkpost_url": "https://api.sparkpost.com/api/v1/transmissions",
+  "table": [
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Saudi Arabia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "UAE",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Bahrain",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Kuwait",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Oman",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 1,
+    "code": null,
+    "countries": "India",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Pakistan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "USA",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 1,
+    "code": null,
+    "countries": "Qatar",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table",
+    "parenttype": "Backend Server Settings"
+   }
+  ],
+  "table_africa": [
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Rwanda",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Somalia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Tanzania",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Kenya",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Congo",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Djibouti",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Uganda",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Central African Republic",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Seychelles",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Ethiopia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Eritrea",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Egypt",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Sudan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Burundi",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Zimbabwe",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Zambia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Comoros",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Malawi",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Lesotho",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Botswana",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Mauritius",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Swaziland",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Réunion",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "South Africa",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Mayotte",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Mozambique",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Madagascar",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Libya",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Cameroon",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Senegal",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Republic of the Congo",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Liberia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Ivory Coast",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Ghana",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Equatorial Guinea",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Nigeria",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Burkina Faso",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Togo",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Guinea-Bissau",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Mauritania",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Benin",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Gabon",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Sierra Leone",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "São Tomé and Príncipe",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Gambia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Guinea",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Chad",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Niger",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Mali",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Western Sahara",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Tunisia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Morocco",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Algeria",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Angola",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Namibia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Saint Helena",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "ape Verde",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "South Sudan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_africa",
+    "parenttype": "Backend Server Settings"
+   }
+  ],
+  "table_antartica": [
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "French Southern Territories",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_antartica",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "South Georgia and the South Sandwich Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_antartica",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Antarctica",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_antartica",
+    "parenttype": "Backend Server Settings"
+   }
+  ],
+  "table_asia": [
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Yemen",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Iraq",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Saudi Arabia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Iran",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Syria",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Armenia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Hashemite Kingdom of Jordan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Lebanon",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Kuwait",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Oman",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Bahrain",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "United Arab Emirates",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Israel",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Turkey",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Azerbaijan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Georgia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Afghanistan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Pakistan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Bangladesh",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Turkmenistan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Tajikistan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Sri Lanka",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Bhutan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Maldives",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "British Indian Ocean Territory",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Nepal",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Myanmar [Burma]",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Uzbekistan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Kazakhstan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Cocos [Keeling] Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Vietnam",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Thailand",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Indonesia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Laos",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Taiwan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Philippines",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Malaysia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "China",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Hong Kong",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Brunei",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Macao",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Cambodia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Republic of Korea",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Japan",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "North Korea",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Singapore",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Mongolia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Christmas Island",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Palestine",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_asia",
+    "parenttype": "Backend Server Settings"
+   }
+  ],
+  "table_australia": [
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Cyprus",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Greece",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Estonia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Latvia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Republic of Lithuania",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Svalbard and Jan Mayen",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Republic of Moldova",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Belarus",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Finland",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Åland",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Ukraine",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Macedonia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Hungary",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Bulgaria",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Albania",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Poland",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Romania",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Kosovo",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Russia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Portugal",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Gibraltar",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Spain",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Malta",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Faroe Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Denmark",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Iceland",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "United Kingdom",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Switzerland",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Sweden",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Netherlands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Austria",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Belgium",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Germany",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Luxembourg",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Ireland",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Monaco",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "France",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Andorra",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Liechtenstein",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Jersey",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Isle of Man",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Guernsey",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Slovakia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Czech Republic",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Norway",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Vatican City",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "San Marino",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Italy",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Slovenia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Montenegro",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Croatia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Bosnia and Herzegovina",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Serbia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_australia",
+    "parenttype": "Backend Server Settings"
+   }
+  ],
+  "table_ip_address": [],
+  "table_north_america": [
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Barbados",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Saint Pierre and Miquelon",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Greenland",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Jamaica",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Dominican Republic",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Cuba",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Martinique",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Bahamas",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Bermuda",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Anguilla",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Trinidad and Tobago",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Saint Kitts and Nevis",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Dominica",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Antigua and Barbuda",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Saint Lucia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Turks and Caicos Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Aruba",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "British Virgin Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Saint Vincent and the Grenadines",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Montserrat",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Saint Martin",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Saint-Barthélemy",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Guadeloupe",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Grenada",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Cayman Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Belize",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "El Salvador",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Guatemala",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Honduras",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Nicaragua",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Costa Rica",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Panama",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Haiti",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Mexico",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Puerto Rico",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "U.S. Virgin Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Canada",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "United States",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Sint Maarten",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Curaçao",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Bonaire",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_north_america",
+    "parenttype": "Backend Server Settings"
+   }
+  ],
+  "table_south_america": [
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Guyana",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "French Guiana",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Suriname",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Paraguay",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Uruguay",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Brazil",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Falkland Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Venezuela",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Ecuador",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Colombia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Argentina",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Chile",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Bolivia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Peru",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_south_america",
+    "parenttype": "Backend Server Settings"
+   }
+  ],
+  "table_ufwl": [
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Palau",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Cook Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "East Timor",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Australia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Marshall Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Federated States of Micronesia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Papua New Guinea",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Solomon Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Tuvalu",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Nauru",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Vanuatu",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "New Caledonia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Norfolk Island",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "New Zealand",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Fiji",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "French Polynesia",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Pitcairn Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Kiribati",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Tokelau",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Tonga",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Wallis and Futuna",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Samoa",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Niue",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Northern Mariana Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "Guam",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "U.S. Minor Outlying Islands",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   },
+   {
+    "api_allow": 0,
+    "code": null,
+    "countries": "American Samoa",
+    "desk_user_allow": 0,
+    "desk_web_user_allow": 0,
+    "parent": "Backend Server Settings",
+    "parentfield": "table_ufwl",
+    "parenttype": "Backend Server Settings"
+   }
+  ],
+  "url": "https://fcm.googleapis.com/v1/projects/dallah-424a0/messages:send",
+  "user_smtp": "ocid1.user.oc1..aaaaaaaaulb4ezrmnyk2i3xvjaenoucvdzuvg25ba6h75mqbwcy3lpc5expq@ocid1.tenancy.oc1..aaaaaaaagi5bl6lgeo33ah36hltzrct5nfx747xxjnasqxdpex2uoe6b3hra.to.com"
+ }
+]

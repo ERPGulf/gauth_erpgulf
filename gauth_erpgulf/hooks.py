@@ -205,11 +205,11 @@ scheduler_events = {
 
 # Request Events
 # ----------------
-before_request = [
-    "gauth_erpgulf.gauth_erpgulf.backend_server."
-    "check_country_restriction",
-    "gauth_erpgulf.gauth_erpgulf.web_logging.mark_primary_request",
-]
+#before_request = [
+#    "gauth_erpgulf.gauth_erpgulf.backend_server."
+#    "check_country_restriction",
+#    "gauth_erpgulf.gauth_erpgulf.web_logging.mark_primary_request",
+#]
 # before_request = [
 #     "gauth_erpgulf.gauth_erpgulf.web_logging.mark_primary_request",
 # ]
@@ -264,3 +264,28 @@ after_request = [
 # fixtures = [
 #     {"dt": "DocType", "filters": {"module": "gauth_erpgulf"}},
 # ]
+fixtures = [
+
+    {
+        "dt": "DocType",
+        "filters": [
+            ["name", "in", ["Backend Server Settings", "Countries"]]
+        ]
+    },
+
+    {
+        "dt": "Backend Server Settings",
+        "filters": [
+            ["name", "!=", "Backend Server Settings"]
+        ]
+    },
+
+    {
+        "dt": "Countries and IP address",
+        "filters": [
+            ["parent", "=", "Backend Server Settings"]
+        ]
+    }
+]
+
+
