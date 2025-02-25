@@ -41,7 +41,7 @@ INVALID_OR_EXPIRED_KEYS = "Invalid or expired key"
 APPLICATION_JSON = "application/json"
 MOBILE_NO_ALIAS = "mobile_no as mobile_no"
 TWO_FA_TOKEN_EXPIRED = "2FA token expired"
-GEO_IP_DATABASE = "geo-ip.mmdb"
+GEO_IP_DATABASE = frappe.get_app_path("gauth_erpgulf","data", "geo_ip.mmdb")
 COUNTRIES_AND_IP_ADDRESS = "Countries and IP address"
 APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded"
 FIELD_FOR_IP_AND_COUNTRY = [
@@ -1215,7 +1215,6 @@ def validate_country(ip_address):
 
     reader = geoip2.database.Reader(GEO_IP_DATABASE)
     response = reader.country(ip_address)
-
     return response.country.name
 
 
@@ -1413,3 +1412,4 @@ def resend_otp_for_reset_key(user):
         return generate_success_response("OTP resent successfully", STATUS_200)
     except Exception as e:
         generate_error_response("Failed to resend OTP", str(e), 500)
+
